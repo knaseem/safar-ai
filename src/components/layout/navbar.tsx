@@ -55,6 +55,7 @@ export function Navbar() {
                         <Link href="#destinations" className="hover:text-white transition-colors">Destinations</Link>
                         <Link href="#experience" className="hover:text-white transition-colors">The Experience</Link>
                         <Link href="#membership" className="hover:text-white transition-colors">Membership</Link>
+                        <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
                     </nav>
 
                     <div className="flex items-center gap-4">
