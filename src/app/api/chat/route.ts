@@ -35,6 +35,7 @@ export async function POST(req: Request) {
           {
             "day": 1,
             "theme": "Theme of the day",
+            "coordinates": { "lat": 0.0, "lng": 0.0 },
             "morning": "Activity description",
             "afternoon": "Activity description",
             "evening": "Activity description",
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
           }
         ]
       }
+      IMPORTANT: You must provide real approximate coordinates (lat/lng) for the main location of each day to enable the 3D map flyover.
       Do not include markdown formatting like \`\`\`json. Just return the raw JSON.
     `;
 

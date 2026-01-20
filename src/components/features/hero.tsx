@@ -107,7 +107,7 @@ export function Hero() {
                         <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                             <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
                             <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
-                                Halal Mode
+                                Halal Trip Mode
                             </span>
                             <Switch
                                 checked={isHalal}
