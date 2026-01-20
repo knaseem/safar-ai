@@ -5,9 +5,65 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { motion } from "framer-motion"
 import { ArrowRight, Sparkles, Moon } from "lucide-react"
+import { toast } from "sonner"
+import { TripItinerary, TripData } from "./trip-itinerary"
 
 export function Hero() {
+    // ... inside Hero component
     const [isHalal, setIsHalal] = useState(false)
+    const [input, setInput] = useState("")
+    const [loading, setLoading] = useState(false)
+    const [tripData, setTripData] = useState<TripData | null>(null)
+
+    const handlePlanTrip = async () => {
+        if (!input.trim()) return
+
+        setLoading(true)
+        const toastId = toast.loading("Consulting the Neural Net...")
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: input, isHalal })
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) throw new Error(data.error || "Failed to generate")
+
+            setTripData(data)
+            toast.dismiss(toastId)
+            toast.success("Itinerary Ready", {
+                description: `Created: ${data.trip_name}`,
+                duration: 3000
+            })
+        } catch (err) {
+            toast.dismiss(toastId)
+            toast.error("Planning Failed", {
+                description: "Our AI agents are currently overwhelmed."
+            })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (tripData) {
+        return (
+            <section className="relative min-h-screen py-24 flex items-center justify-center bg-black/90">
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
+                        alt="Background"
+                        className="w-full h-full object-cover opacity-20"
+                    />
+                </div>
+                <div className="container mx-auto px-6 relative z-10">
+                    <TripItinerary data={tripData} onReset={() => setTripData(null)} />
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden">
@@ -64,15 +120,24 @@ export function Hero() {
                             <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
                                 }`}></div>
                             <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                <Sparkles className="size-5 text-white/50" />
+                                <Sparkles className={`size-5 ${loading ? "animate-spin text-emerald-400" : "text-white/50"}`} />
                                 <input
                                     type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
+                                    disabled={loading}
                                     placeholder={isHalal ? "Find me a private villa in Turkey..." : "Where do you want to wake up tomorrow?"}
                                     className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
                                 />
-                                <Button size="lg" variant="premium" className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""
-                                    }`}>
-                                    <span className="mr-2">Go</span>
+                                <Button
+                                    size="lg"
+                                    variant="premium"
+                                    onClick={handlePlanTrip}
+                                    disabled={loading}
+                                    className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""}`}
+                                >
+                                    <span className="mr-2">{loading ? "Thinking..." : "Go"}</span>
                                     <ArrowRight className="size-4" />
                                 </Button>
                             </div>
