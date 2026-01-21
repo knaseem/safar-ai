@@ -16,7 +16,7 @@ export const blogPosts: BlogPost[] = [
         title: "London's Best Halal Fine Dining",
         excerpt: "From Michelin-starred Indian to high-end steakhouses—the ultimate guide to luxury halal eating in London.",
         category: "Food & Dining",
-        image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070&auto=format&fit=crop",
         readTime: "7 min",
         date: "2025-01-20",
         featured: true
@@ -26,7 +26,7 @@ export const blogPosts: BlogPost[] = [
         title: "Istanbul's Kebab Trail: A Foodie Guide",
         excerpt: "Skip the tourist traps. We take you to the backstreet ocakbaşıs serving the juiciest Adana and Iskender kebabs.",
         category: "Food & Dining",
-        image: "https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?q=80&w=2150&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1541544744-378ca6e5bb6a?q=80&w=2070&auto=format&fit=crop",
         readTime: "8 min",
         date: "2025-01-19"
     },
@@ -35,7 +35,7 @@ export const blogPosts: BlogPost[] = [
         title: "Bangkok's Halal Street Food Secrets",
         excerpt: "Where to find the best halal Pad Thai, crispy chicken, and mango sticky rice in Thailand's chaotic capital.",
         category: "Food & Dining",
-        image: "https://images.unsplash.com/photo-1559314809-0d155014e29e?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=2727&auto=format&fit=crop",
         readTime: "6 min",
         date: "2025-01-18"
     },
@@ -44,7 +44,7 @@ export const blogPosts: BlogPost[] = [
         title: "Sweet Paris: A Muslim Traveler's Guide",
         excerpt: "Navigating gelatine-free pastries and finding the best croissants, macarons, and éclairs in Paris.",
         category: "Food & Dining",
-        image: "https://images.unsplash.com/photo-1550617931-e17a7b70dce2?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=2072&auto=format&fit=crop",
         readTime: "5 min",
         date: "2025-01-17"
     },
@@ -53,7 +53,7 @@ export const blogPosts: BlogPost[] = [
         title: "NYC: Halal Carts vs. Fine Dining",
         excerpt: "The chicken and rice phenomenon vs. upscale eats—exploring the full spectrum of New York's halal scene.",
         category: "Food & Dining",
-        image: "https://images.unsplash.com/photo-1529563021893-cc83c914d5d3?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1496417263034-38ec4f0d6b21?q=80&w=2075&auto=format&fit=crop",
         readTime: "7 min",
         date: "2025-01-16"
     },
@@ -84,7 +84,7 @@ export const blogPosts: BlogPost[] = [
         title: "Riyadh Season & Diriyah: diverse entertainment",
         excerpt: "From world-class concerts to the mud-brick palaces of At-Turaif—Riyadh's transformation is unmissable.",
         category: "Destinations",
-        image: "https://images.unsplash.com/photo-1575608670177-33d30b91e133?q=80&w=2012&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1565060169192-359f42b32252?q=80&w=2070&auto=format&fit=crop",
         readTime: "7 min",
         date: "2025-01-13"
     },
@@ -93,7 +93,7 @@ export const blogPosts: BlogPost[] = [
         title: "Jeddah Al-Balad: Heritage & Art Scene",
         excerpt: "Wander the coral stone alleyways of this UNESCO site, now a hub for contemporary art and culture.",
         category: "Destinations",
-        image: "https://images.unsplash.com/photo-1552554740-974a62174d81?q=80&w=2059&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1565552393322-861f6874c43a?q=80&w=2070&auto=format&fit=crop",
         readTime: "6 min",
         date: "2025-01-12"
     },
