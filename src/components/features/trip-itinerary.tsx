@@ -2,10 +2,13 @@
 
 import { useState } from 'react'
 import { motion } from "framer-motion"
-import { CheckCircle, ArrowRight } from "lucide-react"
+import { CheckCircle, ArrowRight, Heart, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CinemaMap } from "./cinema-map"
 import { BookingModal } from "./booking-modal"
+import { AuthModal } from "./auth-modal"
+import { useAuth } from "@/lib/auth-context"
+import { toast } from "sonner"
 
 export type TripData = {
     trip_name: string
@@ -26,11 +29,57 @@ export type TripData = {
 interface TripItineraryProps {
     data: TripData
     onReset: () => void
+    isHalal?: boolean
 }
 
-export function TripItinerary({ data, onReset }: TripItineraryProps) {
+export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryProps) {
     const [isBookingOpen, setIsBookingOpen] = useState(false)
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [isSaved, setIsSaved] = useState(false)
+    const { user } = useAuth()
     const locations = data.days.map(d => d.coordinates)
+
+    const handleSaveTrip = async () => {
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            const res = await fetch('/api/trips', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    trip_name: data.trip_name,
+                    trip_data: data,
+                    is_halal: isHalal,
+                    destination: data.days[0]?.theme || null
+                })
+            })
+
+            const result = await res.json()
+
+            if (!res.ok) {
+                if (res.status === 409) {
+                    toast.info("Trip already saved", { description: "Check your dashboard" })
+                    setIsSaved(true)
+                } else if (res.status === 403) {
+                    toast.error("Trip limit reached", { description: "Delete some trips to save new ones" })
+                } else {
+                    throw new Error(result.error)
+                }
+            } else {
+                toast.success("Trip saved!", { description: "View it in your dashboard" })
+                setIsSaved(true)
+            }
+        } catch (error) {
+            toast.error("Failed to save trip")
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     return (
         <>
@@ -40,7 +89,7 @@ export function TripItinerary({ data, onReset }: TripItineraryProps) {
                 className="w-full max-w-4xl mx-auto bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
             >
                 {/* Header / Cinema Mode */}
-                <div className="relative h-64 md:h-96 bg-neutral-900 group overflow-hidden">
+                <div className="relative h-80 md:h-[500px] bg-neutral-900 group overflow-hidden">
                     <CinemaMap locations={locations} />
 
                     {/* Overlay Title */}
@@ -51,6 +100,25 @@ export function TripItinerary({ data, onReset }: TripItineraryProps) {
                         </div>
                         <h2 className="text-4xl md:text-5xl font-bold text-white mb-1 drop-shadow-lg">{data.trip_name}</h2>
                     </div>
+
+                    {/* Save Button - positioned top-left to avoid cinema map controls */}
+                    <button
+                        onClick={handleSaveTrip}
+                        disabled={isSaving || isSaved}
+                        className={`absolute top-4 left-4 z-20 flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-300 ${isSaved
+                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
+                            : "bg-black/40 border-white/20 text-white hover:bg-black/60 hover:border-white/30"
+                            }`}
+                    >
+                        {isSaving ? (
+                            <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                            <Heart className={`size-4 ${isSaved ? "fill-current" : ""}`} />
+                        )}
+                        <span className="text-sm font-medium">
+                            {isSaved ? "Saved" : "Save Trip"}
+                        </span>
+                    </button>
                 </div>
 
                 {/* Timeline */}
@@ -108,6 +176,11 @@ export function TripItinerary({ data, onReset }: TripItineraryProps) {
                 days={data.days.length}
                 isOpen={isBookingOpen}
                 onClose={() => setIsBookingOpen(false)}
+            />
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
             />
         </>
     )

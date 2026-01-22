@@ -2,20 +2,30 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useScroll, useMotionValueEvent, motion } from "framer-motion"
+import { useScroll, useMotionValueEvent, motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Plane } from "lucide-react"
+import { Plane, User, LogOut, Map, ChevronDown } from "lucide-react"
 import { VibeCheck } from "@/components/features/vibe-check"
+import { AuthModal } from "@/components/features/auth-modal"
+import { useAuth } from "@/lib/auth-context"
 
 export function Navbar() {
     const { scrollY } = useScroll()
     const [scrolled, setScrolled] = React.useState(false)
     const [isVibeCheckOpen, setIsVibeCheckOpen] = React.useState(false)
+    const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false)
+    const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false)
+    const { user, loading, signOut } = useAuth()
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setScrolled(latest > 50)
     })
+
+    const handleSignOut = async () => {
+        await signOut()
+        setIsUserMenuOpen(false)
+    }
 
     return (
         <>
@@ -59,9 +69,67 @@ export function Navbar() {
                     </nav>
 
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" className="text-white hover:text-white hover:bg-white/10 hidden sm:flex">
-                            Sign In
-                        </Button>
+                        {loading ? (
+                            <div className="w-20 h-9 bg-white/10 rounded-lg animate-pulse" />
+                        ) : user ? (
+                            /* Logged In: User Menu */
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                                >
+                                    <div className="size-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                                        <User className="size-4 text-emerald-400" />
+                                    </div>
+                                    <span className="text-sm text-white/80 hidden sm:block max-w-[120px] truncate">
+                                        {user.email?.split("@")[0]}
+                                    </span>
+                                    <ChevronDown className={cn(
+                                        "size-4 text-white/40 transition-transform",
+                                        isUserMenuOpen && "rotate-180"
+                                    )} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {isUserMenuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute right-0 top-full mt-2 w-48 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden"
+                                        >
+                                            <div className="p-2">
+                                                <Link
+                                                    href="/dashboard"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                                >
+                                                    <Map className="size-4" />
+                                                    <span className="text-sm font-medium">My Trips</span>
+                                                </Link>
+                                                <button
+                                                    onClick={handleSignOut}
+                                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                                                >
+                                                    <LogOut className="size-4" />
+                                                    <span className="text-sm font-medium">Sign Out</span>
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        ) : (
+                            /* Logged Out: Sign In Button */
+                            <Button
+                                variant="ghost"
+                                onClick={() => setIsAuthModalOpen(true)}
+                                className="text-white hover:text-white hover:bg-white/10 hidden sm:flex"
+                            >
+                                Sign In
+                            </Button>
+                        )}
                         <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)}>
                             Plan My Trip
                         </Button>
@@ -70,6 +138,7 @@ export function Navbar() {
             </header>
 
             <VibeCheck isOpen={isVibeCheckOpen} onClose={() => setIsVibeCheckOpen(false)} />
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </>
     )
 }

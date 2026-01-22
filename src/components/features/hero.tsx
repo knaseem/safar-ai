@@ -78,7 +78,7 @@ export function Hero() {
                     />
                 </div>
                 <div className="container mx-auto px-6 relative z-10">
-                    <TripItinerary data={tripData} onReset={() => setTripData(null)} />
+                    <TripItinerary data={tripData} onReset={() => setTripData(null)} isHalal={isHalal} />
                 </div>
             </section>
         )
