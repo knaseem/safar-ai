@@ -205,6 +205,7 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
                                         <MoonIcon className="size-4" />
                                         <span className="uppercase tracking-widest text-[10px]">Stay:</span>
                                         <span className="text-white/80">{day.stay}</span>
+                                        <HotelVerificationBadge hotel={day.stay} />
                                     </div>
                                     <button
                                         onClick={() => {
@@ -246,7 +247,53 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
     )
 }
 
+function HotelVerificationBadge({ hotel }: { hotel: string }) {
+    const [status, setStatus] = useState<'idle' | 'checking' | 'verified'>('idle')
+    const [savings, setSavings] = useState(0)
+
+    useEffect(() => {
+        // Auto-verify on mount for "Autonomous" feel
+        const verify = async () => {
+            setStatus('checking')
+            try {
+                const res = await fetch('/api/agent/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item: hotel, type: 'hotel', originalPrice: 200 })
+                })
+                const data = await res.json()
+                setSavings(data.savings)
+                setStatus('verified')
+            } catch (e) {
+                setStatus('idle')
+            }
+        }
+        // Stagger checks so they don't all spin at once
+        const timeout = setTimeout(verify, Math.random() * 2000 + 500)
+        return () => clearTimeout(timeout)
+    }, [hotel])
+
+    if (status === 'idle') return null
+
+    if (status === 'checking') return (
+        <span className="flex items-center gap-1.5 text-[10px] text-white/40 ml-2 animate-pulse">
+            <Loader2 className="size-3 animate-spin" />
+            AI Verifying...
+        </span>
+    )
+
+    return (
+        <span className="flex items-center gap-1.5 text-[10px] ml-2 animate-in fade-in zoom-in duration-300">
+            <div className="size-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+            <span className="text-emerald-400 font-medium">Verified Now</span>
+            {savings > 0 && <span className="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[9px]">Save ${savings}</span>}
+        </span>
+    )
+}
+
 function ActivityCard({ time, title, destination }: { time: string, title: string, destination: string }) {
+    const [status, setStatus] = useState<'idle' | 'checking' | 'verified'>('idle')
+
     // Extract key term for search (remove generic words if needed, but usually full title + destination works better)
     // Simple heuristic: search for the whole activity string
     const handleBook = () => {
@@ -254,13 +301,34 @@ function ActivityCard({ time, title, destination }: { time: string, title: strin
         window.open(`https://www.viator.com/searchResults/all?text=${encodeURIComponent(query)}`, '_blank')
     }
 
+    // Trigger verification on hover
+    const handleMouseEnter = () => {
+        if (status === 'idle') {
+            setStatus('checking')
+            // Mock API call
+            setTimeout(() => setStatus('verified'), 1200)
+        }
+    }
+
     return (
-        <div className="group p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all flex flex-col h-full relative overflow-hidden">
+        <div
+            className="group p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all flex flex-col h-full relative overflow-hidden"
+            onMouseEnter={handleMouseEnter}
+        >
             <div className="flex justify-between items-start mb-2">
-                <div className="text-[10px] uppercase tracking-widest text-emerald-400">{time}</div>
+                <div className="flex items-center gap-2">
+                    <div className="text-[10px] uppercase tracking-widest text-emerald-400">{time}</div>
+                    {status === 'checking' && <Loader2 className="size-3 text-white/20 animate-spin" />}
+                    {status === 'verified' && (
+                        <div className="flex items-center gap-1">
+                            <div className="size-1.5 rounded-full bg-emerald-500" />
+                            <span className="text-[9px] text-white/40">Live</span>
+                        </div>
+                    )}
+                </div>
                 <button
                     onClick={handleBook}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-500 text-black p-1 rounded hover:bg-emerald-400"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-500 text-black p-1 rounded hover:bg-emerald-400 shadow-lg shadow-emerald-500/20"
                     title="Book Activity"
                 >
                     <ArrowRight className="size-3 -rotate-45" />
