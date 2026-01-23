@@ -130,7 +130,7 @@ export function Navbar() {
                                 Sign In
                             </Button>
                         )}
-                        <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)} className="text-emerald-950 font-semibold">
+                        <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)} className="!bg-white !text-black font-bold hover:!bg-gray-100">
                             Plan My Trip
                         </Button>
                     </div>
