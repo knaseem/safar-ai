@@ -7,14 +7,18 @@ import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BookingRequest } from "@/types/booking"
-import { Loader2, Plane, Calendar, MapPin, LogOut, User as UserIcon } from "lucide-react"
+import { Loader2, Plane, Calendar, MapPin, LogOut, User as UserIcon, X, Sparkles } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { PassportCard } from "@/components/features/passport-card"
 
 export default function ProfilePage() {
     const router = useRouter()
     const [user, setUser] = useState<any>(null)
+    const [profile, setProfile] = useState<any>(null)
     const [bookings, setBookings] = useState<BookingRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'trips' | 'bookings'>('bookings')
+    const [showPassport, setShowPassport] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,6 +30,17 @@ export default function ProfilePage() {
                 return
             }
             setUser(user)
+
+            // Fetch Profile
+            const { data: profileData } = await supabase
+                .from('travel_profiles')
+                .select('*')
+                .eq('user_id', user.id)
+                .single()
+
+            if (profileData) {
+                setProfile(profileData)
+            }
 
             // Fetch Bookings
             const response = await fetch('/api/bookings')
@@ -71,9 +86,17 @@ export default function ProfilePage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
-                                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                                    <div className="bg-white/5 p-3 rounded-lg text-center mb-4">
                                         <p className="text-xs text-white/40 uppercase tracking-widest mb-1">Travel DNA</p>
-                                        <p className="text-emerald-400 font-medium">The Explorer</p>
+                                        <p className="text-emerald-400 font-medium">{profile?.archetype || "Undiscovered"}</p>
+                                        {profile && (
+                                            <button
+                                                onClick={() => setShowPassport(true)}
+                                                className="mt-2 text-[10px] text-white/40 hover:text-white uppercase tracking-wider border-b border-white/10 hover:border-white transition-all pb-0.5"
+                                            >
+                                                View Passport
+                                            </button>
+                                        )}
                                     </div>
                                     <Button
                                         variant="outline"
@@ -137,8 +160,8 @@ export default function ProfilePage() {
                                                     <div>
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider ${booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                                    booking.status === 'booked' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                                        'bg-white/10 text-white/60'
+                                                                booking.status === 'booked' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                                    'bg-white/10 text-white/60'
                                                                 }`}>
                                                                 {booking.status}
                                                             </span>
@@ -190,28 +213,34 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+            {/* Passport Modal */}
+            <AnimatePresence>
+                {showPassport && profile && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 perspective-1000"
+                        onClick={() => setShowPassport(false)}
+                    >
+                        <div className="relative w-full max-w-md" onClick={e => e.stopPropagation()}>
+                            <button
+                                onClick={() => setShowPassport(false)}
+                                className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors z-20"
+                            >
+                                <X className="size-6" />
+                            </button>
+                            <PassportCard
+                                archetype={profile.archetype}
+                                scores={profile.traits?.scores || {}}
+                                onClose={() => setShowPassport(false)}
+                            />
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     )
 }
 
-function Sparkles(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
-            <path d="M5 3v4" />
-            <path d="M9 17v4" />
-            <path d="M3 21h4" />
-        </svg>
-    )
-}
+
