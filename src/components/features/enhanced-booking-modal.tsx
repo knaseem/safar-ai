@@ -163,7 +163,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, onClos
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto"
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md overflow-y-auto"
                 onClick={handleClose}
             >
                 <motion.div
