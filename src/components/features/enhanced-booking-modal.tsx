@@ -494,11 +494,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, onClos
                                 <div className="grid grid-cols-3 gap-3">
                                     <button
                                         onClick={() => {
-                                            const origin = departureAirport?.code || 'NYC'
-                                            const dest = tripData.days[0]?.coordinates ? 'PAR' : 'LON' // Default fallback
-                                            const date = checkIn?.toISOString().split('T')[0].replace(/-/g, '') || ''
-                                            // Skyscanner affiliate link (replace YOUR_AFFILIATE_ID with real ID)
-                                            const url = `https://www.skyscanner.com/transport/flights/${origin}/${dest}/${date}/?adultsv2=${travelers.adults}&childrenv2=${travelers.children}&cabinclass=${flightClass}&preferdirects=false`
+                                            // Aviasales/WayAway affiliate link provided by user
+                                            const url = 'https://aviasales.tpx.lv/fNn5QXxw'
                                             window.open(url, '_blank')
                                         }}
                                         className="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-xl bg-blue-500/20 border border-blue-500/30 text-blue-400 hover:bg-blue-500/30 transition-all"
@@ -533,7 +530,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, onClos
                                         <span className="text-xs font-medium">Activities</span>
                                     </button>
                                 </div>
-                                <p className="text-xs text-white/30 text-center mt-3">Powered by Skyscanner, Booking.com & Viator</p>
+                                <p className="text-xs text-white/30 text-center mt-3">Powered by Aviasales, Booking.com & Viator</p>
                             </div>
                         </div>
                     )}
