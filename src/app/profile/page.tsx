@@ -7,7 +7,7 @@ import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BookingRequest } from "@/types/booking"
-import { Loader2, Plane, Calendar, MapPin, LogOut, User as UserIcon, X, Sparkles } from "lucide-react"
+import { Loader2, Plane, Calendar, MapPin, User as UserIcon, X, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PassportCard } from "@/components/features/passport-card"
 
@@ -54,11 +54,7 @@ export default function ProfilePage() {
         fetchData()
     }, [router])
 
-    const handleSignOut = async () => {
-        const supabase = createClient()
-        await supabase.auth.signOut()
-        router.push('/')
-    }
+
 
     if (loading) {
         return (
@@ -98,14 +94,7 @@ export default function ProfilePage() {
                                             </button>
                                         )}
                                     </div>
-                                    <Button
-                                        variant="outline"
-                                        className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10 hover:text-red-300"
-                                        onClick={handleSignOut}
-                                    >
-                                        <LogOut className="size-4 mr-2" />
-                                        Sign Out
-                                    </Button>
+
                                 </div>
                             </CardContent>
                         </Card>
