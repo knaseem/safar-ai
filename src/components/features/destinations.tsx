@@ -43,7 +43,11 @@ const destinations = [
     }
 ]
 
-export function CuratedDestinations() {
+interface DestinationProps {
+    onSelectDestination: (destination: string) => void;
+}
+
+export function CuratedDestinations({ onSelectDestination }: DestinationProps) {
     return (
         <section id="destinations" className="py-24 bg-black relative overflow-hidden">
             {/* Background Gradient Blob */}
@@ -72,6 +76,7 @@ export function CuratedDestinations() {
                             transition={{ delay: index * 0.1, duration: 0.5 }}
                             viewport={{ once: true }}
                             className="group relative h-[400px] rounded-2xl overflow-hidden cursor-pointer"
+                            onClick={() => onSelectDestination(`Trip to ${dest.title}`)}
                         >
                             {/* Image */}
                             <img

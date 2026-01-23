@@ -19,12 +19,29 @@ const placeholderSuggestions = [
     "Beach vacation in Maldives",
 ]
 
-export function Hero() {
+interface HeroProps {
+    initialPrompt?: string;
+}
+
+export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
+
+    // Handle initial prompt from parent
+    useEffect(() => {
+        if (initialPrompt) {
+            setInput(initialPrompt)
+            // Small timeout to allow state to settle before triggering
+            const timer = setTimeout(() => {
+                const triggerSearch = document.getElementById('trigger-search-btn')
+                if (triggerSearch) triggerSearch.click()
+            }, 100)
+            return () => clearTimeout(timer)
+        }
+    }, [initialPrompt])
 
     // Rotate placeholder every 2 seconds
     useEffect(() => {
@@ -151,6 +168,7 @@ export function Hero() {
                                     suppressHydrationWarning
                                 />
                                 <Button
+                                    id="trigger-search-btn"
                                     size="lg"
                                     variant="premium"
                                     onClick={handlePlanTrip}
