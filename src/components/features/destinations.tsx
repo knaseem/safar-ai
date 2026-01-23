@@ -58,7 +58,7 @@ export function CuratedDestinations() {
                             Hand-picked locations optimized for autonomous travel experiences.
                         </p>
                     </div>
-                    <Button variant="outline" className="text-white border-white/20 hover:bg-white/10 hidden md:flex">
+                    <Button variant="premium" className="hidden md:flex bg-white text-black hover:bg-white/90 font-medium">
                         View All Locations
                     </Button>
                 </div>
@@ -117,7 +117,7 @@ export function CuratedDestinations() {
                     ))}
                 </div>
 
-                <Button variant="outline" className="w-full mt-8 text-white border-white/20 hover:bg-white/10 md:hidden">
+                <Button variant="premium" className="w-full mt-8 bg-white text-black hover:bg-white/90 font-medium md:hidden">
                     View All Locations
                 </Button>
             </div>
