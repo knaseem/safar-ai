@@ -130,7 +130,7 @@ export function Navbar() {
                                 Sign In
                             </Button>
                         )}
-                        <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)}>
+                        <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)} className="text-emerald-950 font-semibold">
                             Plan My Trip
                         </Button>
                     </div>
