@@ -195,15 +195,26 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <ActivityCard time="Morning" title={day.morning} />
-                                    <ActivityCard time="Afternoon" title={day.afternoon} />
-                                    <ActivityCard time="Evening" title={day.evening} />
+                                    <ActivityCard time="Morning" title={day.morning} destination={data.days[0]?.theme?.split(' ').slice(-1)[0] || data.trip_name} />
+                                    <ActivityCard time="Afternoon" title={day.afternoon} destination={data.days[0]?.theme?.split(' ').slice(-1)[0] || data.trip_name} />
+                                    <ActivityCard time="Evening" title={day.evening} destination={data.days[0]?.theme?.split(' ').slice(-1)[0] || data.trip_name} />
                                 </div>
 
-                                <div className="mt-4 flex items-center gap-2 text-white/40 text-sm bg-white/5 p-3 rounded-lg border border-white/5">
-                                    <MoonIcon className="size-4" />
-                                    <span className="uppercase tracking-widest text-[10px]">Stay:</span>
-                                    <span className="text-white/80">{day.stay}</span>
+                                <div className="mt-4 flex items-center justify-between text-white/40 text-sm bg-white/5 p-3 rounded-lg border border-white/5 hover:border-emerald-500/30 transition-colors group/stay">
+                                    <div className="flex items-center gap-2">
+                                        <MoonIcon className="size-4" />
+                                        <span className="uppercase tracking-widest text-[10px]">Stay:</span>
+                                        <span className="text-white/80">{day.stay}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            const hotel = day.stay.split(':')[0]
+                                            window.open(`https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotel)}`, '_blank')
+                                        }}
+                                        className="opacity-0 group-hover/stay:opacity-100 flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded transition-all hover:bg-emerald-500/20"
+                                    >
+                                        Check Rates <ArrowRight className="size-3" />
+                                    </button>
                                 </div>
                             </motion.div>
                         ))}
@@ -235,11 +246,27 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
     )
 }
 
-function ActivityCard({ time, title }: { time: string, title: string }) {
+function ActivityCard({ time, title, destination }: { time: string, title: string, destination: string }) {
+    // Extract key term for search (remove generic words if needed, but usually full title + destination works better)
+    // Simple heuristic: search for the whole activity string
+    const handleBook = () => {
+        const query = `${title} ${destination}`
+        window.open(`https://www.viator.com/searchResults/all?text=${encodeURIComponent(query)}`, '_blank')
+    }
+
     return (
-        <div className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-            <div className="text-[10px] uppercase tracking-widest text-emerald-400 mb-2">{time}</div>
-            <p className="text-white/90 text-sm font-medium leading-relaxed">
+        <div className="group p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-emerald-500/30 transition-all flex flex-col h-full relative overflow-hidden">
+            <div className="flex justify-between items-start mb-2">
+                <div className="text-[10px] uppercase tracking-widest text-emerald-400">{time}</div>
+                <button
+                    onClick={handleBook}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-500 text-black p-1 rounded hover:bg-emerald-400"
+                    title="Book Activity"
+                >
+                    <ArrowRight className="size-3 -rotate-45" />
+                </button>
+            </div>
+            <p className="text-white/90 text-sm font-medium leading-relaxed flex-1">
                 {title}
             </p>
         </div>

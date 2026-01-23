@@ -10,6 +10,55 @@ export interface BlogPost {
 }
 
 export const blogPosts: BlogPost[] = [
+    // PARTNER PROGRAM STRATEGY BATCH (Newest)
+    {
+        slug: "oman-road-trip-guide",
+        title: "Oman Road Trip: The Norway of Arabia",
+        excerpt: "Fjords, deserts, and ancient forts. Why Oman is the ultimate self-drive destination for 2026.",
+        category: "Destinations",
+        image: "https://images.unsplash.com/photo-1518599808960-966953945ca6?q=80&w=2070&auto=format&fit=crop",
+        readTime: "10 min",
+        date: "2025-01-25",
+        featured: true
+    },
+    {
+        slug: "tokyo-halal-guide-2026",
+        title: "Halal Food in Tokyo: A 2026 Guide",
+        excerpt: "Wagyu beef, authentic ramen, and sushi—where to eat halal in Japan's capital without compromising on taste.",
+        category: "Food & Dining",
+        image: "https://images.unsplash.com/photo-1551641506-ee5bf4cb45f1?q=80&w=2084&auto=format&fit=crop",
+        readTime: "8 min",
+        date: "2025-01-24",
+        featured: true
+    },
+    {
+        slug: "slow-travel-manifesto",
+        title: "The Rise of 'Slow Travel' in a Fast World",
+        excerpt: "Why spending 2 weeks in one city is better than 5 cities in 10 days. The art of truly seeing a place.",
+        category: "Travel Tips",
+        image: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop",
+        readTime: "6 min",
+        date: "2025-01-23"
+    },
+    {
+        slug: "luxury-hotels-under-200",
+        title: "Luxury for Less: 5-Star Hotels Under $200",
+        excerpt: "From Bali to Budapest—incredible luxury properties that won't break the bank. Insider booking secrets revealed.",
+        category: "Luxury & Lifestyle",
+        image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=2070&auto=format&fit=crop",
+        readTime: "7 min",
+        date: "2025-01-22"
+    },
+    {
+        slug: "seoul-hidden-cafes",
+        title: "Seoul's Hidden Cafes & Halal BBQ",
+        excerpt: "Exploring the aesthetic cafe culture of Seongsu-dong and finding the best halal K-BBQ spots.",
+        category: "Food & Dining",
+        image: "https://images.unsplash.com/photo-1538485399081-7191377e8241?q=80&w=2774&auto=format&fit=crop",
+        readTime: "9 min",
+        date: "2025-01-21"
+    },
+
     // FOOD & DINING (New)
     {
         slug: "london-halal-fine-dining",
