@@ -3,8 +3,9 @@ import { NextResponse } from "next/server"
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params
     try {
         const supabase = await createClient()
 
