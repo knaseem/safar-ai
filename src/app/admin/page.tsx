@@ -36,10 +36,9 @@ interface AdminBooking {
     flight_class: string
 }
 
-// Kanban Column Component
 function KanbanColumn({ title, count, color, icon: Icon, children }: any) {
     return (
-        <div className="flex-1 min-w-[320px] flex flex-col h-full">
+        <div className="flex-1 min-w-[280px] flex flex-col h-full">
             <div className="flex items-center justify-between mb-4 px-1">
                 <div className="flex items-center gap-2">
                     <div className={`p-1.5 rounded-md ${color} bg-opacity-20`}>
@@ -320,8 +319,8 @@ export default function AdminDashboard() {
             </Card>
 
             {/* Kanban Board */}
-            <div className="flex-1 overflow-x-auto">
-                <div className="flex gap-6 h-full pb-4">
+            <div className="flex-1 overflow-x-auto -mx-8 px-8">
+                <div className="flex gap-6 h-full pb-4 min-w-max pr-8">
                     {/* Incoming / Pending */}
                     <KanbanColumn
                         title="Incoming Requests"
@@ -346,8 +345,8 @@ export default function AdminDashboard() {
                         ))}
                         {/* Empty State visual */}
                         {bookings.filter(b => b.status === 'processing').length === 0 && (
-                            <div className="h-32 border-2 border-dashed border-white/5 rounded-xl flex items-center justify-center text-white/20 text-sm">
-                                Drag items here
+                            <div className="h-32 rounded-xl flex items-center justify-center text-white/20 text-sm italic">
+                                No active trips
                             </div>
                         )}
                     </KanbanColumn>

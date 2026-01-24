@@ -16,6 +16,7 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(null)
     const [profile, setProfile] = useState<any>(null)
     const [bookings, setBookings] = useState<BookingRequest[]>([])
+    const [savedTrips, setSavedTrips] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'trips' | 'bookings'>('bookings')
     const [showPassport, setShowPassport] = useState(false)
@@ -47,6 +48,13 @@ export default function ProfilePage() {
             if (response.ok) {
                 const data = await response.json()
                 setBookings(data.bookings || [])
+            }
+
+            // Fetch Saved Trips
+            const tripsParams = await fetch('/api/trips')
+            if (tripsParams.ok) {
+                const tripsData = await tripsParams.json()
+                setSavedTrips(tripsData.trips || [])
             }
             setLoading(false)
         }
@@ -95,7 +103,7 @@ export default function ProfilePage() {
                                         )}
                                     </div>
 
-                                    {user?.email === 'knaseem22@gmail.com' && (
+                                    {user?.email && (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").includes(user.email) && (
                                         <Button
                                             onClick={() => router.push('/admin')}
                                             className="w-full bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 text-emerald-400 hover:text-emerald-300 hover:border-emerald-500/50"
@@ -196,16 +204,58 @@ export default function ProfilePage() {
                         )}
 
                         {activeTab === 'trips' && (
-                            <div className="text-center py-12 bg-neutral-900/50 rounded-xl border border-white/5">
-                                <Sparkles className="size-12 text-emerald-500/20 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-white mb-2">AI Trips Coming Soon</h3>
-                                <p className="text-white/40 mb-4">Your saved AI-generated itineraries will appear here.</p>
-                                <Button
-                                    onClick={() => router.push('/')}
-                                    className="bg-emerald-500 text-white hover:bg-emerald-600"
-                                >
-                                    Generate New Trip
-                                </Button>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {savedTrips.length === 0 ? (
+                                    <div className="col-span-full text-center py-12 bg-neutral-900/50 rounded-xl border border-white/5">
+                                        <Sparkles className="size-12 text-emerald-500/20 mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-white mb-2">No Saved Trips</h3>
+                                        <p className="text-white/40 mb-4">Your AI-generated itineraries will appear here.</p>
+                                        <Button
+                                            onClick={() => router.push('/')}
+                                            className="bg-emerald-500 text-white hover:bg-emerald-600"
+                                        >
+                                            Generate New Trip
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    savedTrips.map((trip) => (
+                                        <Card key={trip.id} className="bg-neutral-900 border-white/10 hover:border-emerald-500/30 transition-all group overflow-hidden">
+                                            <div className="h-32 bg-neutral-800 relative">
+                                                {/* Fallback pattern or image could go here */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-900/20 to-black" />
+                                                <div className="absolute bottom-3 left-4 right-4">
+                                                    <h3 className="text-lg font-bold text-white truncate">{trip.trip_name}</h3>
+                                                    <p className="text-xs text-white/60 flex items-center gap-1">
+                                                        <MapPin className="size-3" />
+                                                        {trip.destination || "Multiple Destinations"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <CardContent className="p-4">
+                                                <div className="flex items-center justify-between mb-4">
+                                                    <span className="text-xs text-white/40">
+                                                        {new Date(trip.created_at).toLocaleDateString()}
+                                                    </span>
+                                                    {trip.is_halal && (
+                                                        <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-medium uppercase tracking-wider border border-emerald-500/20">
+                                                            Halal
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-white/10 text-white hover:bg-white/10 hover:text-white group-hover:border-emerald-500/30"
+                                                    onClick={() => {
+                                                        // Future: Navigate to view
+                                                        console.log("View trip", trip)
+                                                    }}
+                                                >
+                                                    View Itinerary
+                                                </Button>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                )}
                             </div>
                         )}
                     </div>

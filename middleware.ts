@@ -43,8 +43,8 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL("/?login=true", request.url));
         }
 
-        // Replace with your actual admin email(s)
-        const adminEmails = ["knaseem22@gmail.com"];
+        // Admin Email Check
+        const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
 
         if (!user.email || !adminEmails.includes(user.email)) {
             // Redirect unauthorized users to home

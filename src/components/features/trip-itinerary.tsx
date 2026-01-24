@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from "framer-motion"
-import { CheckCircle, ArrowRight, Heart, Loader2 } from "lucide-react"
+import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CinemaMap } from "./cinema-map"
 import { EnhancedBookingModal } from "./enhanced-booking-modal"
 import { AuthModal } from "./auth-modal"
 import { TripPdfDocument } from "./trip-pdf"
+import { AIChatDrawer } from "./ai-chat-drawer"
 import { pdf } from "@react-pdf/renderer"
 import { saveAs } from "file-saver"
 import { useAuth } from "@/lib/auth-context"
@@ -37,6 +38,7 @@ interface TripItineraryProps {
 
 export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryProps) {
     const [isBookingOpen, setIsBookingOpen] = useState(false)
+    const [isChatOpen, setIsChatOpen] = useState(false)
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [isSaved, setIsSaved] = useState(false)
@@ -167,6 +169,23 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
                             <span className="text-sm font-medium">Download PDF</span>
                         </button>
                     )}
+
+
+                    {/* AI Concierge FAB */}
+                    <button
+                        onClick={() => setIsChatOpen(true)}
+                        className="absolute bottom-6 right-6 z-20 size-14 rounded-full bg-emerald-500 text-black shadow-lg shadow-emerald-500/20 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 group"
+                    >
+                        <motion.div
+                            animate={{ rotate: [0, 15, -15, 0] }}
+                            transition={{ repeat: Infinity, repeatDelay: 5, duration: 2 }}
+                        >
+                            <Sparkles className="size-6" />
+                        </motion.div>
+                        <span className="absolute right-full mr-4 bg-black/80 text-white text-xs font-medium px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none backdrop-blur-md border border-white/10">
+                            Ask Concierge
+                        </span>
+                    </button>
                 </div>
 
                 {/* Bottom Section: Scrollable Timeline */}
@@ -230,7 +249,7 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
                         </Button>
                     </div>
                 </div>
-            </motion.div>
+            </motion.div >
 
             <EnhancedBookingModal
                 tripData={data}
@@ -242,6 +261,12 @@ export function TripItinerary({ data, onReset, isHalal = false }: TripItineraryP
             <AuthModal
                 isOpen={isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
+            />
+
+            <AIChatDrawer
+                isOpen={isChatOpen}
+                onClose={() => setIsChatOpen(false)}
+                tripData={data}
             />
         </>
     )
@@ -337,7 +362,7 @@ function ActivityCard({ time, title, destination }: { time: string, title: strin
             <p className="text-white/90 text-sm font-medium leading-relaxed flex-1">
                 {title}
             </p>
-        </div>
+        </div >
     )
 }
 
