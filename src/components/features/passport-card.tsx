@@ -11,10 +11,11 @@ interface PassportCardProps {
     scores: Record<string, number>
     bookings?: any[]
     onClose?: () => void
+    actionButton?: React.ReactNode
     className?: string
 }
 
-export function PassportCard({ archetype, scores, bookings = [], onClose, className }: PassportCardProps) {
+export function PassportCard({ archetype, scores, bookings = [], onClose, actionButton, className }: PassportCardProps) {
     const [isOpened, setIsOpened] = useState(false)
 
     // Calculate Traveler Tier
@@ -172,7 +173,8 @@ export function PassportCard({ archetype, scores, bookings = [], onClose, classN
                                     )}
                                 </div>
 
-                                <div className="mt-6 flex justify-center gap-4">
+                                <div className="mt-6 flex flex-col items-center gap-4">
+                                    {actionButton}
                                     <button
                                         onClick={() => setIsOpened(false)}
                                         className="text-[10px] uppercase tracking-widest text-neutral-400 hover:text-neutral-800 transition-colors border-b border-transparent hover:border-neutral-800"
