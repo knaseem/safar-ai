@@ -23,6 +23,7 @@ export default function ProfilePage() {
     const [activeTab, setActiveTab] = useState<'trips' | 'bookings'>('bookings')
     const [showPassport, setShowPassport] = useState(false)
     const [showVibeCheck, setShowVibeCheck] = useState(false)
+    const [deletingTripId, setDeletingTripId] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -70,8 +71,18 @@ export default function ProfilePage() {
 
     const handleDeleteTrip = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation()
-        if (!confirm("Are you sure you want to delete this itinerary?")) return
 
+        // If this is the first click, enter confirmation mode
+        if (deletingTripId !== id) {
+            setDeletingTripId(id)
+            // Auto-cancel confirmation after 3 seconds if no action is taken
+            setTimeout(() => {
+                setDeletingTripId(curr => curr === id ? null : curr)
+            }, 3000)
+            return
+        }
+
+        // Second click: perform the actual deletion
         try {
             const res = await fetch(`/api/trips?id=${id}`, {
                 method: "DELETE"
@@ -80,6 +91,7 @@ export default function ProfilePage() {
             if (res.ok) {
                 setSavedTrips(prev => prev.filter(t => t.id !== id))
                 toast.success("Itinerary Deleted")
+                setDeletingTripId(null)
             } else {
                 toast.error("Failed to delete itinerary")
             }
@@ -267,13 +279,32 @@ export default function ProfilePage() {
                                                                 Halal
                                                             </span>
                                                         )}
-                                                        <button
-                                                            onClick={(e) => handleDeleteTrip(trip.id, e)}
-                                                            className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
-                                                            title="Delete Itinerary"
-                                                        >
-                                                            <Trash2 className="size-4" />
-                                                        </button>
+                                                        <AnimatePresence mode="wait">
+                                                            {deletingTripId === trip.id ? (
+                                                                <motion.button
+                                                                    key="confirm"
+                                                                    initial={{ opacity: 0, scale: 0.9, x: 10 }}
+                                                                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                                                                    exit={{ opacity: 0, scale: 0.9, x: 10 }}
+                                                                    onClick={(e) => handleDeleteTrip(trip.id, e)}
+                                                                    className="px-3 py-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all whitespace-nowrap"
+                                                                >
+                                                                    Confirm Delete
+                                                                </motion.button>
+                                                            ) : (
+                                                                <motion.button
+                                                                    key="trash"
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    exit={{ opacity: 0 }}
+                                                                    onClick={(e) => handleDeleteTrip(trip.id, e)}
+                                                                    className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                                                    title="Delete Itinerary"
+                                                                >
+                                                                    <Trash2 className="size-4" />
+                                                                </motion.button>
+                                                            )}
+                                                        </AnimatePresence>
                                                     </div>
                                                 </div>
                                                 <Button
