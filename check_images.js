@@ -1,46 +1,20 @@
-const fs = require('fs');
 const https = require('https');
 
-// Read the file content (simulating reading the TS file as text to extract URLs)
-// In a real scenario, we'd compile the TS, but regex is faster for this check.
-const fileContent = fs.readFileSync('src/lib/blog-data.ts', 'utf8');
+const HERO_IMAGES = [
+    // Islamabad (User provided Pexels)
+    "https://images.pexels.com/photos/27698081/pexels-photo-27698081.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+];
 
-const regex = /image:\s*"(https?:\/\/[^"]+)"/g;
-let match;
-const urls = [];
-
-while ((match = regex.exec(fileContent)) !== null) {
-    urls.push(match[1]);
-}
-
-console.log(`Checking ${urls.length} images...`);
-
-async function checkUrl(url) {
-    return new Promise((resolve) => {
-        const req = https.get(url, (res) => {
-            // Unsplash often redirects, so valid statuses are 200-399
-            if (res.statusCode >= 200 && res.statusCode < 400) {
-                resolve({ url, status: res.statusCode, ok: true });
-            } else {
-                resolve({ url, status: res.statusCode, ok: false });
-            }
-        }).on('error', (e) => {
-            resolve({ url, status: 'ERROR', ok: false });
-        });
-        req.end();
+function checkUrl(url, index) {
+    https.get(url, (res) => {
+        console.log(`[${index}] Status: ${res.statusCode} - ${url.substring(0, 50)}...`);
+        if (res.statusCode !== 200) {
+            console.error(`--> BROKEN: ${url}`);
+        }
+    }).on('error', (e) => {
+        console.error(`[${index}] Error: ${e.message}`);
     });
 }
 
-async function run() {
-    const results = await Promise.all(urls.map(checkUrl));
-    const broken = results.filter(r => !r.ok);
-
-    if (broken.length === 0) {
-        console.log("All verify checks passed!");
-    } else {
-        console.log("Found broken images:");
-        broken.forEach(b => console.log(`[${b.status}] ${b.url}`));
-    }
-}
-
-run();
+console.log("Checking " + HERO_IMAGES.length + " images...");
+HERO_IMAGES.forEach((url, i) => checkUrl(url, i));

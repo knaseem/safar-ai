@@ -23,12 +23,76 @@ interface HeroProps {
     initialPrompt?: string;
 }
 
+const HERO_IMAGES = [
+    {
+        url: "https://images.unsplash.com/photo-1496568816309-51d7c20e3b21?q=80&w=2670&auto=format&fit=crop", // Confirmed Full Burj Khalifa
+        location: "Burj Khalifa, Dubai",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1559586616-361e18714958?q=80&w=2667&auto=format&fit=crop", // Reverting to safe, reliable AlUla (NEOM)
+        location: "AlUla, Saudi Arabia",
+        credit: "NEOM"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2670&auto=format&fit=crop",
+        location: "Kyoto, Japan",
+        credit: "Sorasak"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2670&auto=format&fit=crop", // Confirmed working Zermatt
+        location: "Zermatt, Switzerland",
+        credit: "Jrg"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2673&auto=format&fit=crop",
+        location: "Paris, France",
+        credit: "Anthony DELANOIX"
+    },
+    {
+        url: "https://images.pexels.com/photos/14822617/pexels-photo-14822617.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", // User provided Pexels image
+        location: "Swat Valley, Pakistan",
+        credit: "Pexels"
+    },
+    {
+        url: "https://images.pexels.com/photos/27698081/pexels-photo-27698081.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", // User provided Pexels image (Faisal Mosque)
+        location: "Islamabad, Pakistan",
+        credit: "Pexels"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop",
+        location: "Maldives",
+        credit: "Rayyu"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=2654&auto=format&fit=crop",
+        location: "Iceland",
+        credit: "Davide Cantelli"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?q=80&w=2274&auto=format&fit=crop",
+        location: "Kuala Lumpur, Malaysia",
+        credit: "Esmonde Yong"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?q=80&w=2670&auto=format&fit=crop",
+        location: "Beijing, China",
+        credit: "Zhang Kaiyv"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?q=80&w=2670&auto=format&fit=crop", // Restored generic Shanghai skyline that works
+        location: "Shanghai, China",
+        credit: "Edward He"
+    }
+]
+
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
     // Handle initial prompt from parent
     useEffect(() => {
@@ -48,6 +112,14 @@ export function Hero({ initialPrompt }: HeroProps) {
         const interval = setInterval(() => {
             setPlaceholderIndex((prev) => (prev + 1) % placeholderSuggestions.length)
         }, 2000)
+        return () => clearInterval(interval)
+    }, [])
+
+    // Rotate Hero Image every 5 seconds (Faster Pace)
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length)
+        }, 5000)
         return () => clearInterval(interval)
     }, [])
 
@@ -89,9 +161,9 @@ export function Hero({ initialPrompt }: HeroProps) {
             <section className="relative min-h-screen py-24 flex items-center justify-center bg-black/90">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
+                        src={HERO_IMAGES[currentImageIndex].url}
                         alt="Background"
-                        className="w-full h-full object-cover opacity-20"
+                        className="w-full h-full object-cover opacity-20 blur-sm"
                     />
                 </div>
                 <div className="container mx-auto px-6 relative z-10">
@@ -103,16 +175,44 @@ export function Hero({ initialPrompt }: HeroProps) {
 
     return (
         <section className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden">
-            {/* Background with Overlay */}
-            <div className="absolute inset-0 z-0">
+            {/* Cinematic Background Slider */}
+            <div className="absolute inset-0 z-0 bg-black">
+                <AnimatePresence mode="popLayout">
+                    <motion.div
+                        key={currentImageIndex}
+                        initial={{ opacity: 0, scale: 1.1 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 1.5, ease: "easeInOut" }} // Crossfade
+                        className="absolute inset-0"
+                    >
+                        {/* Ken Burns Scale Effect */}
+                        <motion.img
+                            src={HERO_IMAGES[currentImageIndex].url}
+                            alt={HERO_IMAGES[currentImageIndex].location}
+                            initial={{ scale: 1.05 }}
+                            animate={{ scale: 1.15 }}
+                            transition={{ duration: 12, ease: "linear" }}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                // Fallback or skip to next
+                                console.error("Image failed:", HERO_IMAGES[currentImageIndex].url)
+                                e.currentTarget.style.display = 'none'
+                            }}
+                        />
+                        {/* Location Credit Overlay */}
+                        <div className="absolute bottom-6 right-8 z-20 flex flex-col items-end text-white/50 text-right">
+                            <span className="text-xs uppercase tracking-[0.2em] font-light border-b border-white/20 pb-1 mb-1">Location</span>
+                            <span className="text-sm font-medium text-white/90">{HERO_IMAGES[currentImageIndex].location}</span>
+                            <span className="text-[10px] text-white/30">Photo by {HERO_IMAGES[currentImageIndex].credit}</span>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Global Overlay for legibility */}
                 <div className="absolute inset-0 bg-black/40 z-10" />
                 <div className={`absolute inset-0 bg-gradient-to-t transition-colors duration-1000 z-10 ${isHalal ? "from-emerald-950/80 via-transparent to-black/20" : "from-black via-transparent to-black/20"
                     }`} />
-                <img
-                    src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
-                    alt="Luxury Travel Background"
-                    className="w-full h-full object-cover"
-                />
             </div>
 
             {/* Content */}
