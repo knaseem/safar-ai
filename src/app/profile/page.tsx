@@ -285,6 +285,7 @@ export default function ProfilePage() {
                             <PassportCard
                                 archetype={profile.archetype}
                                 scores={profile.traits?.scores || {}}
+                                bookings={bookings}
                                 onClose={() => setShowPassport(false)}
                             />
                         </div>
