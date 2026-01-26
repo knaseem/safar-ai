@@ -8,6 +8,7 @@ import { PassportCard } from "./passport-card"
 import { TravelDeals } from "./travel-deals"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 export type VibeCard = {
     id: string
@@ -292,7 +293,7 @@ export function VibeCheck({ isOpen, onClose }: VibeCheckProps) {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-xl p-4 perspective-1000"
             >
-                <div className="relative w-full max-w-md">
+                <div className={cn("relative w-full transition-all duration-500", showDeals ? "max-w-4xl" : "max-w-md")}>
                     <button
                         onClick={onClose}
                         className="absolute -top-12 right-0 text-white/50 hover:text-white transition-colors z-20"

@@ -108,7 +108,7 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 {/* Flights Section */}
                 <div className="space-y-3">
                     <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-wider">
