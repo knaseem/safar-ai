@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Plane, Hotel, ExternalLink, Sparkles, Loader2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { generateAffiliateLink } from "@/lib/affiliate"
 
 interface FlightOffer {
     id: string
@@ -26,6 +27,20 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
+    const destinations: Record<string, string> = {
+        "Adrenaline Junkie": "ZQN", // Queenstown
+        "Quiet Luxury Nomad": "MLE", // Maldives
+        "Culture Connoisseur": "HND", // Tokyo
+        "Zen Master": "DPS", // Bali
+        "Gastronomy Globetrotter": "CDG" // Paris
+    }
+    const dest = destinations[archetype] || "JFK"
+
+    const handleAffiliateClick = (type: 'flight' | 'hotel', params: any) => {
+        const link = generateAffiliateLink(type, params)
+        window.open(link, '_blank')
+    }
+
     useEffect(() => {
         async function fetchDeals() {
             setLoading(true)
@@ -33,14 +48,6 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
             try {
                 // Mocking destination based on archetype for now
                 // In production, this would be dynamic
-                const destinations: Record<string, string> = {
-                    "Adrenaline Junkie": "ZQN", // Queenstown
-                    "Quiet Luxury Nomad": "MLE", // Maldives
-                    "Culture Connoisseur": "HND", // Tokyo
-                    "Zen Master": "DPS", // Bali
-                    "Gastronomy Globetrotter": "CDG" // Paris
-                }
-                const dest = destinations[archetype] || "JFK"
 
                 // Fetch Flights
                 const flightRes = await fetch(`/api/flights/search?origin=SYD&destination=${dest}&departureDate=2026-06-01&adults=1`)
@@ -127,7 +134,16 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
                             </div>
                             <div className="text-right">
                                 <div className="text-lg font-bold text-emerald-400">${flight.price.total}</div>
-                                <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-white/60 group-hover:text-white group-hover:bg-emerald-500/20">
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-[10px] px-2 text-white/60 group-hover:text-white group-hover:bg-emerald-500/20"
+                                    onClick={() => handleAffiliateClick('flight', {
+                                        origin: 'SYD',
+                                        destination: dest,
+                                        checkIn: '2026-06-01'
+                                    })}
+                                >
                                     View on Skyscanner <ExternalLink className="size-3 ml-1" />
                                 </Button>
                             </div>
@@ -165,7 +181,15 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
                                 </div>
                                 <div className="text-right">
                                     <div className="text-lg font-bold text-cyan-400">${price}</div>
-                                    <Button size="sm" variant="ghost" className="h-7 text-[10px] px-2 text-white/60 group-hover:text-white group-hover:bg-cyan-500/20">
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-[10px] px-2 text-white/60 group-hover:text-white group-hover:bg-cyan-500/20"
+                                        onClick={() => handleAffiliateClick('hotel', {
+                                            name: hotelName,
+                                            destination: dest
+                                        })}
+                                    >
                                         Book Now <ExternalLink className="size-3 ml-1" />
                                     </Button>
                                 </div>
