@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { PassportCard } from "@/components/features/passport-card"
 import { VibeCheck } from "@/components/features/vibe-check"
 import { toast } from "sonner"
+import { BookingDetailModal } from "@/components/features/booking-detail-modal"
 
 export default function ProfilePage() {
     const router = useRouter()
@@ -24,6 +25,7 @@ export default function ProfilePage() {
     const [showPassport, setShowPassport] = useState(false)
     const [showVibeCheck, setShowVibeCheck] = useState(false)
     const [deletingTripId, setDeletingTripId] = useState<string | null>(null)
+    const [selectedBooking, setSelectedBooking] = useState<any | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -228,7 +230,11 @@ export default function ProfilePage() {
                                                             <p className="text-xs text-white/40 uppercase">Est. Budget</p>
                                                             <p className="text-lg font-semibold text-white">${booking.estimated_price?.toLocaleString()}</p>
                                                         </div>
-                                                        <Button variant="outline" className="bg-transparent border-white/10 text-white hover:bg-white/10">
+                                                        <Button
+                                                            variant="outline"
+                                                            className="bg-transparent border-white/10 text-white hover:bg-white/10"
+                                                            onClick={() => setSelectedBooking(booking)}
+                                                        >
                                                             View Details
                                                         </Button>
                                                     </div>
@@ -361,6 +367,12 @@ export default function ProfilePage() {
                     // Refresh data to show new profile immediately
                     window.location.reload()
                 }}
+            />
+            {/* Booking Detail Modal */}
+            <BookingDetailModal
+                booking={selectedBooking}
+                isOpen={!!selectedBooking}
+                onClose={() => setSelectedBooking(null)}
             />
         </main >
     )
