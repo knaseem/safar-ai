@@ -373,11 +373,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                             title={day.morning}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
-                                            onBook={(url) => {
-                                                setPortalUrl(url)
-                                                setPortalTitle("Experience Secure Booking")
-                                                setIsPortalOpen(true)
-                                            }}
+
                                         />
                                     </div>
                                     <div onMouseEnter={() => setTimeOfDay('Afternoon')}>
@@ -386,11 +382,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                             title={day.afternoon}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
-                                            onBook={(url) => {
-                                                setPortalUrl(url)
-                                                setPortalTitle("Experience Secure Booking")
-                                                setIsPortalOpen(true)
-                                            }}
+
                                         />
                                     </div>
                                     <div onMouseEnter={() => setTimeOfDay('Evening')}>
@@ -399,11 +391,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                             title={day.evening}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
-                                            onBook={(url) => {
-                                                setPortalUrl(url)
-                                                setPortalTitle("Experience Secure Booking")
-                                                setIsPortalOpen(true)
-                                            }}
+
                                         />
                                     </div>
                                 </div>
@@ -426,23 +414,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                             )}
                                         </div>
                                     </div>
-                                    <button
-                                        onClick={() => {
-                                            const hotel = day.stay.split(':')[0]
-                                            const url = generateAffiliateLink('hotel', {
-                                                name: hotel,
-                                                destination: cleanDestination,
-                                                // Default to next month for checking rates if no dates
-                                                checkIn: new Date(Date.now() + 86400000 * 30).toISOString().split('T')[0]
-                                            })
-                                            setPortalUrl(url)
-                                            setPortalTitle(`Booking: ${hotel}`)
-                                            setIsPortalOpen(true)
-                                        }}
-                                        className="flex items-center gap-1 text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded transition-all hover:bg-emerald-500/20"
-                                    >
-                                        Book Hotel <ArrowRight className="size-3" />
-                                    </button>
+
                                 </div>
                             </motion.div>
                         ))}

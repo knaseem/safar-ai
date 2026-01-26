@@ -46,20 +46,10 @@ export function HotelVerificationBadge({ hotel }: { hotel: string }) {
     )
 }
 
-export function ActivityCard({ time, title, destination, isActive = false, onBook }: { time: string, title: string, destination: string, isActive?: boolean, onBook?: (url: string) => void }) {
+export function ActivityCard({ time, title, destination, isActive = false }: { time: string, title: string, destination: string, isActive?: boolean }) {
     const [status, setStatus] = useState<'idle' | 'checking' | 'verified'>('idle')
 
-    const handleBook = () => {
-        const url = generateAffiliateLink('activity', {
-            name: title,
-            destination: destination
-        })
-        if (onBook) {
-            onBook(url)
-        } else {
-            window.open(url, '_blank')
-        }
-    }
+
 
     const handleMouseEnter = () => {
         if (status === 'idle') {
@@ -98,12 +88,7 @@ export function ActivityCard({ time, title, destination, isActive = false, onBoo
 
             <div className="mt-3 pt-3 border-t border-white/5 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-[10px] text-white/40">Verified Activity</span>
-                <button
-                    onClick={handleBook}
-                    className="flex items-center gap-1 text-[10px] bg-emerald-500 text-black px-2 py-1 rounded hover:bg-emerald-400 font-bold"
-                >
-                    Book Activity <ArrowRight className="size-3" />
-                </button>
+
             </div>
         </div >
     )
