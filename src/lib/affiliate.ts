@@ -19,26 +19,27 @@ export function generateAffiliateLink(
 
     switch (type) {
         case 'hotel':
-            // Booking.com Search
-            // https://www.booking.com/searchresults.html?ss=Paris&checkin=2024-10-01&checkout=2024-10-05
-            let url = `https://www.booking.com/searchresults.html?ss=${query}`
-            if (checkIn) url += `&checkin=${checkIn}`
-            if (checkOut) url += `&checkout=${checkOut}`
-            return url
+            // Expedia Hotel Search
+            let hotelUrl = `https://www.expedia.com/Hotel-Search?destination=${query}`
+            if (checkIn) hotelUrl += `&startDate=${checkIn}`
+            if (checkOut) hotelUrl += `&endDate=${checkOut}`
+            return hotelUrl
 
         case 'activity':
-            // Viator is blocking direct search params from some IPs/Refs (Access Restricted)
-            // Fallback to TripAdvisor (Parent co) which is more permissive
-            return `https://www.tripadvisor.com/Search?q=${query}`
+            // Expedia Things to Do
+            return `https://www.expedia.com/Activities-Search?query=${query}`
 
         case 'flight':
-            // Skyscanner or similar
-            // For now, simple Skyscanner search
-            return `https://www.skyscanner.com/transport/flights/${origin || 'any'}/${destination}/${checkIn || ''}`
+            // Expedia Flight Search
+            // Format: leg1=from:Origin,to:Destination,departure:YYYY-MM-DD
+            const flightOrigin = origin || 'any'
+            const flightDest = destination || 'any'
+            let flightUrl = `https://www.expedia.com/Flights-Search?leg1=from:${flightOrigin},to:${flightDest}`
+            if (checkIn) flightUrl += `,departure:${checkIn}`
+            return flightUrl
 
         case 'general':
         default:
-            // Fallback to Google Search if all else fails, or a generic travel site
-            return `https://www.google.com/search?q=${query}+travel`
+            return `https://www.expedia.com/Search?city=${query}`
     }
 }

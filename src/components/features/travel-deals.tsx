@@ -144,7 +144,7 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
                                         checkIn: '2026-06-01'
                                     })}
                                 >
-                                    View on Skyscanner <ExternalLink className="size-3 ml-1" />
+                                    View on Expedia <ExternalLink className="size-3 ml-1" />
                                 </Button>
                             </div>
                         </motion.div>
@@ -190,7 +190,7 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
                                             destination: dest
                                         })}
                                     >
-                                        Book Now <ExternalLink className="size-3 ml-1" />
+                                        Book on Expedia <ExternalLink className="size-3 ml-1" />
                                     </Button>
                                 </div>
                             </motion.div>
