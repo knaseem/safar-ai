@@ -98,3 +98,39 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }
+
+// PATCH: Update booking status (User marking complete)
+export async function PATCH(req: NextRequest) {
+    try {
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        const { id, status } = await req.json()
+
+        if (!id || status !== 'booked') {
+            return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+        }
+
+        const { data: updated, error } = await supabase
+            .from("booking_requests")
+            .update({ status: 'booked' })
+            .eq("id", id)
+            .eq("user_id", user.id) // Security: Must own the booking
+            .select()
+            .single()
+
+        if (error) {
+            console.error("Error updating booking:", error)
+            return NextResponse.json({ error: "Failed to update booking" }, { status: 500 })
+        }
+
+        return NextResponse.json({ success: true, booking: updated })
+    } catch (error) {
+        console.error("Booking PATCH error:", error)
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    }
+}

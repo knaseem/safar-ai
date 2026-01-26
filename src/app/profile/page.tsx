@@ -18,7 +18,7 @@ export default function ProfilePage() {
     const router = useRouter()
     const [user, setUser] = useState<any>(null)
     const [profile, setProfile] = useState<any>(null)
-    const [bookings, setBookings] = useState<BookingRequest[]>([])
+    const [bookings, setBookings] = useState<any[]>([])
     const [savedTrips, setSavedTrips] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'trips' | 'bookings'>('bookings')
@@ -373,6 +373,10 @@ export default function ProfilePage() {
                 booking={selectedBooking}
                 isOpen={!!selectedBooking}
                 onClose={() => setSelectedBooking(null)}
+                onBookingUpdate={(updated) => {
+                    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
+                    setSelectedBooking(updated)
+                }}
             />
         </main >
     )
