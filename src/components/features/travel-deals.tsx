@@ -99,7 +99,7 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
         <div className="space-y-6">
             <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="size-4 text-emerald-400" />
-                <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-400">Curated Deals for You</h3>
+                <h3 className="text-sm font-bold uppercase tracking-widest text-emerald-400">Live Global Market Intelligence</h3>
             </div>
 
             {error && (
@@ -111,8 +111,8 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                 {/* Flights Section */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-wider">
-                        <Plane className="size-3" />
+                    <div className="flex items-center gap-2 text-xs text-white/90 uppercase tracking-widest font-bold">
+                        <Plane className="size-3 text-emerald-400" />
                         <span>Featured Flights</span>
                     </div>
                     {displayFlights.map((flight, idx) => (
@@ -153,8 +153,8 @@ export function TravelDeals({ archetype }: TravelDealsProps) {
 
                 {/* Hotels Section */}
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs text-white/40 uppercase tracking-wider">
-                        <Hotel className="size-3" />
+                    <div className="flex items-center gap-2 text-xs text-white/90 uppercase tracking-widest font-bold">
+                        <Hotel className="size-3 text-cyan-400" />
                         <span>Top Accommodations</span>
                     </div>
                     {displayHotels.map((hotel: any, idx) => {
