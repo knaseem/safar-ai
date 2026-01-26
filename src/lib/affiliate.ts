@@ -39,16 +39,16 @@ export function generateAffiliateLink(
     const encodedCity = encodeURIComponent(cleanCity)
 
     // In a real app, these would be your actual affiliate IDs
-    // const BOOKING_AID = '123456'
-    // const VIATOR_PID = '78910'
+    const affiliateId = process.env.NEXT_PUBLIC_EXPEDIA_AFFILIATE_ID || ''
+    const affiliateParam = affiliateId ? `&refid=${affiliateId}` : ''
 
     switch (type) {
         case 'hotel':
             // Expedia Hotel Search - Use clean city and specific search query
-            let hotelUrl = `https://www.expedia.com/Hotel-Search?destination=${encodedCity}`
+            let hotelUrl = `https://www.expedia.com/Hotel-Search?destination=${encodedCity}${affiliateParam}`
             if (name && name !== destination) {
                 // If we have a specific hotel name, search for that within the city
-                hotelUrl = `https://www.expedia.com/Hotel-Search?destination=${encodedCity}&hotelName=${encodeURIComponent(name)}`
+                hotelUrl = `https://www.expedia.com/Hotel-Search?destination=${encodedCity}&hotelName=${encodeURIComponent(name)}${affiliateParam}`
             }
 
             if (checkIn) hotelUrl += `&startDate=${checkIn}`
@@ -57,7 +57,7 @@ export function generateAffiliateLink(
 
         case 'activity':
             // Expedia Things to Do - Use clean city
-            let activityUrl = `https://www.expedia.com/things-to-do/search?location=${encodedCity}`
+            let activityUrl = `https://www.expedia.com/things-to-do/search?location=${encodedCity}${affiliateParam}`
             if (checkIn) {
                 // MM/DD/YYYY format for activity search
                 const parts = checkIn.split('-')
@@ -79,7 +79,7 @@ export function generateAffiliateLink(
             // Expedia Flight Search - Leg-based format
             const flightOrigin = origin || 'any'
             const flightDest = cleanCity || 'any'
-            let flightUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(flightOrigin)},to:${encodeURIComponent(flightDest)}`
+            let flightUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(flightOrigin)},to:${encodeURIComponent(flightDest)}${affiliateParam}`
             if (checkIn) flightUrl += `,departure:${checkIn}`
             flightUrl += `&mode=search` // Ensure it enters search mode
             return flightUrl
