@@ -98,7 +98,17 @@ export async function searchFlights(params: {
 
     try {
         const response = await (amadeus as any).shopping.flightOffersSearch.get(params);
-        return response.data || [];
+        let data = response.data || [];
+
+        // Fallback for Demo: If no flights found for DXB in test mode, return a mock offer
+        if (data.length === 0 && process.env.AMADEUS_HOSTNAME === 'test' && params.destinationLocationCode === 'DXB') {
+            data = [{
+                id: 'mock-dxb-1',
+                price: { total: '1254.50', currency: 'USD' },
+                itineraries: [{ duration: 'PT14H30M', segments: [{ departure: { iataCode: params.originLocationCode }, arrival: { iataCode: 'DXB' } }] }]
+            }];
+        }
+        return data;
     } catch (error) {
         console.error('Amadeus Flight Search Error:', error);
         return [];
@@ -156,9 +166,22 @@ export async function searchLocations(keyword: string) {
     const amadeus = getAmadeus();
     if (!amadeus) return [];
 
+    // Test Data Fallbacks (Amadeus Test API has limited coverage)
+    const upperKeyword = keyword.toUpperCase();
+    const fallbacks: Record<string, any> = {
+        'DUBAI': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' } }],
+        'ABU DHABI': [{ iataCode: 'AUH', name: 'ABU DHABI', address: { cityName: 'ABU DHABI', cityCode: 'AUH' } }],
+        'DXB': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' } }],
+        'AUH': [{ iataCode: 'AUH', name: 'ABU DHABI', address: { cityName: 'ABU DHABI', cityCode: 'AUH' } }]
+    };
+
+    if (process.env.AMADEUS_HOSTNAME === 'test' && fallbacks[upperKeyword]) {
+        return fallbacks[upperKeyword];
+    }
+
     try {
         const response = await (amadeus as any).referenceData.locations.get({
-            keyword,
+            keyword: upperKeyword, // Force uppercase for better matching
             subType: ['CITY', 'AIRPORT']
         });
         return response.data || [];
