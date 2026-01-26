@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, createContext, useContext } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 
 // Context to allow other components to trigger mood changes
-type SoundTheme = 'city' | 'nature' | 'ocean' | 'quiet'
+type SoundTheme = 'city' | 'nature' | 'ocean' | 'desert' | 'cafe' | 'quiet'
 
 interface SoundContextType {
     setTheme: (theme: SoundTheme) => void

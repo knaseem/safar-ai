@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { motion, AnimatePresence } from "framer-motion"
@@ -153,6 +154,7 @@ export function Hero({ initialPrompt }: HeroProps) {
     const [tripData, setTripData] = useState<TripData | null>(null)
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const router = useRouter()
 
     // Handle initial prompt from parent
     useEffect(() => {
@@ -209,12 +211,18 @@ export function Hero({ initialPrompt }: HeroProps) {
 
             if (!res.ok) throw new Error(data.error || "Failed to generate")
 
-            setTripData(data)
             toast.dismiss(toastId)
             toast.success("Itinerary Ready", {
                 description: `Created: ${data.trip_name}`,
                 duration: 3000
             })
+
+            // Redirect to the dedicated trip page for persistence
+            if (data.id) {
+                router.push(`/trip/generated/${data.id}`)
+            } else {
+                setTripData(data)
+            }
         } catch (err) {
             toast.dismiss(toastId)
             toast.error("Planning Failed", {

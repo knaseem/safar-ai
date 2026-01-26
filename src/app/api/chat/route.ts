@@ -30,6 +30,7 @@ export async function POST(req: Request) {
       Format the response as a valid JSON object with this structure:
       {
         "trip_name": "Title of the trip",
+        "sound_theme": "one of: city | nature | ocean | desert | cafe",
         "days": [
           {
             "day": 1,
@@ -54,9 +55,28 @@ export async function POST(req: Request) {
 
     // Clean up markdown formatting if present
     const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const tripData = JSON.parse(cleanedText);
 
-    // 4. Return Data
-    return NextResponse.json(JSON.parse(cleanedText));
+    // 4. Persistence: Save to temporary_trips to prevent loss on refresh
+    const { data: tempTrip, error: tempError } = await supabase
+      .from("temporary_trips")
+      .insert({
+        trip_data: tripData,
+        is_halal: isHalal || false,
+        user_id: (await supabase.auth.getUser()).data.user?.id || null
+      })
+      .select("id")
+      .single();
+
+    if (tempError) {
+      console.error("Failed to save temporary trip:", tempError);
+    }
+
+    // 5. Return Data
+    return NextResponse.json({
+      ...tripData,
+      id: tempTrip?.id
+    });
   } catch (error) {
     console.error("AI Error:", error);
     return NextResponse.json(
