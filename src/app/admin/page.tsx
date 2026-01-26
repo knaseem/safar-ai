@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Calendar, Users, CheckCircle, Clock, XCircle, Sparkles } from "lucide-react"
+import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { format, subDays } from "date-fns"
@@ -128,6 +129,25 @@ export default function AdminDashboard() {
             processAnalytics(bookingsData, profilesData || [])
         }
         setLoading(false)
+    }
+
+    const updateStatus = async (id: string, newStatus: string) => {
+        const supabase = createClient()
+        const { error } = await supabase
+            .from('booking_requests')
+            .update({ status: newStatus })
+            .eq('id', id)
+
+        if (error) {
+            toast.error("Failed to update status")
+        } else {
+            toast.success(`Booking ${newStatus} successfully`)
+            // Update local state
+            setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus as any } : b))
+            setSelectedBooking(null)
+            // Refresh stats
+            fetchData()
+        }
     }
 
     const processAnalytics = (bookings: any[], profiles: any[]) => {
@@ -383,6 +403,7 @@ export default function AdminDashboard() {
                     <BookingDetailModal
                         booking={selectedBooking}
                         onClose={() => setSelectedBooking(null)}
+                        onUpdateStatus={updateStatus}
                     />
                 )}
             </AnimatePresence>
@@ -390,7 +411,7 @@ export default function AdminDashboard() {
     )
 }
 
-function BookingDetailModal({ booking, onClose }: { booking: AdminBooking, onClose: () => void }) {
+function BookingDetailModal({ booking, onClose, onUpdateStatus }: { booking: AdminBooking, onClose: () => void, onUpdateStatus: (id: string, status: string) => void }) {
     const [profile, setProfile] = useState<any>(null)
     const [loadingProfile, setLoadingProfile] = useState(true)
 
@@ -490,11 +511,24 @@ function BookingDetailModal({ booking, onClose }: { booking: AdminBooking, onClo
                         <div className="pt-6 border-t border-white/10">
                             <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider mb-4">Concierge Actions</h3>
                             <div className="flex gap-3">
-                                <Button className="bg-white text-black hover:bg-white/90">
+                                <Button
+                                    className="bg-white text-black hover:bg-white/90"
+                                    onClick={() => onUpdateStatus(booking.id, 'booked')}
+                                    disabled={booking.status === 'booked'}
+                                >
                                     <CheckCircle className="size-4 mr-2" />
                                     Mark as Booked
                                 </Button>
-                                <Button className="bg-purple-500 hover:bg-purple-600 text-white border-none">
+                                <Button
+                                    variant="outline"
+                                    className="border-red-500/50 text-red-500 hover:bg-red-500/10"
+                                    onClick={() => onUpdateStatus(booking.id, 'cancelled')}
+                                    disabled={booking.status === 'cancelled'}
+                                >
+                                    <XCircle className="size-4 mr-2" />
+                                    Cancel Request
+                                </Button>
+                                <Button className="ml-auto bg-purple-500 hover:bg-purple-600 text-white border-none">
                                     <Sparkles className="size-4 mr-2" />
                                     Draft AI Response
                                 </Button>
