@@ -11,7 +11,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Missing Gemini API Key" }, { status: 500 })
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" })
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
         const prompt = `
             You are a charismatic, friendly travel podcast host. 

@@ -100,12 +100,18 @@ export async function searchFlights(params: {
         const response = await (amadeus as any).shopping.flightOffersSearch.get(params);
         let data = response.data || [];
 
-        // Fallback for Demo: If no flights found for DXB in test mode, return a mock offer
-        if (data.length === 0 && process.env.AMADEUS_HOSTNAME === 'test' && params.destinationLocationCode === 'DXB') {
+        // Fallback for Demo: If no flights found in test mode, return a mock offer to allow UI verification
+        if (data.length === 0 && process.env.AMADEUS_HOSTNAME === 'test') {
             data = [{
-                id: 'mock-dxb-1',
-                price: { total: '1254.50', currency: 'USD' },
-                itineraries: [{ duration: 'PT14H30M', segments: [{ departure: { iataCode: params.originLocationCode }, arrival: { iataCode: 'DXB' } }] }]
+                id: `mock-${params.destinationLocationCode.toLowerCase()}-1`,
+                price: { total: (300 + Math.random() * 1000).toFixed(2), currency: 'USD' },
+                itineraries: [{
+                    duration: 'PT12H',
+                    segments: [{
+                        departure: { iataCode: params.originLocationCode, at: params.departureDate + 'T10:00:00' },
+                        arrival: { iataCode: params.destinationLocationCode, at: params.departureDate + 'T22:00:00' }
+                    }]
+                }]
             }];
         }
         return data;
@@ -129,7 +135,16 @@ export async function searchHotels(params: {
 
     try {
         const response = await (amadeus as any).referenceData.locations.hotels.byCity.get(params);
-        return response.data || [];
+        let data = response.data || [];
+
+        // Fallback for Demo in Test Mode
+        if (data.length === 0 && process.env.AMADEUS_HOSTNAME === 'test') {
+            data = [
+                { hotelId: 'MOCKHOTEL1', name: 'Luxury Palace', geoCode: { latitude: 0, longitude: 0 } },
+                { hotelId: 'MOCKHOTEL2', name: 'Grand View Resort', geoCode: { latitude: 0, longitude: 0 } }
+            ];
+        }
+        return data;
     } catch (error) {
         console.error('Amadeus Hotel Search Error:', error);
         return [];
@@ -197,6 +212,24 @@ export async function searchLocations(keyword: string) {
         return response.data || [];
     } catch (error) {
         console.error('Amadeus Location Search Error:', error);
+        return [];
+    }
+}
+/**
+ * Search for flight inspirations (cheapest destinations)
+ */
+export async function getFlightInspiration(params: {
+    origin: string;
+    maxPrice?: number;
+}) {
+    const amadeus = getAmadeus();
+    if (!amadeus) return [];
+
+    try {
+        const response = await (amadeus as any).shopping.flightDestinations.get(params);
+        return response.data || [];
+    } catch (error) {
+        console.error('Amadeus Inspiration Error:', error);
         return [];
     }
 }

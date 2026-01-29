@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
         // Construct the chat history for Gemini
         // Gemini 2.0 Flash supports multi-turn chat
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const chat = model.startChat({
             history: [

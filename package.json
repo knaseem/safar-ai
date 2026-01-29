@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@duffel/api": "^4.21.5",
     "@google/generative-ai": "^0.24.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.2.6",

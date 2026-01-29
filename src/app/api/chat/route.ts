@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { prompt, isHalal } = await req.json();
+    const { prompt, isHalal, selection } = await req.json();
     const supabase = await createClient();
 
     // 1. Get the user's "Travel DNA" (or default)
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     `;
 
     // 3. Call Gemini
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
     const text = response.text();
@@ -75,6 +75,11 @@ export async function POST(req: Request) {
       // Ensure basic structure exists
       if (!tripData.trip_name) tripData.trip_name = "My Bespoke Journey";
       if (!tripData.days) tripData.days = [];
+
+      // Store selections if provided
+      if (selection) {
+        tripData.selection = selection;
+      }
 
     } catch (parseError) {
       console.error("JSON Parse Error. Cleaned text:", text);

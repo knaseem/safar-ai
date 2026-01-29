@@ -37,6 +37,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const [portalUrl, setPortalUrl] = useState<string | null>(null)
     const [isPortalOpen, setIsPortalOpen] = useState(false)
     const [portalTitle, setPortalTitle] = useState("Secure Booking")
+    const [providerName, setProviderName] = useState("Expedia")
 
     const { user } = useAuth()
 
@@ -538,9 +539,32 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                 <h2 className="text-3xl font-bold text-white mb-2">Booking Reserved!</h2>
                                 <p className="text-white/60 mb-8 max-w-md mx-auto">Your itinerary is synced. Complete your payment with our partners to finalize.</p>
 
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                <div className="space-y-4 mb-8">
                                     <button
-                                        onClick={() => {
+                                        onClick={async () => {
+                                            // Create a Duffel Link Session for a unified checkout
+                                            try {
+                                                const res = await fetch('/api/bookings/duffel/link', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({
+                                                        tripId: (tripData as any).id || null,
+                                                        userId: user?.id || null
+                                                    })
+                                                });
+                                                const json = await res.json();
+                                                if (json.data?.url) {
+                                                    setPortalUrl(json.data.url);
+                                                    setPortalTitle("Secure Unified Checkout");
+                                                    setProviderName("Duffel");
+                                                    setIsPortalOpen(true);
+                                                    return;
+                                                }
+                                            } catch (err) {
+                                                console.error("Duffel session failed, falling back to affiliate", err);
+                                            }
+
+                                            // Fallback to affiliate
                                             const url = generateAffiliateLink('flight', {
                                                 origin: departureAirport?.code || 'any',
                                                 destination: extractCleanCity(destination),
@@ -548,49 +572,60 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                             })
                                             setPortalUrl(url)
                                             setPortalTitle("Flight Secure Booking")
+                                            setProviderName("Expedia")
                                             setIsPortalOpen(true)
                                         }}
-                                        className="group relative overflow-hidden rounded-xl bg-[#0C73FE] p-4 transition-all hover:scale-[1.02]"
+                                        className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 transition-all hover:scale-[1.01] shadow-xl shadow-blue-500/20"
                                     >
-                                        <Plane className="size-6 text-white mx-auto mb-2" />
-                                        <div className="text-sm font-bold text-white">Book Flight</div>
+                                        <div className="absolute top-0 right-0 p-4 opacity-30"><Sparkles className="size-6 text-white" /></div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-left">
+                                                <div className="text-xl font-black text-white mb-1 uppercase tracking-tight">Finalize & Pay Securely</div>
+                                                <div className="text-white/60 text-xs">Complete your entire trip booking in one step</div>
+                                            </div>
+                                            <Plane className="size-8 text-white group-hover:translate-x-1 transition-transform" />
+                                        </div>
                                     </button>
 
-                                    <button
-                                        onClick={() => {
-                                            const url = generateAffiliateLink('hotel', {
-                                                name: extractCleanCity(destination),
-                                                destination: extractCleanCity(destination),
-                                                checkIn: checkIn?.toISOString().split('T')[0],
-                                                checkOut: checkOut?.toISOString().split('T')[0]
-                                            })
-                                            setPortalUrl(url)
-                                            setPortalTitle("Hotel Secure Booking")
-                                            setIsPortalOpen(true)
-                                        }}
-                                        className="group relative overflow-hidden rounded-xl bg-[#003580] p-4 transition-all hover:scale-[1.02]"
-                                    >
-                                        <Building2 className="size-6 text-white mx-auto mb-2" />
-                                        <div className="text-sm font-bold text-white">Book Hotel</div>
-                                    </button>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            onClick={() => {
+                                                const url = generateAffiliateLink('hotel', {
+                                                    name: extractCleanCity(destination),
+                                                    destination: extractCleanCity(destination),
+                                                    checkIn: checkIn?.toISOString().split('T')[0],
+                                                    checkOut: checkOut?.toISOString().split('T')[0]
+                                                })
+                                                setPortalUrl(url)
+                                                setPortalTitle("Hotel Secure Booking")
+                                                setProviderName("Expedia")
+                                                setIsPortalOpen(true)
+                                            }}
+                                            className="group flex flex-col items-center justify-center rounded-xl bg-white/5 border border-white/10 p-4 transition-all hover:bg-white/10"
+                                        >
+                                            <Building2 className="size-5 text-white/60 mb-2" />
+                                            <div className="text-sm font-medium text-white">Book Hotel</div>
+                                        </button>
 
-                                    <button
-                                        onClick={() => {
-                                            const url = generateAffiliateLink('activity', {
-                                                destination: extractCleanCity(destination),
-                                                checkIn: checkIn?.toISOString().split('T')[0],
-                                                checkOut: checkOut?.toISOString().split('T')[0],
-                                                name: `Things to do in ${extractCleanCity(destination)}`
-                                            })
-                                            setPortalUrl(url)
-                                            setPortalTitle("Activity Secure Booking")
-                                            setIsPortalOpen(true)
-                                        }}
-                                        className="group relative overflow-hidden rounded-xl bg-[#00A680] p-4 transition-all hover:scale-[1.02]"
-                                    >
-                                        <Star className="size-6 text-white mx-auto mb-2" />
-                                        <div className="text-sm font-bold text-white">Book Activities</div>
-                                    </button>
+                                        <button
+                                            onClick={() => {
+                                                const url = generateAffiliateLink('activity', {
+                                                    destination: extractCleanCity(destination),
+                                                    checkIn: checkIn?.toISOString().split('T')[0],
+                                                    checkOut: checkOut?.toISOString().split('T')[0],
+                                                    name: `Things to do in ${extractCleanCity(destination)}`
+                                                })
+                                                setPortalUrl(url)
+                                                setPortalTitle("Activity Secure Booking")
+                                                setProviderName("Expedia")
+                                                setIsPortalOpen(true)
+                                            }}
+                                            className="group flex flex-col items-center justify-center rounded-xl bg-white/5 border border-white/10 p-4 transition-all hover:bg-white/10"
+                                        >
+                                            <Star className="size-5 text-white/60 mb-2" />
+                                            <div className="text-sm font-medium text-white">Book Activities</div>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="mt-8 flex justify-center gap-4 sticky bottom-0 bg-neutral-900 py-4 border-t border-white/5">
@@ -608,7 +643,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 url={portalUrl}
                 onClose={() => setIsPortalOpen(false)}
                 title={portalTitle}
-                providerName="Expedia"
+                providerName={providerName}
             />
         </>
     )

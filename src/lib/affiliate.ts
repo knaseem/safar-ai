@@ -77,11 +77,13 @@ export function generateAffiliateLink(
 
         case 'flight':
             // Expedia Flight Search - Leg-based format
-            const flightOrigin = origin || 'any'
-            const flightDest = cleanCity || 'any'
-            let flightUrl = `https://www.expedia.com/Flights-Search?leg1=from:${encodeURIComponent(flightOrigin)},to:${encodeURIComponent(flightDest)}${affiliateParam}`
+            // If origin/dest are 3-letter codes, use them directly
+            const flightOrigin = (origin && origin.length === 3) ? origin : encodeURIComponent(origin || 'any')
+            const flightDest = (destination && destination.length === 3) ? destination : encodeURIComponent(cleanCity || 'any')
+
+            let flightUrl = `https://www.expedia.com/Flights-Search?leg1=from:${flightOrigin},to:${flightDest}${affiliateParam}`
             if (checkIn) flightUrl += `,departure:${checkIn}`
-            flightUrl += `&mode=search` // Ensure it enters search mode
+            flightUrl += `&mode=search`
             return flightUrl
 
         case 'general':

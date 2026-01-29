@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, ShieldCheck, ExternalLink, ArrowLeft, Lock, CheckCircle2 } from "lucide-react"
+import { X, ShieldCheck, ExternalLink, ArrowLeft, Lock, CheckCircle2, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ConciergePortalProps {
@@ -15,41 +15,32 @@ interface ConciergePortalProps {
 
 export function ConciergePortal({ url, isOpen, onClose, title = "Secure Booking", providerName = "Expedia" }: ConciergePortalProps) {
     const [status, setStatus] = useState<'syncing' | 'redirecting' | 'completed' | 'blocked'>('syncing')
+    const isInternalUrl = url?.startsWith('/') || url?.startsWith(window.location.origin)
 
     useEffect(() => {
         if (isOpen && url) {
             setStatus('syncing')
 
-            // 1. Sync Phase (1.8s - 2.6s with human-like jitter)
-            const jitter = Math.random() * 800
+            const jitter = Math.random() * 500
             const syncTimer = setTimeout(() => {
-                setStatus('redirecting')
-
-                // 2. Redirect Phase (Immediately after sync)
-                // STEALTH: Use 'noreferrer' to hide the source app from Expedia's bot filters
-                const win = window.open(url, '_blank', 'noreferrer')
-
-                if (!win) {
-                    setStatus('blocked')
+                // If it's an internal mock URL, we can use the iframe
+                if (isInternalUrl) {
+                    setStatus('redirecting')
                 } else {
-                    // 3. Completion Phase (After successful redirect)
-                    const completeTimer = setTimeout(() => {
-                        setStatus('completed')
-                    }, 1500)
-                    return () => clearTimeout(completeTimer)
+                    // Real Duffel links block iframes. We must go external.
+                    setStatus('blocked')
                 }
-            }, 1800 + jitter)
+            }, 1200 + jitter)
 
-            return () => {
-                clearTimeout(syncTimer)
-            }
+            return () => clearTimeout(syncTimer)
         }
-    }, [isOpen, url])
+    }, [isOpen, url, isInternalUrl])
 
     const handleOpenExternal = () => {
-        // STEALTH: Also use 'noreferrer' for manual fallback button
-        if (url) window.open(url, '_blank', 'noreferrer')
-        if (status === 'blocked') setStatus('completed')
+        if (url) {
+            window.open(url, '_blank', 'noreferrer')
+            setStatus('completed')
+        }
     }
 
     return (
@@ -81,106 +72,80 @@ export function ConciergePortal({ url, isOpen, onClose, title = "Secure Booking"
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="w-full max-w-md space-y-12">
-                        {/* Status Icon */}
-                        <div className="relative mx-auto size-24">
-                            <AnimatePresence mode="wait">
-                                {status === 'completed' ? (
-                                    <motion.div
-                                        key="success"
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        className="absolute inset-0 flex items-center justify-center"
-                                    >
-                                        <div className="size-20 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                                            <CheckCircle2 className="size-10 text-emerald-500" />
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        key="syncing"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="absolute inset-0"
-                                    >
+                    <div className={`w-full transition-all duration-700 ${status === 'redirecting' || status === 'completed' ? 'max-w-6xl h-[80vh]' : 'max-w-md space-y-12 h-auto'}`}>
+                        <AnimatePresence mode="wait">
+                            {(status === 'syncing' || status === 'blocked') && (
+                                <motion.div
+                                    key="syncing-view"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="space-y-12"
+                                >
+                                    {/* Status Icon */}
+                                    <div className="relative mx-auto size-24">
                                         <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20" />
                                         <div className="absolute inset-0 rounded-full border-t-2 border-emerald-500 animate-spin" />
                                         <ShieldCheck className="absolute inset-0 m-auto size-10 text-emerald-500" />
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                    </div>
 
-                        {/* Messaging */}
-                        <div className="space-y-4">
-                            <AnimatePresence mode="wait">
-                                {status === 'syncing' && (
-                                    <motion.div
-                                        key="msg-sync"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        exit={{ y: -20, opacity: 0 }}
-                                    >
+                                    {/* Messaging */}
+                                    <div className="space-y-4">
                                         <h2 className="text-2xl font-bold text-white mb-2 italic">Syncing Security Protocols...</h2>
                                         <p className="text-white/40 text-sm">Initializing encrypted handover with {providerName}. Please remain on this screen.</p>
-                                    </motion.div>
-                                )}
-                                {status === 'redirecting' && (
-                                    <motion.div
-                                        key="msg-redir"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        exit={{ y: -20, opacity: 0 }}
-                                    >
-                                        <h2 className="text-2xl font-bold text-white mb-2 italic">Handing Over Session...</h2>
-                                        <p className="text-white/40 text-sm tracking-wide">Launching {providerName} in a dedicated secure session.</p>
-                                    </motion.div>
-                                )}
-                                {status === 'completed' && (
-                                    <motion.div
-                                        key="msg-done"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                    >
-                                        <h2 className="text-2xl font-bold text-white mb-2 italic tracking-tight">Session Transferred Successfully</h2>
-                                        <p className="text-white/40 text-sm mb-8">You are now connected to the {providerName} secure booking engine in your new tab.</p>
-                                        <Button
-                                            onClick={onClose}
-                                            className="bg-white text-black hover:bg-neutral-200 px-8 py-6 rounded-2xl font-bold text-lg"
-                                        >
-                                            Return to SafarAI
-                                        </Button>
-                                    </motion.div>
-                                )}
-                                {status === 'blocked' && (
-                                    <motion.div
-                                        key="msg-blocked"
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                    >
-                                        <h2 className="text-2xl font-bold text-white mb-4 italic">Security Protocol Required</h2>
-                                        <p className="text-white/40 text-sm mb-8 leading-relaxed">Your browser blocked the automatic handover. Please proceed manually to continue your secure booking with {providerName}.</p>
-                                        <Button
-                                            onClick={handleOpenExternal}
-                                            className="bg-emerald-600 text-white hover:bg-emerald-500 px-8 py-7 rounded-2xl font-bold text-lg shadow-xl shadow-emerald-500/20 w-full"
-                                        >
-                                            Proceed to Secure Booking
-                                            <ExternalLink className="size-5 ml-2" />
-                                        </Button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
 
-                        {/* Animated Dots for active phases */}
-                        {(status === 'syncing' || status === 'redirecting') && (
-                            <div className="flex justify-center gap-2 pt-8">
-                                <div className="size-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.3s]" />
-                                <div className="size-2 rounded-full bg-emerald-500 animate-bounce [animation-delay:-0.15s]" />
-                                <div className="size-2 rounded-full bg-emerald-500 animate-bounce" />
-                            </div>
-                        )}
+                            {(status === 'redirecting' || status === 'completed') && url && (
+                                <motion.div
+                                    key="iframe-view"
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="w-full h-full rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl relative"
+                                >
+                                    <iframe
+                                        src={url}
+                                        className="w-full h-full border-0"
+                                        title={title}
+                                        onLoad={() => setStatus('completed')}
+                                        allow="payment"
+                                    />
+                                    {status === 'redirecting' && (
+                                        <div className="absolute inset-0 bg-black flex flex-col items-center justify-center gap-4">
+                                            <div className="size-16 rounded-full border-t-2 border-emerald-500 animate-spin" />
+                                            <span className="text-white/40 text-sm font-medium">Loading Secure Checkout...</span>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {status === 'blocked' && (
+                                <motion.div
+                                    key="blocked-view"
+                                    initial={{ y: 20, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="max-w-md mx-auto space-y-8"
+                                >
+                                    <div className="size-20 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto">
+                                        <ExternalLink className="size-10 text-amber-500" />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h2 className="text-2xl font-bold text-white italic">External Handover Required</h2>
+                                        <p className="text-white/40 text-sm leading-relaxed">
+                                            For your security, {providerName} requires checkout to be completed in a dedicated secure session. Click below to continue.
+                                        </p>
+                                    </div>
+                                    <Button
+                                        onClick={handleOpenExternal}
+                                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-6 rounded-2xl shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3"
+                                    >
+                                        Proceed to Secure Checkout
+                                        <ArrowRight className="size-5" />
+                                    </Button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
                     {/* Footer Info */}

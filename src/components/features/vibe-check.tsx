@@ -354,7 +354,14 @@ export function VibeCheck({ isOpen, onClose }: VibeCheckProps) {
             const res = await fetch(`/api/chat?v=${Date.now()}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: hybridPrompt, isHalal })
+                body: JSON.stringify({
+                    prompt: hybridPrompt,
+                    isHalal,
+                    selection: {
+                        flight: selection.flight,
+                        hotel: selection.hotel
+                    }
+                })
             })
 
             console.log("DEBUG: Fetch Status:", res.status, res.ok);

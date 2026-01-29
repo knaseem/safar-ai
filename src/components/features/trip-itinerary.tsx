@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun } from "lucide-react"
+import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CinemaMap } from "./cinema-map"
 import { EnhancedBookingModal } from "./enhanced-booking-modal"
@@ -40,6 +40,10 @@ export type TripData = {
         evening: string
         stay: string
     }[]
+    selection?: {
+        flight: any
+        hotel: any
+    }
 }
 
 interface TripItineraryProps {
@@ -58,15 +62,14 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
     const [isPresenting, setIsPresenting] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [isPortalOpen, setIsPortalOpen] = useState(false)
+    const [portalUrl, setPortalUrl] = useState<string | null>(null)
+    const [portalTitle, setPortalTitle] = useState("Secure Booking")
+    const [providerName, setProviderName] = useState("Expedia")
     const [isSaved, setIsSaved] = useState(!!tripId)
     const [savedTripId, setSavedTripId] = useState<string | null>(tripId || null)
     const [activeDayIndex, setActiveDayIndex] = useState(0)
     const [timeOfDay, setTimeOfDay] = useState<'Morning' | 'Afternoon' | 'Evening'>('Morning')
-
-    // Concierge Portal State
-    const [portalUrl, setPortalUrl] = useState<string | null>(null)
-    const [isPortalOpen, setIsPortalOpen] = useState(false)
-    const [portalTitle, setPortalTitle] = useState("Secure Booking")
 
     // Standardized destination extraction using precision utility
     const destinationName = searchQuery || data.trip_name || data.days[0]?.theme || 'Destination'
@@ -421,12 +424,48 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     </div>
 
                     <div className="p-8 border-t border-white/10 flex justify-between items-center bg-black/40 backdrop-blur-md sticky bottom-0 z-10">
-                        <button onClick={onReset} className="text-white/40 hover:text-white text-sm">
-                            ← Back
-                        </button>
-                        <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => setIsBookingOpen(true)}>
-                            Request Custom Package <ArrowRight className="size-4 ml-2" />
-                        </Button>
+                        <div className="flex flex-col">
+                            <button onClick={onReset} className="text-white/40 hover:text-white text-xs mb-1 text-left">
+                                ← Back to Vibe
+                            </button>
+                            {data.selection && (
+                                <div className="flex gap-2 text-[10px] text-emerald-400 font-bold uppercase tracking-tighter">
+                                    <Plane className="size-3" /> Flight & Hotel Locked
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            {data.selection ? (
+                                <Button
+                                    size="lg"
+                                    className="bg-emerald-500 text-black hover:bg-emerald-400 font-bold"
+                                    onClick={() => {
+                                        const flightLink = generateAffiliateLink('flight', {
+                                            origin: data.selection?.flight.origin,
+                                            destination: data.selection?.flight.destination,
+                                            checkIn: '2026-06-01' // Use selected date if available
+                                        })
+                                        // window.open(flightLink, '_blank') // Replaced with ConciergePortal
+                                        setPortalUrl(flightLink)
+                                        setPortalTitle("Secure Flight Booking")
+                                        setProviderName("Expedia") // Set provider name
+                                        setIsPortalOpen(true)
+
+                                        // Also open hotel shortly after or provide a consolidated UI
+                                        toast.info("Opening Flight Deep Link...", {
+                                            description: "Secure your flight on Expedia while we prepare your hotel link."
+                                        })
+                                    }}
+                                >
+                                    Complete Secure Booking <ArrowRight className="size-4 ml-2" />
+                                </Button>
+                            ) : (
+                                <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => setIsBookingOpen(true)}>
+                                    Request Custom Package <ArrowRight className="size-4 ml-2" />
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </motion.div>
@@ -464,7 +503,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 url={portalUrl}
                 onClose={() => setIsPortalOpen(false)}
                 title={portalTitle}
-                providerName="Expedia"
+                providerName={providerName}
             />
         </>
     )

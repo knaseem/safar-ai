@@ -28,11 +28,13 @@ interface FlightOffer {
     id: string
     price: { total: string, currency: string }
     itineraries: any[]
+    duffel_offer_id?: string // Added for Duffel support
 }
 
 interface HotelOffer {
     hotel: { name: string, hotelId: string }
     offers: any[]
+    duffel_stay_id?: string // Added for Duffel support
 }
 
 interface TravelDealsProps {
@@ -71,8 +73,18 @@ export function TravelDeals({ archetype, customDestination, originCityCode = "CL
             setLoading(true)
             setError(null)
             try {
+                // Calculate dynamic dates: 1 month from now
+                const today = new Date()
+                const futureDate = new Date()
+                futureDate.setMonth(today.getMonth() + 2) // 2 months out for better data availability in test env
+                const departureStr = futureDate.toISOString().split('T')[0]
+
+                const checkOut = new Date(futureDate)
+                checkOut.setDate(futureDate.getDate() + 5)
+                const checkOutStr = checkOut.toISOString().split('T')[0]
+
                 // Fetch Flights
-                const flightRes = await fetch(`/api/flights/search?origin=${originCityCode}&destination=${dest}&departureDate=2026-06-01&adults=1`)
+                const flightRes = await fetch(`/api/flights/search?origin=${originCityCode}&destination=${dest}&departureDate=${departureStr}&adults=1`)
                 const flightData = await flightRes.json()
 
                 // Fetch Hotels
@@ -179,18 +191,22 @@ export function TravelDeals({ archetype, customDestination, originCityCode = "CL
                                 return hId === selectedHotel;
                             }) || displayHotels[0];
 
-                            console.log("Passing onComplete with:", { flight, hotel });
-                            onComplete?.({ flight, hotel });
+                            // Ensure we pass the clean city code for deep linking
+                            const enrichedFlight = { ...flight, origin: originCityCode, destination: dest };
+                            const enrichedHotel = { ...hotel, destination: dest };
+
+                            console.log("Passing onComplete with:", { flight: enrichedFlight, hotel: enrichedHotel });
+                            onComplete?.({ flight: enrichedFlight, hotel: enrichedHotel });
                         } else {
                             toast.error("Please select both a flight and a hotel to proceed.");
                         }
                     }}
                 >
                     <span className="hidden sm:inline">
-                        {selectedFlight && selectedHotel ? "Proceed to Itinerary" : "See Unlimited Explorer Results"}
+                        {selectedFlight && selectedHotel ? "Proceed to Secure Booking" : "See Unlimited Explorer Results"}
                     </span>
                     <span className="sm:hidden">
-                        {selectedFlight && selectedHotel ? "Proceed" : "Explore Results"}
+                        {selectedFlight && selectedHotel ? "Checkout" : "Explore Results"}
                     </span>
                     <ArrowRight className="size-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -305,7 +321,7 @@ export function TravelDeals({ archetype, customDestination, originCityCode = "CL
                                             checkIn: '2026-06-01'
                                         })}
                                     >
-                                        Expedia <ExternalLink className="size-3 ml-1" />
+                                        Compare <ExternalLink className="size-3 ml-1" />
                                     </Button>
                                     <Button
                                         size="sm"
@@ -382,7 +398,7 @@ export function TravelDeals({ archetype, customDestination, originCityCode = "CL
                                                 destination: dest
                                             })}
                                         >
-                                            Expedia <ExternalLink className="size-3 ml-1" />
+                                            Compare <ExternalLink className="size-3 ml-1" />
                                         </Button>
                                         <Button
                                             size="sm"

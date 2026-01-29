@@ -33,17 +33,18 @@ const seededRandom = (seed: string) => {
 
 export async function fetchBusiestPeriods(cityCode: string): Promise<AnalyticsData[]> {
     const amadeus = getAmadeus();
-    const isProd = process.env.AMADEUS_HOSTNAME === 'production';
-
-    // REAL API CALL (Future Proofing)
-    if (isProd && amadeus) {
+    // REAL API CALL
+    if (amadeus) {
         try {
             const response = await (amadeus as any).travel.analytics.airTraffic.busiestPeriod.get({
                 cityCode: cityCode,
                 period: '2024',
                 direction: 'ARRIVING'
             });
-            return response.data;
+
+            if (response.data && response.data.length > 0) {
+                return response.data;
+            }
         } catch (e) {
             console.warn("Amadeus API limit or error, falling back to sim", e);
         }
@@ -73,10 +74,31 @@ export async function fetchBusiestPeriods(cityCode: string): Promise<AnalyticsDa
 
 export async function fetchTrendingDestinations(originCity: string): Promise<DestinationRanking[]> {
     const amadeus = getAmadeus();
-    const isProd = process.env.AMADEUS_HOSTNAME === 'production';
+    // REAL API CALL
+    if (amadeus) {
+        try {
+            const response = await (amadeus as any).shopping.flightDestinations.get({
+                origin: originCity,
+                oneWay: false,
+                nonStop: false
+            });
 
-    // SIMULATION MODE
-    // Return a curated list of "Trending" spots based on the origin
+            if (response.data && response.data.length > 0) {
+                return response.data.map((item: any, index: number) => ({
+                    destination: item.destination,
+                    name: item.destination, // Usually just city code from this API
+                    rank: index + 1,
+                    trend: Math.random() > 0.5 ? 'up' : 'stable',
+                    change: Math.round(Math.random() * 20)
+                }));
+            }
+        } catch (e) {
+            console.warn("Amadeus Inspiration API fail, falling back to curated list", e);
+        }
+    }
+
+    // SIMULATION MODE / FALLBACK
+    // Return a curated list of "Trending" spots if API fails or returns empty
     const mockTrends: DestinationRanking[] = [
         { destination: 'TYO', name: 'Tokyo, Japan', rank: 1, trend: 'up', change: 24 },
         { destination: 'PAR', name: 'Paris, France', rank: 2, trend: 'stable', change: 2 },
