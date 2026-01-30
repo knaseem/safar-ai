@@ -42,6 +42,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const { user } = useAuth()
 
     // Form state
+    const [bookingType, setBookingType] = useState<'all' | 'flight' | 'hotel'>('all')
+    const [budget, setBudget] = useState('')
     const [checkIn, setCheckIn] = useState<Date | null>(null)
     const [checkOut, setCheckOut] = useState<Date | null>(null)
     const [travelers, setTravelers] = useState<TravelerCount>({ adults: 2, children: 0, infants: 0 })
@@ -209,6 +211,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                         is_special_occasion: isSpecialOccasion,
                         occasion_type: occasionType,
                         estimated_price: estimatedPrice,
+                        booking_type: bookingType,
+                        budget: budget || undefined,
                     })
                     setConfirmationCode(`SAFAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)
                 } catch (error) {
@@ -298,6 +302,22 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     </div>
                                 )}
 
+                                {/* Booking Type Selector */}
+                                <div className="flex bg-white/5 p-1 rounded-xl mb-6">
+                                    {(['all', 'flight', 'hotel'] as const).map((type) => (
+                                        <button
+                                            key={type}
+                                            onClick={() => setBookingType(type)}
+                                            className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${bookingType === type
+                                                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                                : 'text-white/40 hover:text-white'
+                                                }`}
+                                        >
+                                            {type === 'all' ? 'Flight + Hotel' : type === 'flight' ? 'Flight Only' : 'Hotel Only'}
+                                        </button>
+                                    ))}
+                                </div>
+
                                 <div className="space-y-4">
                                     <DateRangePicker
                                         checkIn={checkIn}
@@ -310,72 +330,95 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                         onChange={setTravelers}
                                     />
 
-                                    <AirportInput
-                                        value={departureAirport}
-                                        onChange={setDepartureAirport}
-                                    />
+                                    {bookingType !== 'hotel' && (
+                                        <AirportInput
+                                            value={departureAirport}
+                                            onChange={setDepartureAirport}
+                                        />
+                                    )}
+
+                                    {/* Budget Input */}
+                                    <div>
+                                        <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Total Budget (Optional)</label>
+                                        <div className="relative">
+                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                                            <input
+                                                type="text"
+                                                value={budget}
+                                                onChange={(e) => setBudget(e.target.value)}
+                                                placeholder="e.g. 5000"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                            />
+                                        </div>
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
-                                            <div className="flex gap-2">
-                                                {(['single', 'double', 'suite'] as const).map((type) => (
-                                                    <button
-                                                        key={type}
-                                                        type="button"
-                                                        onClick={() => setRoomType(type)}
-                                                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
-                                                            ? 'bg-emerald-500 text-black'
-                                                            : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                            }`}
-                                                    >
-                                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                    </button>
-                                                ))}
+                                        {bookingType !== 'flight' && (
+                                            <div>
+                                                <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
+                                                <div className="flex gap-2">
+                                                    {(['single', 'double', 'suite'] as const).map((type) => (
+                                                        <button
+                                                            key={type}
+                                                            type="button"
+                                                            onClick={() => setRoomType(type)}
+                                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
+                                                                ? 'bg-emerald-500 text-black'
+                                                                : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                }`}
+                                                        >
+                                                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        <div>
-                                            <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Flight Class</label>
-                                            <div className="flex gap-2">
-                                                {(['economy', 'business', 'first'] as const).map((cls) => (
-                                                    <button
-                                                        key={cls}
-                                                        type="button"
-                                                        onClick={() => setFlightClass(cls)}
-                                                        className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-colors ${flightClass === cls
-                                                            ? 'bg-emerald-500 text-black'
-                                                            : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                            }`}
-                                                    >
-                                                        {cls.charAt(0).toUpperCase() + cls.slice(1)}
-                                                    </button>
-                                                ))}
+                                        {bookingType !== 'hotel' && (
+                                            <div>
+                                                <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Flight Class</label>
+                                                <div className="flex gap-2">
+                                                    {(['economy', 'business', 'first'] as const).map((cls) => (
+                                                        <button
+                                                            key={cls}
+                                                            type="button"
+                                                            onClick={() => setFlightClass(cls)}
+                                                            className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-colors ${flightClass === cls
+                                                                ? 'bg-emerald-500 text-black'
+                                                                : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                }`}
+                                                        >
+                                                            {cls.charAt(0).toUpperCase() + cls.slice(1)}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
 
                                     {/* Advanced Preferences */}
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-6">
                                         <div className="grid grid-cols-2 gap-6">
-                                            <div>
-                                                <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Seat Preference</label>
-                                                <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
-                                                    {(['aisle', 'window', 'no-preference'] as const).map((pref) => (
-                                                        <button
-                                                            key={pref}
-                                                            type="button"
-                                                            onClick={() => setSeatPreference(pref)}
-                                                            className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${seatPreference === pref
-                                                                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                                                                : 'text-white/40 hover:text-white'
-                                                                }`}
-                                                        >
-                                                            {pref.split('-')[0]}
-                                                        </button>
-                                                    ))}
+                                            {bookingType !== 'hotel' && (
+                                                <div>
+                                                    <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Seat Preference</label>
+                                                    <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
+                                                        {(['aisle', 'window', 'no-preference'] as const).map((pref) => (
+                                                            <button
+                                                                key={pref}
+                                                                type="button"
+                                                                onClick={() => setSeatPreference(pref)}
+                                                                className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${seatPreference === pref
+                                                                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                                                    : 'text-white/40 hover:text-white'
+                                                                    }`}
+                                                            >
+                                                                {pref.split('-')[0]}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                             <div>
                                                 <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Checked Bags</label>
                                                 <div className="flex items-center justify-between bg-black/40 p-1 rounded-lg">
@@ -452,18 +495,24 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                                         <h3 className="text-lg font-semibold text-white mb-4">{tripData.trip_name}</h3>
                                         <div className="space-y-2 text-sm">
-                                            <div className="flex justify-between text-white/70">
-                                                <span className="flex items-center gap-2"><Plane className="size-4" /> Flight</span>
-                                                <span className="text-white">{departureAirport?.city} → {destination}</span>
-                                            </div>
-                                            <div className="flex justify-between text-white/70">
-                                                <span className="flex items-center gap-2"><BedDouble className="size-4" /> Hotel</span>
-                                                <span className="text-white">{nights} nights • {roomType}</span>
-                                            </div>
-                                            <div className="flex justify-between text-white/70">
-                                                <span className="flex items-center gap-2"><Star className="size-4" /> Class</span>
-                                                <span className="text-white capitalize">{flightClass}</span>
-                                            </div>
+                                            {bookingType !== 'hotel' && (
+                                                <div className="flex justify-between text-white/70">
+                                                    <span className="flex items-center gap-2"><Plane className="size-4" /> Flight</span>
+                                                    <span className="text-white">{departureAirport?.city} → {destination}</span>
+                                                </div>
+                                            )}
+                                            {bookingType !== 'flight' && (
+                                                <div className="flex justify-between text-white/70">
+                                                    <span className="flex items-center gap-2"><BedDouble className="size-4" /> Hotel</span>
+                                                    <span className="text-white">{nights} nights • {roomType}</span>
+                                                </div>
+                                            )}
+                                            {bookingType !== 'hotel' && (
+                                                <div className="flex justify-between text-white/70">
+                                                    <span className="flex items-center gap-2"><Star className="size-4" /> Class</span>
+                                                    <span className="text-white capitalize">{flightClass}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

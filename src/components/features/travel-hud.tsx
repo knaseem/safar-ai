@@ -6,8 +6,8 @@ import { CloudSun, DollarSign, Clock, Plane, ShieldCheck, Wifi, Battery } from "
 import { cn } from "@/lib/utils"
 
 export function TravelHUD() {
-    const [currentTime, setCurrentTime] = useState(new Date())
-    const [destinationTime, setDestinationTime] = useState(new Date())
+    const [currentTime, setCurrentTime] = useState<Date | null>(null)
+    const [destinationTime, setDestinationTime] = useState<Date | null>(null)
     const [showCelsius, setShowCelsius] = useState(true)
     const [booking, setBooking] = useState<any>(null)
     const [weatherData, setWeatherData] = useState<any>(null)
@@ -74,11 +74,16 @@ export function TravelHUD() {
 
 
     useEffect(() => {
+        // Explicitly set time on mount to switch from server null state to client time
+        setCurrentTime(new Date())
+        setDestinationTime(new Date())
+
         const timer = setInterval(() => {
             const now = new Date()
             setCurrentTime(now)
 
-            // Calculate destination time (Simulated)
+            // Calculate destination time
+            // destTime logic is handled here for state consistency
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000)
             const destTime = new Date(utc + (3600000 * destination.timezoneOffset))
             setDestinationTime(destTime)
@@ -93,7 +98,9 @@ export function TravelHUD() {
             clearInterval(timer)
             clearInterval(tempTimer)
         }
-    }, [])
+    }, [destination.timezoneOffset])
+
+    if (!currentTime) return null
 
     return (
         <motion.div
@@ -200,7 +207,8 @@ export function TravelHUD() {
                         <span className="text-xs font-mono font-bold">
                             {(() => {
                                 const offset = Math.round(destination.lng / 15)
-                                const utc = new Date().getTime() + (new Date().getTimezoneOffset() * 60000)
+                                // Use currentTime which is guaranteed non-null here
+                                const utc = currentTime!.getTime() + (currentTime!.getTimezoneOffset() * 60000)
                                 const destTime = new Date(utc + (3600000 * offset))
                                 return destTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             })()}

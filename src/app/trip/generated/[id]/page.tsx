@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { TripItinerary } from "@/components/features/trip-itinerary"
 import { Navbar } from "@/components/layout/navbar"
 import { notFound } from "next/navigation"
@@ -9,7 +9,12 @@ interface GeneratedTripPageProps {
 
 export default async function GeneratedTripPage({ params }: GeneratedTripPageProps) {
     const { id } = await params
-    const supabase = await createClient()
+
+    // Use Service Role to bypass RLS for public trip preview
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     const { data: trip, error } = await supabase
         .from("temporary_trips")
