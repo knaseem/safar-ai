@@ -178,7 +178,7 @@ export default function ContactPage() {
                                 </div>
                                 <div>
                                     <h4 className="text-white font-medium">Email Support</h4>
-                                    <p className="text-white/40 text-sm">support@safarai.com</p>
+                                    <p className="text-white/40 text-sm">support@safar-ai.co</p>
                                     <p className="text-white/30 text-xs mt-1">Response within 24-48 hours</p>
                                 </div>
                             </div>

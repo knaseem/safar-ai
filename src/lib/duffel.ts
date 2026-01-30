@@ -94,7 +94,7 @@ export async function createLinkSession(params: {
     enableStays?: boolean;
 }) {
     const duffel = getDuffel();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.safar-ai.co';
 
     if (!duffel) {
         // Mock link for sandbox/demo - Points to our local mock page
