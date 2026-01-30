@@ -11,7 +11,7 @@ export async function POST(req: Request) {
             from: 'SafarAI Contact <onboarding@resend.dev>', // Default testing sender
             to: [process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'support@safar-ai.co'],
             subject: `Contact Form: ${subject || 'New Message'}`,
-            reply_to: email, // So you can reply directly to the user
+            replyTo: email, // So you can reply directly to the user
             text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
             html: `
                 <div style="font-family: sans-serif; padding: 20px;">
