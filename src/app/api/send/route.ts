@@ -9,7 +9,7 @@ export async function POST(req: Request) {
 
         const data = await resend.emails.send({
             from: 'SafarAI Contact <onboarding@resend.dev>', // Default testing sender
-            to: [process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'support@safar-ai.co'],
+            to: [process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'knaseem@safar-ai.co'],
             subject: `Contact Form: ${subject || 'New Message'}`,
             replyTo: email, // So you can reply directly to the user
             text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
