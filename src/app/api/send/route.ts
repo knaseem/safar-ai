@@ -27,10 +27,10 @@ export async function POST(req: Request) {
                         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 20px 40px; border-bottom: 2px solid #D4AF37;">
                             <tr>
                                 <td width="50" style="vertical-align: middle;">
-                                    <div style="background-color: #ffffff; width: 32px; height: 32px; border-radius: 6px; text-align: center; display: block;">
-                                        <!-- Plane Icon SVG forced to black with explicit path stroke -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 6px; display: inline-block; color: #000000;">
-                                            <path stroke="#000000" d="M2 12h20M13 2l9 10-9 10M2 12l5-5m0 10l-5-5"/>
+                                    <div style="background-color: #ffffff; width: 32px; height: 32px; border-radius: 6px; text-align: center; line-height: 28px;">
+                                        <!-- Plane Icon SVG Filled Black -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#000000" style="vertical-align: middle; display: inline-block;">
+                                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                                         </svg>
                                     </div>
                                 </td>
