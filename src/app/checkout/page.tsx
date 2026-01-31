@@ -89,6 +89,35 @@ function CheckoutContent() {
                 return
             }
 
+            // Handle mock/test offers
+            if (offerId.startsWith('mock_')) {
+                const isHotel = offerType === 'stay' || offerId === 'mock_hotel_offer'
+                setOffer({
+                    id: offerId,
+                    total_amount: isHotel ? "1250.00" : "850.00",
+                    total_currency: "USD",
+                    base_amount: isHotel ? "1000.00" : "750.00",
+                    owner: { name: isHotel ? "Duffel Stays" : "Duffel Air" },
+                    slices: [{
+                        origin: { iata_code: isHotel ? "HOTEL" : "JFK", name: isHotel ? "Hotel Booking" : "New York" },
+                        destination: { iata_code: isHotel ? "STAY" : "LHR", name: isHotel ? "Hotel Stay" : "London" },
+                        departure_date: new Date().toISOString().split('T')[0],
+                        duration: "PT7H",
+                        segments: [{
+                            operating_carrier: { name: isHotel ? "Grand Hyatt" : "British Airways" },
+                            operating_carrier_flight_number: isHotel ? "" : "BA112",
+                            departure: { at: new Date().toISOString() },
+                            arrival: { at: new Date().toISOString() }
+                        }]
+                    }],
+                    passengers: [{ type: "adult" }],
+                    conditions: {},
+                    expires_at: new Date(Date.now() + 3600000).toISOString()
+                })
+                setLoading(false)
+                return
+            }
+
             try {
                 const response = await fetch(`/api/offers/${offerId}`)
                 if (!response.ok) throw new Error("Failed to load offer")
@@ -104,7 +133,7 @@ function CheckoutContent() {
         }
 
         fetchOffer()
-    }, [offerId])
+    }, [offerId, offerType])
 
     // Calculate markup
     const baseAmount = offer?.base_amount ? parseFloat(offer.base_amount) : 0
@@ -126,7 +155,10 @@ function CheckoutContent() {
                 destination: firstSlice?.destination?.iata_code,
                 departureDate: firstSlice?.departure_date,
                 airline: firstSegment?.operating_carrier?.name,
-            } : undefined
+            } : {
+                hotelName: firstSegment?.operating_carrier?.name, // Using carrier name field for hotel name in mock
+                checkIn: firstSlice?.departure_date,
+            }
 
             const response = await fetch("/api/orders", {
                 method: "POST",
@@ -159,6 +191,13 @@ function CheckoutContent() {
             setSubmitting(false)
         }
     }
+
+    // Extraction of user details for pre-fill
+    const userData = user ? {
+        email: user.email,
+        firstName: user.user_metadata?.full_name?.split(' ')[0],
+        lastName: user.user_metadata?.full_name?.split(' ').slice(1).join(' '),
+    } : undefined
 
     // Loading state
     if (loading) {
@@ -281,6 +320,7 @@ function CheckoutContent() {
                             onSubmit={handleSubmit}
                             disabled={!user || submitting}
                             submitting={submitting}
+                            initialData={userData}
                         />
 
                         {/* Policy Display */}

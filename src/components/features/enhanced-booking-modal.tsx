@@ -8,6 +8,7 @@ import {
     BedDouble, Star, Briefcase
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toast } from "sonner"
 import { DateRangePicker } from '@/components/ui/date-range-picker'
 import { TravelerSelector } from '@/components/ui/traveler-selector'
 import { AirportInput } from '@/components/ui/airport-input'
@@ -591,88 +592,56 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                 <div className="space-y-4 mb-8">
                                     <button
                                         onClick={async () => {
-                                            // Create a Duffel Link Session for a unified checkout
+                                            // Redirect to internal checkout for Flights & Hotels
                                             try {
-                                                const res = await fetch('/api/bookings/duffel/link', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({
-                                                        tripId: (tripData as any).id || null,
-                                                        userId: user?.id || null
-                                                    })
-                                                });
-                                                const json = await res.json();
-                                                if (json.data?.url) {
-                                                    setPortalUrl(json.data.url);
-                                                    setPortalTitle("Secure Unified Checkout");
-                                                    setProviderName("Duffel");
-                                                    setIsPortalOpen(true);
-                                                    return;
-                                                }
-                                            } catch (err) {
-                                                console.error("Duffel session failed, falling back to affiliate", err);
-                                            }
+                                                // Create search params for checkout
+                                                const params = new URLSearchParams()
+                                                if (tripData.days[0]?.theme) params.set('offer_id', 'mock_offer_id') // Will be replaced by real ID in production
+                                                params.set('type', bookingType === 'hotel' ? 'stay' : 'flight')
 
-                                            // Fallback to affiliate
-                                            const url = generateAffiliateLink('flight', {
-                                                origin: departureAirport?.code || 'any',
-                                                destination: extractCleanCity(destination),
-                                                checkIn: checkIn?.toISOString().split('T')[0]
-                                            })
-                                            setPortalUrl(url)
-                                            setPortalTitle("Flight Secure Booking")
-                                            setProviderName("Expedia")
-                                            setIsPortalOpen(true)
+                                                // If we have a live flight price, we should try to get that real offer ID
+                                                // For now, we'll send them to checkout page which handles fetching
+
+                                                window.location.href = `/checkout?${params.toString()}`
+                                            } catch (err) {
+                                                console.error('Checkout redirect error:', err)
+                                                toast.error("Failed to start checkout. Please try again.")
+                                            }
                                         }}
-                                        className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 p-6 transition-all hover:scale-[1.01] shadow-xl shadow-blue-500/20"
+                                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-6 rounded-xl flex items-center justify-between px-6 transition-all shadow-lg shadow-blue-900/20 group"
                                     >
-                                        <div className="absolute top-0 right-0 p-4 opacity-30"><Sparkles className="size-6 text-white" /></div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="text-left">
-                                                <div className="text-xl font-black text-white mb-1 uppercase tracking-tight">Finalize & Pay Securely</div>
-                                                <div className="text-white/60 text-xs">Complete your entire trip booking in one step</div>
-                                            </div>
-                                            <Plane className="size-8 text-white group-hover:translate-x-1 transition-transform" />
+                                        <div className="flex flex-col items-start gap-1">
+                                            <span className="text-xl">FINALIZE & PAY SECURELY</span>
+                                            <span className="text-xs font-normal text-blue-200">Complete your entire trip booking in one step</span>
+                                        </div>
+                                        <div className="relative">
+                                            <Plane className="size-8 text-white group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                                            <Sparkles className="absolute -top-1 -right-1 size-3 text-yellow-300 animate-pulse" />
                                         </div>
                                     </button>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             onClick={() => {
-                                                const url = generateAffiliateLink('hotel', {
-                                                    name: extractCleanCity(destination),
-                                                    destination: extractCleanCity(destination),
-                                                    checkIn: checkIn?.toISOString().split('T')[0],
-                                                    checkOut: checkOut?.toISOString().split('T')[0]
-                                                })
-                                                setPortalUrl(url)
-                                                setPortalTitle("Hotel Secure Booking")
-                                                setProviderName("Expedia")
-                                                setIsPortalOpen(true)
+                                                // Redirect to internal checkout for Hotels
+                                                window.location.href = `/checkout?type=stay&offer_id=mock_hotel_offer`
                                             }}
-                                            className="group flex flex-col items-center justify-center rounded-xl bg-white/5 border border-white/10 p-4 transition-all hover:bg-white/10"
+                                            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-center group"
                                         >
-                                            <Building2 className="size-5 text-white/60 mb-2" />
-                                            <div className="text-sm font-medium text-white">Book Hotel</div>
+                                            <Building2 className="size-6 text-white/50 group-hover:text-purple-400 mx-auto mb-2 transition-colors" />
+                                            <span className="text-sm font-medium text-white">Book Hotel</span>
                                         </button>
 
                                         <button
                                             onClick={() => {
-                                                const url = generateAffiliateLink('activity', {
-                                                    destination: extractCleanCity(destination),
-                                                    checkIn: checkIn?.toISOString().split('T')[0],
-                                                    checkOut: checkOut?.toISOString().split('T')[0],
-                                                    name: `Things to do in ${extractCleanCity(destination)}`
-                                                })
-                                                setPortalUrl(url)
-                                                setPortalTitle("Activity Secure Booking")
-                                                setProviderName("Expedia")
-                                                setIsPortalOpen(true)
+                                                // Direct Viator link for activities
+                                                const viatorUrl = `https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination)}`
+                                                window.open(viatorUrl, '_blank')
                                             }}
-                                            className="group flex flex-col items-center justify-center rounded-xl bg-white/5 border border-white/10 p-4 transition-all hover:bg-white/10"
+                                            className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-center group"
                                         >
-                                            <Star className="size-5 text-white/60 mb-2" />
-                                            <div className="text-sm font-medium text-white">Book Activities</div>
+                                            <Car className="size-6 text-white/50 group-hover:text-amber-400 mx-auto mb-2 transition-colors" />
+                                            <span className="text-sm font-medium text-white">Book Activities</span>
                                         </button>
                                     </div>
                                 </div>
@@ -685,7 +654,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                         )}
                     </motion.div>
                 </motion.div>
-            </AnimatePresence>
+            </AnimatePresence >
 
             <ConciergePortal
                 isOpen={isPortalOpen}

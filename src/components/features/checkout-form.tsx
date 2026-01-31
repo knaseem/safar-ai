@@ -21,18 +21,24 @@ interface CheckoutFormProps {
     onSubmit: (passengers: PassengerData[]) => void
     disabled?: boolean
     submitting?: boolean
+    initialData?: {
+        email?: string
+        firstName?: string
+        lastName?: string
+        phone?: string
+    }
 }
 
-export function CheckoutForm({ passengerCount, onSubmit, disabled, submitting }: CheckoutFormProps) {
+export function CheckoutForm({ passengerCount, onSubmit, disabled, submitting, initialData }: CheckoutFormProps) {
     const [passengers, setPassengers] = useState<PassengerData[]>(
         Array(passengerCount).fill(null).map(() => ({
             type: "adult",
-            given_name: "",
-            family_name: "",
+            given_name: initialData?.firstName || "",
+            family_name: initialData?.lastName || "",
             gender: "male",
             born_on: "",
-            email: "",
-            phone_number: "",
+            email: initialData?.email || "",
+            phone_number: initialData?.phone || "",
             title: "mr",
         }))
     )
