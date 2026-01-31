@@ -80,8 +80,8 @@ export function Navbar() {
                         <NavLink href="#destinations">Destinations</NavLink>
                         <NavLink href="#experience">The Experience</NavLink>
                         <NavLink href="#membership">Membership</NavLink>
-                        <NavLink href="/budget">Planning</NavLink>
                         <NavLink href="/trends">Trends</NavLink>
+                        <NavLink href="/budget">Planning</NavLink>
                         <NavLink href="/blog">Blog</NavLink>
                     </nav>
 

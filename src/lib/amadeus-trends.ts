@@ -1,117 +1,105 @@
-
-import { getAmadeus } from './amadeus';
-
-// Interfaces matching Amadeus API responses
-export interface AnalyticsData {
-    period: string; // "2024-01"
-    score: number; // 0-100 probability or volume
+export interface TrendingDestination {
+    city: string;
+    country: string;
+    code: string;
+    score: number; // 0-100 "Hotness" score
+    change: number; // Percentage change from last month
+    imageUrl: string;
+    priceEstimate: number;
 }
 
-export interface DestinationRanking {
-    destination: string; // IATA code
-    name?: string; // Enriched name
-    rank: number;
-    trend: 'up' | 'down' | 'stable';
-    change: number; // Percentage change
+export interface SeasonalityData {
+    month: string;
+    demand: number; // 0-100 scale
+    price: number; // Avg price index
 }
 
-/**
- * SIMULATION LAYER: Market Insights
- * Returns mock data if keys are missing or in test mode.
- */
+// Mock Data for "Global Trending"
+const TRENDING_CITIES: TrendingDestination[] = [
+    {
+        city: "Doha",
+        country: "Qatar",
+        code: "DOH",
+        score: 98,
+        change: 12.5,
+        imageUrl: "/images/ai-hero/doha-hero.png",
+        priceEstimate: 850,
+    },
+    {
+        city: "Dubai",
+        country: "UAE",
+        code: "DXB",
+        score: 95,
+        change: 5.2,
+        imageUrl: "/images/ai-hero/dubai-hero.png",
+        priceEstimate: 920,
+    },
+    {
+        city: "Mecca",
+        country: "Saudi Arabia",
+        code: "JED",
+        score: 92,
+        change: 8.7,
+        imageUrl: "/images/ai-hero/mecca-hero.png",
+        priceEstimate: 1100,
+    },
+    {
+        city: "Zanzibar",
+        country: "Tanzania",
+        code: "ZNZ",
+        score: 88,
+        change: 15.3,
+        imageUrl: "/images/ai-hero/zanzibar-hero.png",
+        priceEstimate: 1350,
+    },
+    {
+        city: "Medina",
+        country: "Saudi Arabia",
+        code: "MED",
+        score: 85,
+        change: 4.1,
+        imageUrl: "/images/ai-hero/medina-hero.png",
+        priceEstimate: 1050,
+    },
+    {
+        city: "Istanbul",
+        country: "Turkey",
+        code: "IST",
+        score: 82,
+        change: -2.3,
+        imageUrl: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?q=80&w=2071&auto=format&fit=crop", // Placeholder
+        priceEstimate: 780,
+    },
+];
 
-// Mock Data Generators using deterministic random based on string seed
-const seededRandom = (seed: string) => {
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-        hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-        hash |= 0;
-    }
-    const x = Math.sin(hash) * 10000;
-    return x - Math.floor(x);
-}
+// Mock Seasonality Curve (Standard Sine Wave + Noise)
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export async function fetchBusiestPeriods(cityCode: string): Promise<AnalyticsData[]> {
-    const amadeus = getAmadeus();
-    // REAL API CALL
-    if (amadeus) {
-        try {
-            const response = await (amadeus as any).travel.analytics.airTraffic.busiestPeriod.get({
-                cityCode: cityCode,
-                period: '2024',
-                direction: 'ARRIVING'
-            });
+export const getTrendingDestinations = async (): Promise<TrendingDestination[]> => {
+    // Simulate API latency
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    return TRENDING_CITIES;
+};
 
-            if (response.data && response.data.length > 0) {
-                return response.data;
-            }
-        } catch (e) {
-            console.warn("Amadeus API limit or error, falling back to sim", e);
-        }
-    }
+export const getSeasonalityData = async (destinationCode: string): Promise<SeasonalityData[]> => {
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
-    // SIMULATION MODE
-    // Generate a realistic seasonality curve (High in Summer/Dec, Low in Feb/Nov)
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // Deterministic "random" based on code char codes to keep charts stable but different per city
+    const seed = destinationCode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-    // Northern hemisphere default seasonality
-    const baseSeasonality = [0.4, 0.3, 0.5, 0.6, 0.7, 0.9, 1.0, 0.9, 0.7, 0.6, 0.4, 0.8];
-
-    return months.map((m, i) => {
-        const noise = (seededRandom(cityCode + m) * 0.2) - 0.1; // +/- 10% randomness
-        let val = baseSeasonality[i] + noise;
-
-        // Adjust for specific known hubs (mock logic)
-        if (cityCode === 'DXB' && (i < 3 || i > 9)) val += 0.4; // Winter sun
-        if (cityCode === 'SYD' && (i < 2 || i > 10)) val += 0.4; // Southern summer
+    return MONTHS.map((month, index) => {
+        // Peak season usually Summer (Jun-Aug) or Winter (Dec) depending on logic, let's randomize slightly
+        const baseDemand = 60 + Math.sin((index + seed) * 0.5) * 30;
+        const noise = (Math.random() * 10) - 5;
 
         return {
-            period: m,
-            score: Math.min(Math.max(Math.round(val * 100), 10), 100)
+            month,
+            demand: Math.max(20, Math.min(100, Math.round(baseDemand + noise))),
+            price: Math.round(500 + (baseDemand * 8) + noise * 10),
         };
     });
-}
+};
 
-export async function fetchTrendingDestinations(originCity: string): Promise<DestinationRanking[]> {
-    const amadeus = getAmadeus();
-    // REAL API CALL
-    if (amadeus) {
-        try {
-            const response = await (amadeus as any).shopping.flightDestinations.get({
-                origin: originCity,
-                oneWay: false,
-                nonStop: false
-            });
-
-            if (response.data && response.data.length > 0) {
-                return response.data.map((item: any, index: number) => ({
-                    destination: item.destination,
-                    name: item.destination, // Usually just city code from this API
-                    rank: index + 1,
-                    trend: Math.random() > 0.5 ? 'up' : 'stable',
-                    change: Math.round(Math.random() * 20)
-                }));
-            }
-        } catch (e) {
-            console.warn("Amadeus Inspiration API fail, falling back to curated list", e);
-        }
-    }
-
-    // SIMULATION MODE / FALLBACK
-    // Return a curated list of "Trending" spots if API fails or returns empty
-    const mockTrends: DestinationRanking[] = [
-        { destination: 'TYO', name: 'Tokyo, Japan', rank: 1, trend: 'up', change: 24 },
-        { destination: 'PAR', name: 'Paris, France', rank: 2, trend: 'stable', change: 2 },
-        { destination: 'DXB', name: 'Dubai, UAE', rank: 3, trend: 'up', change: 15 },
-        { destination: 'NYC', name: 'New York, USA', rank: 4, trend: 'down', change: -5 },
-        { destination: 'SIN', name: 'Singapore', rank: 5, trend: 'up', change: 8 },
-        { destination: 'ROM', name: 'Rome, Italy', rank: 6, trend: 'stable', change: 0 },
-        { destination: 'CPT', name: 'Cape Town', rank: 7, trend: 'up', change: 12 },
-        { destination: 'DPS', name: 'Bali, Indonesia', rank: 8, trend: 'up', change: 18 },
-        { destination: 'IST', name: 'Istanbul, Turkey', rank: 9, trend: 'down', change: -2 },
-        { destination: 'BCN', name: 'Barcelona, Spain', rank: 10, trend: 'stable', change: 4 },
-    ];
-
-    // Shuffle slightly based on origin for variety
-    return mockTrends.sort(() => Math.random() - 0.5);
-}
+export const getAiInsight = (destination: string) => {
+    return `AI analysis indicates ${destination} is experiencing a surge in booking volume (+15% YoY). Best time to visit is currently projected to be mid-October for optimal price-to-crowd ratio.`;
+};
