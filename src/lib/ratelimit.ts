@@ -2,10 +2,10 @@ import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
 // Create a new ratelimiter using Upstash Redis
-// This will work in serverless environments (Vercel Edge, etc.)
+// Vercel's Upstash integration creates KV_REST_API_* env vars
 const redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL || '',
-    token: process.env.UPSTASH_REDIS_REST_TOKEN || '',
+    url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '',
+    token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
 })
 
 // Rate limiters for different endpoints
@@ -34,7 +34,10 @@ export const generalRatelimit = new Ratelimit({
  * Check if rate limiting is enabled (env vars are set)
  */
 export function isRateLimitEnabled(): boolean {
-    return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+    return !!(
+        (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN) ||
+        (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+    )
 }
 
 /**
