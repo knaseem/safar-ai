@@ -28,9 +28,9 @@ export async function POST(req: Request) {
                             <tr>
                                 <td width="50" style="vertical-align: middle;">
                                     <div style="background-color: #ffffff; width: 32px; height: 32px; border-radius: 6px; text-align: center; display: block;">
-                                        <!-- Plane Icon SVG forced to black -->
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 6px; display: inline-block;">
-                                            <path d="M2 12h20M13 2l9 10-9 10M2 12l5-5m0 10l-5-5"/>
+                                        <!-- Plane Icon SVG forced to black with explicit path stroke -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 6px; display: inline-block; color: #000000;">
+                                            <path stroke="#000000" d="M2 12h20M13 2l9 10-9 10M2 12l5-5m0 10l-5-5"/>
                                         </svg>
                                     </div>
                                 </td>
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
                         <div style="padding: 40px;">
                             <div style="background-color: #f8f9fa; border-left: 4px solid #000000; padding: 15px; margin-bottom: 30px;">
                                 <p style="margin: 0; color: #555555; font-size: 12px; font-weight: 600; text-transform: uppercase;">Status</p>
-                                <p style="margin: 5px 0 0; color: #000000; font-size: 16px; font-weight: bold;">New Inquiry Recieved</p>
+                                <p style="margin: 5px 0 0; color: #000000; font-size: 16px; font-weight: bold;">New Inquiry Received</p>
                             </div>
 
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
