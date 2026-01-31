@@ -27,13 +27,15 @@ export async function POST(req: Request) {
                         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 20px 40px; border-bottom: 2px solid #D4AF37;">
                             <tr>
                                 <td width="50" style="vertical-align: middle;">
-                                    <div style="background-color: #ffffff; width: 32px; height: 32px; border-radius: 6px; text-align: center; line-height: 32px;">
-                                        <!-- Plane Icon SVG -->
-                                        <div style="color: #000000; font-size: 20px; line-height: 32px;">✈</div>
+                                    <div style="background-color: #ffffff; width: 32px; height: 32px; border-radius: 6px; text-align: center; display: block;">
+                                        <!-- Plane Icon SVG forced to black -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 6px; display: inline-block;">
+                                            <path d="M2 12h20M13 2l9 10-9 10M2 12l5-5m0 10l-5-5"/>
+                                        </svg>
                                     </div>
                                 </td>
                                 <td style="vertical-align: middle;">
-                                    <h1 style="margin: 0; font-family: 'Playfair Display', serif; color: #ffffff; font-size: 24px; letter-spacing: 1px;">
+                                    <h1 style="margin: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #ffffff; font-size: 24px; letter-spacing: -0.5px; font-weight: 700;">
                                         Safar<span style="color: #a3a3a3;">AI</span>
                                     </h1>
                                 </td>
