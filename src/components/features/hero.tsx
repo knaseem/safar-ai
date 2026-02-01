@@ -10,6 +10,8 @@ import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
 import { StaysSearchForm } from "./stays/stays-search-form"
 import { HotelResultsModal } from "./stays/hotel-results-modal"
+import { FlightsSearchForm } from "./flights/flights-search-form"
+import { FlightResultsModal } from "./flights/flight-results-modal"
 
 // Rotating placeholder suggestions
 const placeholderSuggestions = [
@@ -151,7 +153,7 @@ const HALAL_HERO_IMAGES = [
 
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
-    const [mode, setMode] = useState<'ai' | 'stays'>('ai') // 'ai' or 'stays'
+    const [mode, setMode] = useState<'ai' | 'stays' | 'flights'>('ai')
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
@@ -162,6 +164,11 @@ export function Hero({ initialPrompt }: HeroProps) {
     const [showHotelResults, setShowHotelResults] = useState(false)
     const [hotelResults, setHotelResults] = useState<any[]>([])
     const [searchedParams, setSearchedParams] = useState<any>(null)
+
+    // Flights State
+    const [showFlightResults, setShowFlightResults] = useState(false)
+    const [flightResults, setFlightResults] = useState<any>(null)
+    const [searchedFlightParams, setSearchedFlightParams] = useState<any>(null)
 
     const router = useRouter()
 
@@ -190,12 +197,35 @@ export function Hero({ initialPrompt }: HeroProps) {
         }
     }
 
-    // Handle initial prompt from parent
+    const handleFlightsSearch = async (params: any) => {
+        setLoading(true)
+        setSearchedFlightParams(params)
 
+        try {
+            const res = await fetch('/api/flights/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params)
+            })
+            const data = await res.json()
+
+            if (data.offers) {
+                setFlightResults(data)
+                setShowFlightResults(true)
+            } else {
+                toast.error("No flights found. Try broader dates.")
+            }
+        } catch (e) {
+            toast.error("Failed to search flights")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Handle initial prompt from parent
     useEffect(() => {
         if (initialPrompt) {
             setInput(initialPrompt)
-            // Small timeout to allow state to settle before triggering
             const timer = setTimeout(() => {
                 const triggerSearch = document.getElementById('trigger-search-btn')
                 if (triggerSearch) triggerSearch.click()
@@ -222,7 +252,7 @@ export function Hero({ initialPrompt }: HeroProps) {
         return () => clearInterval(interval)
     }, [isHalal])
 
-    // Reset index when mode toggles to avoid out of bounds
+    // Reset index when mode toggles
     useEffect(() => {
         setCurrentImageIndex(0)
     }, [isHalal])
@@ -252,7 +282,6 @@ export function Hero({ initialPrompt }: HeroProps) {
                 duration: 3000
             })
 
-            // Redirect to the dedicated trip page for persistence
             if (data.id) {
                 router.push(`/trip/generated/${data.id}`)
             } else {
@@ -361,18 +390,21 @@ export function Hero({ initialPrompt }: HeroProps) {
                         >
                             Find Stays
                         </button>
+                        <button
+                            onClick={() => setMode('flights')}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'flights' ? 'bg-sky-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Find Flights
+                        </button>
                     </div>
 
-                    {mode === 'ai' ? (
+                    {mode === 'ai' && (
                         <>
                             <p className="text-lg text-white/70 max-w-2xl text-center">
                                 SafarAI is your personal autonomous concierge. Just say where you want to go.
                             </p>
 
-                            {/* AI Input Mockup */}
                             <div className="w-full max-w-2xl mt-4 flex flex-col items-center gap-4">
-
-                                {/* Halal Toggle */}
                                 <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
                                     <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
                                     <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
@@ -416,12 +448,22 @@ export function Hero({ initialPrompt }: HeroProps) {
                                 <p className="mt-3 text-xs text-white/40 text-center">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
                             </div>
                         </>
-                    ) : (
-                        /* Stays Mode */
+                    )}
+
+                    {mode === 'stays' && (
                         <div className="w-full flex flex-col items-center mt-4">
                             <StaysSearchForm
                                 loading={loading}
                                 onSearch={handleStaysSearch}
+                            />
+                        </div>
+                    )}
+
+                    {mode === 'flights' && (
+                        <div className="w-full flex flex-col items-center mt-4">
+                            <FlightsSearchForm
+                                loading={loading}
+                                onSearch={handleFlightsSearch}
                             />
                         </div>
                     )}
@@ -435,9 +477,16 @@ export function Hero({ initialPrompt }: HeroProps) {
                 results={hotelResults}
                 searchParams={searchedParams}
                 onSelectHotel={(id) => {
-                    toast.info("Room Selection coming next", { description: "We found the hotel!" })
-                    console.log("Selected Hotel:", id)
+                    // Handled inside component
                 }}
+            />
+
+            {/* Flights Results Modal */}
+            <FlightResultsModal
+                isOpen={showFlightResults}
+                onClose={() => setShowFlightResults(false)}
+                results={flightResults}
+                searchParams={searchedFlightParams}
             />
         </section>
     )
