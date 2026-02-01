@@ -315,9 +315,9 @@ export function Hero({ initialPrompt }: HeroProps) {
     }
 
     return (
-        <section className="relative h-screen min-h-[800px] flex items-center justify-center overflow-hidden">
+        <section className="relative h-screen min-h-[800px] flex items-center justify-center">
             {/* Cinematic Background Slider */}
-            <div className="absolute inset-0 z-0 bg-black">
+            <div className="absolute inset-0 z-0 bg-black overflow-hidden">
                 <AnimatePresence mode="popLayout">
                     <motion.div
                         key={currentImageIndex}

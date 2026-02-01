@@ -12,7 +12,10 @@ interface StaysSearchFormProps {
 }
 
 export function StaysSearchForm({ onSearch, loading }: StaysSearchFormProps) {
-    const [location, setLocation] = useState("")
+    const [location, setLocation] = useState("") // Actual value sent to API (lat,lng)
+    const [displayLocation, setDisplayLocation] = useState("") // Value shown in input
+    const [suggestions, setSuggestions] = useState<any[]>([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
     const [checkIn, setCheckIn] = useState<Date | null>(null)
     const [checkOut, setCheckOut] = useState<Date | null>(null)
     const [guests, setGuests] = useState(2)
@@ -43,11 +46,50 @@ export function StaysSearchForm({ onSearch, loading }: StaysSearchFormProps) {
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="Where to? (e.g. London, Dubai)"
+                        value={displayLocation}
+                        onChange={(e) => {
+                            setDisplayLocation(e.target.value)
+                            // Basic debounce manually or just fetch on every keystroke for now (optimize later if needed)
+                            if (e.target.value.length > 2) {
+                                fetch(`/api/locations/search?keyword=${e.target.value}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.data) {
+                                            setSuggestions(data.data)
+                                            setShowSuggestions(true)
+                                        }
+                                    })
+                                    .catch(err => console.error(err))
+                            } else {
+                                setSuggestions([])
+                                setShowSuggestions(false)
+                            }
+                        }}
+                        placeholder="Where to? (e.g. London, New York)"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
                     />
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                            {suggestions.map((suggestion: any, index: number) => (
+                                <button
+                                    key={index}
+                                    className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center gap-2 transition-colors"
+                                    onClick={() => {
+                                        setDisplayLocation(suggestion.name) // Show Name "NEW YORK"
+                                        // Pass "lat,lng" to the actual location state used for search
+                                        const lat = suggestion.geoCode?.latitude || 0
+                                        const lng = suggestion.geoCode?.longitude || 0
+                                        setLocation(`${lat},${lng}`)
+                                        setShowSuggestions(false)
+                                    }}
+                                >
+                                    <MapPin className="size-4 text-emerald-400" />
+                                    <span>{suggestion.name}</span>
+                                    {suggestion.iataCode && <span className="text-white/30 text-xs ml-auto font-mono">{suggestion.iataCode}</span>}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Date Picker */}
