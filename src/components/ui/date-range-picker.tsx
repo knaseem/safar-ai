@@ -10,6 +10,8 @@ interface DateRangePickerProps {
     onDateChange: (checkIn: Date | null, checkOut: Date | null) => void
     minDate?: Date
     className?: string
+    fromLabel?: string
+    toLabel?: string
 }
 
 export function DateRangePicker({
@@ -18,6 +20,8 @@ export function DateRangePicker({
     onDateChange,
     minDate = new Date(),
     className,
+    fromLabel = "Check-In",
+    toLabel = "Check-Out"
 }: DateRangePickerProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const [currentMonth, setCurrentMonth] = React.useState(new Date())
@@ -127,7 +131,7 @@ export function DateRangePicker({
                 <div className="flex-1 flex items-center gap-3 px-4 border-r border-white/10">
                     <CalendarIcon className="size-5 text-white/50" />
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-white/40 uppercase tracking-wider font-bold">Check-In</span>
+                        <span className="text-[10px] text-white/40 uppercase tracking-wider font-bold">{fromLabel}</span>
                         <span className={`text-sm font-medium ${checkIn ? 'text-white' : 'text-white/40'}`}>
                             {formatLabelDate(checkIn)}
                         </span>
@@ -137,7 +141,7 @@ export function DateRangePicker({
                 {/* Check Out Section */}
                 <div className="flex-1 flex items-center gap-3 px-4">
                     <div className="flex flex-col">
-                        <span className="text-[10px] text-white/40 uppercase tracking-wider font-bold">Check-Out</span>
+                        <span className="text-[10px] text-white/40 uppercase tracking-wider font-bold">{toLabel}</span>
                         <span className={`text-sm font-medium ${checkOut ? 'text-white' : 'text-white/40'}`}>
                             {formatLabelDate(checkOut)}
                         </span>
@@ -210,7 +214,7 @@ export function DateRangePicker({
 
                     <div className="mt-4 pt-3 border-t border-white/10 text-center text-xs text-white/40 flex justify-between">
                         <button onClick={() => setIsOpen(false)} className="hover:text-white">Close</button>
-                        <span>{selectingCheckOut ? "Select check-out date" : "Select check-in date"}</span>
+                        <span>{selectingCheckOut ? `Select ${toLabel} date` : `Select ${fromLabel} date`}</span>
                     </div>
                 </div>
             )}

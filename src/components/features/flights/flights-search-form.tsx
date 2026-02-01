@@ -74,6 +74,8 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                         label="Trip Dates"
                         checkIn={checkIn}
                         checkOut={checkOut}
+                        fromLabel="Depart"
+                        toLabel="Return"
                         onDateChange={(inDate, outDate) => {
                             setCheckIn(inDate)
                             setCheckOut(outDate)
