@@ -106,7 +106,10 @@ export async function createLinkSession(params: {
     offerId?: string; // Add offerId to interface
 }) {
     const duffel = getDuffel();
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.safar-ai.co';
+    // Prioritize localhost in development to prevent redirecting to production (and losing session)
+    const appUrl = (process.env.NODE_ENV === 'development')
+        ? 'http://localhost:3000'
+        : (process.env.NEXT_PUBLIC_APP_URL || 'https://www.safar-ai.co');
 
     if (!duffel) {
         // Mock link for sandbox/demo - Points to our local mock page

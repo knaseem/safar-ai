@@ -46,6 +46,20 @@ export async function POST(request: Request) {
             };
         }
 
+        // Create Search Params object
+        const searchCriteria = (origin && destination && date) ? {
+            origin,
+            destination,
+            departureDate: date,
+            adults: adults || 1
+        } : undefined
+
+        if (!searchCriteria) {
+            console.warn("⚠️ [API] Dropping Search Params because incomplete:", { origin, destination, date })
+        } else {
+            console.log("✅ [API] Passing Search Params:", searchCriteria)
+        }
+
         // Create a Duffel Link Session
         const session = await createLinkSession({
             reference,
@@ -58,12 +72,7 @@ export async function POST(request: Request) {
                 source: "safar-ai"
             },
             markup: markupParams,
-            searchParams: (origin && destination && date) ? {
-                origin,
-                destination,
-                departureDate: date,
-                adults: adults || 1
-            } : undefined
+            searchParams: searchCriteria
         })
 
         return NextResponse.json({ url: session.url })
