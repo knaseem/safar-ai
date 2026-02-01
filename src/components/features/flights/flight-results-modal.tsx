@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 interface FlightResultsModalProps {
     isOpen: boolean
     onClose: () => void
-    results: any[]
+    results: any
     searchParams: any
 }
 
