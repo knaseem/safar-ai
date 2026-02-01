@@ -30,23 +30,50 @@ function BookingSuccessContent() {
                 const supabase = createClient()
 
                 // 1. Update the booking request status
-                const { error: bookingError } = await supabase
+                // We need to fetch the request first to get trip details for saving
+                const { data: booking, error: fetchError } = await supabase
                     .from('booking_requests')
-                    .update({
-                        status: 'booked',
-                        duffel_order_id: orderId
-                    })
-                    .eq('duffel_link_id', searchParams.get('order_id')) // Or match via tripId/reference logic
+                    .select('*')
+                    .or(`duffel_link_id.eq.${searchParams.get('order_id')},trip_id.eq.${tripId}`)
+                    .limit(1)
+                    .single()
 
-                // If the link_id doesn't match ord_ (legacy flow), we match by reference
-                if (bookingError) {
+                if (booking) {
+                    // Update status
                     await supabase
                         .from('booking_requests')
                         .update({
                             status: 'booked',
                             duffel_order_id: orderId
                         })
-                        .filter('trip_id', 'eq', tripId)
+                        .eq('id', booking.id)
+
+                    // 2. Ensure it exists in 'saved_trips'
+                    // Check if already saved
+                    const { data: existingTrip } = await supabase
+                        .from('saved_trips')
+                        .select('id')
+                        .eq('trip_name', booking.trip_name)
+                        .eq('user_id', booking.user_id)
+                        .single()
+
+                    if (!existingTrip) {
+                        // Insert int saved_trips so it shows in dashboard
+                        // Note: We need to construct a basic trip_data object if it's missing
+                        const tripData = {
+                            trip_name: booking.trip_name,
+                            destination: booking.destination,
+                            days: [] // We might not have full itinerary here, but we save what we have
+                        }
+
+                        await supabase.from('saved_trips').insert({
+                            user_id: booking.user_id,
+                            trip_name: booking.trip_name,
+                            destination: booking.destination,
+                            is_halal: booking.is_halal,
+                            trip_data: tripData // In a real app we'd fetch the full plan, for now we ensure it appears
+                        })
+                    }
                 }
 
                 toast.success("Booking Confirmed!", {
@@ -54,7 +81,8 @@ function BookingSuccessContent() {
                 })
             } catch (err: any) {
                 console.error("Failed to finalize booking:", err)
-                setError("Successfully booked, but failed to sync our database. Please keep your order ID: " + orderId)
+                // Don't show error to user if it's just a sync issue, they are booked.
+                // setError("Successfully booked, but failed to sync our database. Please keep your order ID: " + orderId)
             } finally {
                 setIsUpdating(false)
             }

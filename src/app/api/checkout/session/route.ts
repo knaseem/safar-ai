@@ -71,6 +71,7 @@ export async function POST(request: Request) {
                 offer_id: offer_id,
                 source: "safar-ai"
             },
+            offerId: offer_id, // Pass specifically to lock the flight offer
             markup: markupParams,
             searchParams: searchCriteria
         })
