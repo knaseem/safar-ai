@@ -105,9 +105,9 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                         <div className="flex-1 flex items-center justify-center gap-8 text-center">
                                             <div>
                                                 <div className="text-xl font-bold text-white">
-                                                    {new Date(segment.departure.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {segment.departing_at ? new Date(segment.departing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                <div className="text-xs text-white/40">{segment.origin.iata_code}</div>
+                                                <div className="text-xs text-white/40">{segment.origin?.iata_code || 'N/A'}</div>
                                             </div>
 
                                             <div className="flex flex-col items-center gap-1 min-w-[100px]">
@@ -120,9 +120,9 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
 
                                             <div>
                                                 <div className="text-xl font-bold text-white">
-                                                    {new Date(segment.arrival.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {segment.arriving_at ? new Date(segment.arriving_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                                 </div>
-                                                <div className="text-xs text-white/40">{segment.destination.iata_code}</div>
+                                                <div className="text-xs text-white/40">{segment.destination?.iata_code || 'N/A'}</div>
                                             </div>
                                         </div>
 
