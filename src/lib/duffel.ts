@@ -180,18 +180,113 @@ export async function searchStays(params: {
     if (!duffel) return [];
 
     try {
-        // Duffel Stays API is currently in specific access/beta for some regions
-        // This is a placeholder for the implementation
+        // Duffel Stays Search
+        // Note: Duffel Stays requires strict date format YYYY-MM-DD
+        const checkIn = new Date(params.checkInDate).toISOString().split('T')[0];
+        const checkOut = new Date(params.checkOutDate).toISOString().split('T')[0];
+
+        // Handle location: if it looks like lat,long use coordinates, otherwise mock or radius
+        let location: any = {
+            radius: 5, // Default 5km radius
+            geographic_coordinates: {
+                latitude: 51.5072, // Default London
+                longitude: 0.1276
+            }
+        };
+
+        if (params.location.includes(',')) {
+            const [lat, lng] = params.location.split(',').map(Number);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                location = {
+                    radius: 10,
+                    geographic_coordinates: {
+                        latitude: lat,
+                        longitude: lng
+                    }
+                };
+            }
+        }
+
         const response = await (duffel as any).stays.search({
-            location: params.location,
-            check_in_date: params.checkInDate,
-            check_out_date: params.checkOutDate,
-            adults: params.adults,
+            location,
+            check_in_date: checkIn,
+            check_out_date: checkOut,
+            rooms: 1,
+            guests: Array(params.adults).fill({ type: 'adult' })
         });
-        return response.data || [];
+
+        return response.data;
     } catch (error) {
-        console.error('Duffel Stays Error:', error);
-        return [];
+        console.error('Duffel Stays Search Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Fetch all available rates for a specific search result (Hotel)
+ */
+export async function fetchStayRates(searchResultId: string) {
+    const duffel = getDuffel();
+    if (!duffel) return [];
+
+    try {
+        const response = await (duffel as any).stays.searchResults.fetchAllRates(searchResultId);
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Fetch Rates Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Create a Quote for a specific Rate (Lock Price)
+ */
+export async function createStayQuote(rateId: string) {
+    const duffel = getDuffel();
+    if (!duffel) return null;
+
+    try {
+        const response = await (duffel as any).stays.quotes.create(rateId);
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Create Quote Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Create a Booking from a Quote
+ */
+export async function createStayBooking(params: {
+    quoteId: string;
+    passengers: Passenger[];
+    email: string;
+    phone_number: string;
+}) {
+    const duffel = getDuffel();
+    if (!duffel) {
+        return {
+            id: 'bk_stay_mock_' + Math.random().toString(36).substring(7),
+            reference: 'STAY-' + Math.random().toString(36).substring(7).toUpperCase(),
+            status: 'confirmed'
+        };
+    }
+
+    try {
+        const response = await (duffel as any).stays.bookings.create({
+            quote_id: params.quoteId,
+            guests: params.passengers.map(p => ({
+                given_name: p.given_name,
+                family_name: p.family_name,
+                born_on: p.born_on, // YYYY-MM-DD
+            })),
+            email: params.email,
+            phone_number: params.phone_number,
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Stay Booking Error:', error);
+        throw error;
     }
 }
 

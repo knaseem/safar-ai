@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, Sparkles, Moon } from "lucide-react"
 import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
+import { StaysSearchForm } from "./stays/stays-search-form"
+import { HotelResultsModal } from "./stays/hotel-results-modal"
 
 // Rotating placeholder suggestions
 const placeholderSuggestions = [
@@ -149,14 +151,47 @@ const HALAL_HERO_IMAGES = [
 
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
+    const [mode, setMode] = useState<'ai' | 'stays'>('ai') // 'ai' or 'stays'
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+    // Stays State
+    const [showHotelResults, setShowHotelResults] = useState(false)
+    const [hotelResults, setHotelResults] = useState<any[]>([])
+    const [searchedParams, setSearchedParams] = useState<any>(null)
+
     const router = useRouter()
 
+    const handleStaysSearch = async (params: any) => {
+        setLoading(true)
+        setSearchedParams(params)
+
+        try {
+            const res = await fetch('/api/stays/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(params)
+            })
+            const data = await res.json()
+
+            if (data.results) {
+                setHotelResults(data.results)
+                setShowHotelResults(true)
+            } else {
+                toast.error("No results found")
+            }
+        } catch (e) {
+            toast.error("Failed to search stays")
+        } finally {
+            setLoading(false)
+        }
+    }
+
     // Handle initial prompt from parent
+
     useEffect(() => {
         if (initialPrompt) {
             setInput(initialPrompt)
@@ -298,69 +333,112 @@ export function Hero({ initialPrompt }: HeroProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="flex flex-col items-center gap-6"
+                    className="flex flex-col items-center gap-6 w-full max-w-4xl px-4"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-medium text-white tracking-wider uppercase">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-medium text-white tracking-wider uppercase mb-4">
                         <Sparkles className="size-3 text-yellow-400" />
                         The Future of Travel is Autonomous
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white max-w-4xl">
-                        Experience the World, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 italic font-serif">Effortlessly.</span>
+                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white text-center">
+                        Experience the World, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 italic font-serif">Effortlessly.</span>
                     </h1>
 
-                    <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
-                        SafarAI is your personal autonomous concierge. Just say where you want to go, and we'll handle the flights, hotels, and experiences.
-                    </p>
+                    {/* Mode Tabs */}
+                    <div className="flex p-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-2">
+                        <button
+                            onClick={() => {
+                                setMode('ai')
+                                setIsHalal(false)
+                            }}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'ai' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            AI Planner
+                        </button>
+                        <button
+                            onClick={() => setMode('stays')}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'stays' ? 'bg-emerald-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Find Stays
+                        </button>
+                    </div>
 
-                    {/* AI Input Mockup */}
-                    <div className="w-full max-w-2xl mt-8 flex flex-col items-center gap-4">
+                    {mode === 'ai' ? (
+                        <>
+                            <p className="text-lg text-white/70 max-w-2xl text-center">
+                                SafarAI is your personal autonomous concierge. Just say where you want to go.
+                            </p>
 
-                        {/* Halal Toggle */}
-                        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                            <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
-                            <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
-                                Halal Trip Mode
-                            </span>
-                            <Switch
-                                checked={isHalal}
-                                onCheckedChange={setIsHalal}
-                                className="data-[state=checked]:bg-emerald-500"
+                            {/* AI Input Mockup */}
+                            <div className="w-full max-w-2xl mt-4 flex flex-col items-center gap-4">
+
+                                {/* Halal Toggle */}
+                                <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
+                                    <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
+                                    <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
+                                        Halal Trip Mode
+                                    </span>
+                                    <Switch
+                                        checked={isHalal}
+                                        onCheckedChange={setIsHalal}
+                                        className="data-[state=checked]:bg-emerald-500"
+                                    />
+                                </div>
+
+                                <div className="relative group w-full">
+                                    <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
+                                        }`}></div>
+                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                        <Sparkles className={`size-5 ${loading ? "animate-spin text-emerald-400" : "text-white/50"}`} />
+                                        <input
+                                            type="text"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
+                                            disabled={loading}
+                                            placeholder={(isHalal ? halalPlaceholderSuggestions : placeholderSuggestions)[placeholderIndex % (isHalal ? halalPlaceholderSuggestions : placeholderSuggestions).length]}
+                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                            suppressHydrationWarning
+                                        />
+                                        <Button
+                                            id="trigger-search-btn"
+                                            size="lg"
+                                            variant="premium"
+                                            onClick={handlePlanTrip}
+                                            disabled={loading}
+                                            className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""}`}
+                                        >
+                                            <span className="mr-2">{loading ? "Thinking..." : "Go"}</span>
+                                            <ArrowRight className="size-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                                <p className="mt-3 text-xs text-white/40 text-center">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
+                            </div>
+                        </>
+                    ) : (
+                        /* Stays Mode */
+                        <div className="w-full flex flex-col items-center mt-4">
+                            <StaysSearchForm
+                                loading={loading}
+                                onSearch={handleStaysSearch}
                             />
                         </div>
-
-                        <div className="relative group w-full">
-                            <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
-                                }`}></div>
-                            <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                <Sparkles className={`size-5 ${loading ? "animate-spin text-emerald-400" : "text-white/50"}`} />
-                                <input
-                                    type="text"
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
-                                    disabled={loading}
-                                    placeholder={(isHalal ? halalPlaceholderSuggestions : placeholderSuggestions)[placeholderIndex % (isHalal ? halalPlaceholderSuggestions : placeholderSuggestions).length]}
-                                    className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
-                                    suppressHydrationWarning
-                                />
-                                <Button
-                                    id="trigger-search-btn"
-                                    size="lg"
-                                    variant="premium"
-                                    onClick={handlePlanTrip}
-                                    disabled={loading}
-                                    className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""}`}
-                                >
-                                    <span className="mr-2">{loading ? "Thinking..." : "Go"}</span>
-                                    <ArrowRight className="size-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <p className="mt-3 text-xs text-white/40">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
-                    </div>
+                    )}
                 </motion.div>
             </div>
+
+            {/* Stays Results Modal */}
+            <HotelResultsModal
+                isOpen={showHotelResults}
+                onClose={() => setShowHotelResults(false)}
+                results={hotelResults}
+                searchParams={searchedParams}
+                onSelectHotel={(id) => {
+                    toast.info("Room Selection coming next", { description: "We found the hotel!" })
+                    console.log("Selected Hotel:", id)
+                }}
+            />
         </section>
     )
 }

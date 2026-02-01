@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createLinkSession } from "@/lib/duffel"
 import { createClient } from "@/lib/supabase/server"
-import { MARKUP_FLIGHT_PERCENT } from "@/lib/pricing"
+import { MARKUP_FLIGHT_PERCENT, MARKUP_HOTEL_PERCENT } from "@/lib/pricing"
 
 export async function POST(request: Request) {
     try {
@@ -35,7 +35,13 @@ export async function POST(request: Request) {
             // Base = Total / (1 + MarkupRate)
             // MarkupAmount = Total - Base
 
-            const markupRate = MARKUP_FLIGHT_PERCENT / 100;
+            let markupRate = 0;
+            if (type === 'stay') {
+                markupRate = MARKUP_HOTEL_PERCENT / 100;
+            } else {
+                markupRate = MARKUP_FLIGHT_PERCENT / 100;
+            }
+
             const totalAmount = parseFloat(amount);
             const baseAmount = totalAmount / (1 + markupRate);
             const markupValue = (totalAmount - baseAmount).toFixed(2);
