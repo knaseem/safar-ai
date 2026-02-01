@@ -88,6 +88,16 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 setShowFromSuggestions(false)
                             }
                         }}
+                        onBlur={() => {
+                            // Delay to allow click on suggestion to fire first
+                            setTimeout(() => {
+                                if (!origin && fromSuggestions.length > 0) {
+                                    setFromSearch(fromSuggestions[0].name)
+                                    setOrigin(fromSuggestions[0].iataCode)
+                                }
+                                setShowFromSuggestions(false)
+                            }, 150)
+                        }}
                         placeholder="From"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                     />
@@ -135,6 +145,16 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 setToSuggestions([])
                                 setShowToSuggestions(false)
                             }
+                        }}
+                        onBlur={() => {
+                            // Delay to allow click on suggestion to fire first
+                            setTimeout(() => {
+                                if (!destination && toSuggestions.length > 0) {
+                                    setToSearch(toSuggestions[0].name)
+                                    setDestination(toSuggestions[0].iataCode)
+                                }
+                                setShowToSuggestions(false)
+                            }, 150)
                         }}
                         placeholder="To"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
