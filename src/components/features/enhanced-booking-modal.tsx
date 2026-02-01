@@ -357,7 +357,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                         checkIn={checkIn}
                                         checkOut={checkOut}
                                         onDateChange={(ci, co) => { setCheckIn(ci); setCheckOut(co) }}
-                                        label={bookingType === 'hotel' ? "Check-in / Check-out" : "Travel Dates"}
+                                        fromLabel={bookingType === 'hotel' ? "Check-In" : "Depart"}
+                                        toLabel={bookingType === 'hotel' ? "Check-Out" : "Return"}
                                     />
 
                                     <TravelerSelector
