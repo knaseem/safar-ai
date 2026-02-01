@@ -47,7 +47,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                         type="text"
                         value={origin}
                         onChange={(e) => setOrigin(e.target.value)}
-                        placeholder="From? (e.g. JFK, LHR)"
+                        placeholder="From"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                         maxLength={3}
                     />
@@ -61,15 +61,15 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                         type="text"
                         value={destination}
                         onChange={(e) => setDestination(e.target.value)}
-                        placeholder="To? (e.g. DXB, CDG)"
+                        placeholder="To"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                         maxLength={3}
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/20 font-mono">IATA</span>
                 </div>
 
-                {/* Date Picker */}
-                <div className="flex-1 w-full relative z-40">
+                {/* Date Picker - Made Wider */}
+                <div className="flex-[1.4] w-full relative z-40">
                     <DateRangePicker
                         checkIn={checkIn}
                         checkOut={checkOut}
