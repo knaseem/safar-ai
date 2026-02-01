@@ -51,7 +51,6 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                         maxLength={3}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/20 font-mono">IATA</span>
                 </div>
 
                 {/* Destination Input */}
@@ -65,7 +64,6 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                         maxLength={3}
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/20 font-mono">IATA</span>
                 </div>
 
                 {/* Date Picker - Made Wider */}
