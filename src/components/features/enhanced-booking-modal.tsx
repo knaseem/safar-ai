@@ -682,9 +682,15 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                                 } else if (destination) {
                                                     // Try one more fallback map check before giving up
                                                     const commonMap: Record<string, string> = {
-                                                        'new york': 'NYC', 'london': 'LON', 'paris': 'PAR', 'dubai': 'DXB', 'tokyo': 'TYO'
+                                                        'new york': 'NYC', 'london': 'LON', 'paris': 'PAR', 'dubai': 'DXB', 'tokyo': 'TYO',
+                                                        'singapore': 'SIN', 'los angeles': 'LAX', 'san francisco': 'SFO', 'miami': 'MIA'
                                                     }
-                                                    const code = commonMap[destination.toLowerCase()]
+                                                    const cleanDest = destination.trim().toLowerCase()
+                                                    const code = commonMap[cleanDest]
+
+                                                    // DEBUG PROBIING
+                                                    console.log(`[Checkout Debug] Dest: ${destination}, Clean: ${cleanDest}, IATA: ${destIata || code}`)
+
                                                     if (code) {
                                                         params.set('destination', code)
                                                     } else {
@@ -718,6 +724,22 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                                     params.set('airline', 'Safar Airways')
                                                     params.set('duration', 'PT6H') // Generic duration
                                                     params.set('flightNumber', 'SA101')
+                                                }
+
+                                                // FINAL VALIDATION CHECK
+                                                const hasOrigin = params.get('origin')
+                                                const hasDest = params.get('destination')
+                                                const hasDate = params.get('date')
+
+                                                if (!hasOrigin || !hasDest || !hasDate) {
+                                                    const missing = []
+                                                    if (!hasOrigin) missing.push('Origin (Airport)')
+                                                    if (!hasDest) missing.push('Destination (City)')
+                                                    if (!hasDate) missing.push('Date')
+
+                                                    toast.error(`Missing Checkout Data: ${missing.join(', ')}`)
+                                                    // console.error("Missing params:", {hasOrigin, hasDest, hasDate})
+                                                    return // Stop redirect
                                                 }
 
                                                 window.location.href = `/checkout?${params.toString()}`
