@@ -47,10 +47,16 @@ export async function POST(req: Request) {
       Your client is a "${profile.archetype}" with these traits: ${JSON.stringify(profile.traits)}.
       ${isHalal ? "CRITICAL REQUIREMENT: This is a HALAL trip. YOU MUST ONLY suggest hotels with no alcohol (or removal options), Halal food options nearby, and family-friendly activities. Avoid nightlife/clubs." : ""}
       
-      Design a 3-day ultra-personalized itinerary based on their request: "${prompt}".
+      Design an ultra-personalized itinerary based on their request: "${prompt}".
+      
+      CRITICAL INSTRUCTION: Analyze the prompt for a specific duration (e.g., "5 days", "one week", "weekend"). 
+      - If a duration is found, generate an itinerary for EXACTLY that many days.
+      - If no duration is specified, default to a 3-day itinerary.
+
       Format the response as a valid JSON object with COMPLETED data (no placeholders) with this structure:
       {
         "trip_name": "Title of the trip",
+        "trip_duration_days": 5, // Example: The number of days generated
         "sound_theme": "one of: city | nature | ocean | desert | cafe",
         "days": [
           {
@@ -64,7 +70,7 @@ export async function POST(req: Request) {
           }
         ]
       }
-      IMPORTANT: Include all 3 days. You must provide real approximate coordinates (lat/lng) for the main location of each day.
+      IMPORTANT: Include ALL days requested (e.g., if 5 days asked, return 5 days). You must provide real approximate coordinates (lat/lng) for the main location of each day.
       Do not include markdown formatting like \`\`\`json. Just return the raw JSON.
     `;
 
