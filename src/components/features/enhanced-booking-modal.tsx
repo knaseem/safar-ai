@@ -51,6 +51,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const [travelers, setTravelers] = useState<TravelerCount>({ adults: 2, children: 0, infants: 0 })
     const [departureAirport, setDepartureAirport] = useState<{ code: string; city: string } | null>(null)
     const [roomType, setRoomType] = useState<'single' | 'double' | 'suite'>('double')
+    const [hotelClass, setHotelClass] = useState<'standard' | 'comfort' | 'luxury'>('comfort')
     const [flightClass, setFlightClass] = useState<'economy' | 'business' | 'first'>('economy')
     const [travelInsurance, setTravelInsurance] = useState(false)
     const [specialRequests, setSpecialRequests] = useState('')
@@ -348,6 +349,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                         checkIn={checkIn}
                                         checkOut={checkOut}
                                         onDateChange={(ci, co) => { setCheckIn(ci); setCheckOut(co) }}
+                                        label={bookingType === 'hotel' ? "Check-in / Check-out" : "Travel Dates"}
                                     />
 
                                     <TravelerSelector
@@ -379,24 +381,44 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
 
                                     <div className="grid grid-cols-2 gap-4">
                                         {bookingType !== 'flight' && (
-                                            <div>
-                                                <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
-                                                <div className="flex gap-2">
-                                                    {(['single', 'double', 'suite'] as const).map((type) => (
-                                                        <button
-                                                            key={type}
-                                                            type="button"
-                                                            onClick={() => setRoomType(type)}
-                                                            className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
-                                                                ? 'bg-emerald-500 text-black'
-                                                                : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                                }`}
-                                                        >
-                                                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                        </button>
-                                                    ))}
+                                            <>
+                                                <div>
+                                                    <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
+                                                    <div className="flex gap-2">
+                                                        {(['single', 'double', 'suite'] as const).map((type) => (
+                                                            <button
+                                                                key={type}
+                                                                type="button"
+                                                                onClick={() => setRoomType(type)}
+                                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
+                                                                    ? 'bg-emerald-500 text-black'
+                                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                    }`}
+                                                            >
+                                                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                                <div>
+                                                    <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Hotel Class</label>
+                                                    <div className="flex gap-2">
+                                                        {(['standard', 'comfort', 'luxury'] as const).map((cls) => (
+                                                            <button
+                                                                key={cls}
+                                                                type="button"
+                                                                onClick={() => setHotelClass(cls)}
+                                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${hotelClass === cls
+                                                                    ? 'bg-emerald-500 text-black'
+                                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                    }`}
+                                                            >
+                                                                {cls.charAt(0).toUpperCase() + cls.slice(1)}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </>
                                         )}
 
                                         {bookingType !== 'hotel' && (
@@ -444,14 +466,16 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                                     </div>
                                                 </div>
                                             )}
-                                            <div>
-                                                <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Checked Bags</label>
-                                                <div className="flex items-center justify-between bg-black/40 p-1 rounded-lg">
-                                                    <button onClick={() => setBaggageCount(Math.max(0, baggageCount - 1))} className="size-8 rounded-md hover:bg-white/10 text-white/60">-</button>
-                                                    <span className="text-sm font-bold text-white">{baggageCount}</span>
-                                                    <button onClick={() => setBaggageCount(baggageCount + 1)} className="size-8 rounded-md hover:bg-white/10 text-white/60">+</button>
+                                            {bookingType !== 'hotel' && (
+                                                <div>
+                                                    <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Checked Bags</label>
+                                                    <div className="flex items-center justify-between bg-black/40 p-1 rounded-lg">
+                                                        <button onClick={() => setBaggageCount(Math.max(0, baggageCount - 1))} className="size-8 rounded-md hover:bg-white/10 text-white/60">-</button>
+                                                        <span className="text-sm font-bold text-white">{baggageCount}</span>
+                                                        <button onClick={() => setBaggageCount(baggageCount + 1)} className="size-8 rounded-md hover:bg-white/10 text-white/60">+</button>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
 
                                         <div>

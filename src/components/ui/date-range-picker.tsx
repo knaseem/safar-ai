@@ -10,6 +10,7 @@ interface DateRangePickerProps {
     onDateChange: (checkIn: Date | null, checkOut: Date | null) => void
     minDate?: Date
     className?: string
+    label?: string
 }
 
 export function DateRangePicker({
@@ -17,7 +18,8 @@ export function DateRangePicker({
     checkOut,
     onDateChange,
     minDate = new Date(),
-    className
+    className,
+    label = "Travel Dates"
 }: DateRangePickerProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const [currentMonth, setCurrentMonth] = React.useState(new Date())
@@ -88,7 +90,7 @@ export function DateRangePicker({
 
     return (
         <div className={cn("relative", className)}>
-            <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Travel Dates</label>
+            <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">{label}</label>
 
             <button
                 type="button"
