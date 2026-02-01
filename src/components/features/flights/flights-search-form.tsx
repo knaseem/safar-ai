@@ -12,8 +12,16 @@ interface FlightsSearchFormProps {
 }
 
 export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps) {
-    const [origin, setOrigin] = useState("")
-    const [destination, setDestination] = useState("")
+    const [origin, setOrigin] = useState("") // IATA Code
+    const [destination, setDestination] = useState("") // IATA Code
+
+    // Autocomplete State
+    const [fromSearch, setFromSearch] = useState("")
+    const [toSearch, setToSearch] = useState("")
+    const [fromSuggestions, setFromSuggestions] = useState<any[]>([])
+    const [toSuggestions, setToSuggestions] = useState<any[]>([])
+    const [showFromSuggestions, setShowFromSuggestions] = useState(false)
+    const [showToSuggestions, setShowToSuggestions] = useState(false)
     const [checkIn, setCheckIn] = useState<Date | null>(null) // Departure
     const [checkOut, setCheckOut] = useState<Date | null>(null) // Return (Optional)
     const [passengers, setPassengers] = useState(1)
@@ -45,12 +53,47 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                     <Plane className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
-                        value={origin}
-                        onChange={(e) => setOrigin(e.target.value)}
+                        value={fromSearch}
+                        onChange={(e) => {
+                            setFromSearch(e.target.value)
+                            if (e.target.value.length > 1) {
+                                fetch(`/api/locations/search?keyword=${e.target.value}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.data) {
+                                            setFromSuggestions(data.data)
+                                            setShowFromSuggestions(true)
+                                        }
+                                    })
+                            } else {
+                                setFromSuggestions([])
+                                setShowFromSuggestions(false)
+                            }
+                        }}
                         placeholder="From"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
-                        maxLength={3}
                     />
+                    {showFromSuggestions && fromSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                            {fromSuggestions.map((suggestion: any, index: number) => (
+                                <button
+                                    key={index}
+                                    className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
+                                    onClick={() => {
+                                        setFromSearch(`${suggestion.name} (${suggestion.iataCode})`)
+                                        setOrigin(suggestion.iataCode)
+                                        setShowFromSuggestions(false)
+                                    }}
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-medium">{suggestion.name}</span>
+                                        <span className="text-white/40 text-xs">{suggestion.address?.cityName || suggestion.name}</span>
+                                    </div>
+                                    <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-1 rounded">{suggestion.iataCode}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Destination Input */}
@@ -58,12 +101,47 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
-                        value={destination}
-                        onChange={(e) => setDestination(e.target.value)}
+                        value={toSearch}
+                        onChange={(e) => {
+                            setToSearch(e.target.value)
+                            if (e.target.value.length > 1) {
+                                fetch(`/api/locations/search?keyword=${e.target.value}`)
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.data) {
+                                            setToSuggestions(data.data)
+                                            setShowToSuggestions(true)
+                                        }
+                                    })
+                            } else {
+                                setToSuggestions([])
+                                setShowToSuggestions(false)
+                            }
+                        }}
                         placeholder="To"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
-                        maxLength={3}
                     />
+                    {showToSuggestions && toSuggestions.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                            {toSuggestions.map((suggestion: any, index: number) => (
+                                <button
+                                    key={index}
+                                    className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
+                                    onClick={() => {
+                                        setToSearch(`${suggestion.name} (${suggestion.iataCode})`)
+                                        setDestination(suggestion.iataCode)
+                                        setShowToSuggestions(false)
+                                    }}
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-medium">{suggestion.name}</span>
+                                        <span className="text-white/40 text-xs">{suggestion.address?.cityName || suggestion.name}</span>
+                                    </div>
+                                    <span className="text-emerald-400 font-mono font-bold bg-emerald-500/10 px-2 py-1 rounded">{suggestion.iataCode}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Date Picker - Made Wider */}
