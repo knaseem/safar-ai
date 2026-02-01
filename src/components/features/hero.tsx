@@ -373,6 +373,19 @@ export function Hero({ initialPrompt }: HeroProps) {
                         Experience the World, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 italic font-serif">Effortlessly.</span>
                     </h1>
 
+                    {/* Halal Toggle - Global */}
+                    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-2">
+                        <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
+                        <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
+                            Halal Trip Mode
+                        </span>
+                        <Switch
+                            checked={isHalal}
+                            onCheckedChange={setIsHalal}
+                            className="data-[state=checked]:bg-emerald-500"
+                        />
+                    </div>
+
                     {/* Mode Tabs */}
                     <div className="flex p-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-2">
                         <button
@@ -405,17 +418,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                             </p>
 
                             <div className="w-full max-w-2xl mt-4 flex flex-col items-center gap-4">
-                                <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                                    <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
-                                    <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
-                                        Halal Trip Mode
-                                    </span>
-                                    <Switch
-                                        checked={isHalal}
-                                        onCheckedChange={setIsHalal}
-                                        className="data-[state=checked]:bg-emerald-500"
-                                    />
-                                </div>
+
 
                                 <div className="relative group w-full">
                                     <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
