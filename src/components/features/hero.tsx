@@ -362,7 +362,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="flex flex-col items-center gap-6 w-full max-w-4xl px-4"
+                    className="flex flex-col items-center gap-6 w-full max-w-4xl px-4 mx-auto"
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-medium text-white tracking-wider uppercase mb-4">
                         <Sparkles className="size-3 text-yellow-400" />
