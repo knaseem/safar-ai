@@ -192,17 +192,35 @@ export async function searchLocations(keyword: string) {
     const fallbacks: Record<string, any> = {
         'DUBAI': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
         'DXB': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
-        'LONDON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
-        'LON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
-        'LHR': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
+        'LONDON': [
+            { iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } },
+            { iataCode: 'LGW', name: 'London Gatwick', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.1537, longitude: -0.1821 } },
+            { iataCode: 'STN', name: 'London Stansted', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.8860, longitude: 0.2389 } },
+            { iataCode: 'LCY', name: 'London City', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5048, longitude: 0.0495 } }
+        ],
+        'LON': [
+            { iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } },
+            { iataCode: 'LGW', name: 'London Gatwick', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.1537, longitude: -0.1821 } },
+            { iataCode: 'STN', name: 'London Stansted', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.8860, longitude: 0.2389 } },
+            { iataCode: 'LCY', name: 'London City', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5048, longitude: 0.0495 } }
+        ],
+        'LHR': [{ iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } }],
         'TOKYO': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
         'HND': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
         'NRT': [{ iataCode: 'NRT', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.7720, longitude: 140.3929 } }],
         'SYDNEY': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
         'SYD': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
         'PARIS': [{ iataCode: 'CDG', name: 'PARIS', address: { cityName: 'PARIS', cityCode: 'PAR' }, geoCode: { latitude: 48.8566, longitude: 2.3522 } }],
-        'NYC': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7128, longitude: -74.0060 } }],
-        'NEW YORK': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7128, longitude: -74.0060 } }]
+        'NYC': [
+            { iataCode: 'JFK', name: 'New York JFK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.6413, longitude: -73.7781 } },
+            { iataCode: 'EWR', name: 'Newark Liberty', address: { cityName: 'NEWARK', cityCode: 'NYC' }, geoCode: { latitude: 40.6895, longitude: -74.1745 } },
+            { iataCode: 'LGA', name: 'LaGuardia', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7769, longitude: -73.8740 } }
+        ],
+        'NEW YORK': [
+            { iataCode: 'JFK', name: 'New York JFK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.6413, longitude: -73.7781 } },
+            { iataCode: 'EWR', name: 'Newark Liberty', address: { cityName: 'NEWARK', cityCode: 'NYC' }, geoCode: { latitude: 40.6895, longitude: -74.1745 } },
+            { iataCode: 'LGA', name: 'LaGuardia', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7769, longitude: -73.8740 } }
+        ]
     };
 
     if (process.env.AMADEUS_HOSTNAME !== 'production' && fallbacks[upperKeyword]) {
