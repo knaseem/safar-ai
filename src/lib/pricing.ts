@@ -1,4 +1,4 @@
-"use client" // This utility can be used on both client and server if needed, but primarily server-side for API routes
+// This utility can be used on both client and server if needed, but primarily server-side for API routes
 
 /**
  * Pricing Utility for Safar AI
@@ -6,9 +6,9 @@
  */
 
 // Default markup percentages (can be overridden by Env vars)
-const MARKUP_FLIGHT_PERCENT = Number(process.env.MARKUP_FLIGHT_PERCENT) || 5;
-const MARKUP_HOTEL_PERCENT = Number(process.env.MARKUP_HOTEL_PERCENT) || 10;
-const MARKUP_ANCILLARY_FEE = Number(process.env.MARKUP_ANCILLARY_FEE) || 15;
+export const MARKUP_FLIGHT_PERCENT = Number(process.env.MARKUP_FLIGHT_PERCENT) || 5;
+export const MARKUP_HOTEL_PERCENT = Number(process.env.MARKUP_HOTEL_PERCENT) || 10;
+export const MARKUP_ANCILLARY_FEE = Number(process.env.MARKUP_ANCILLARY_FEE) || 15;
 
 export type MarkupType = 'flight' | 'hotel' | 'ancillary';
 

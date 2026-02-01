@@ -140,7 +140,7 @@ export function BookingModal({ tripName, days, isOpen, onClose }: BookingModalPr
                                 onClick={handleBookNow}
                                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg"
                             >
-                                Book Now - ${estimatedPrice.toLocaleString()}
+                                Check Availability
                             </Button>
                             <p className="text-center text-white/30 text-xs mt-4">Demo mode. No real charges.</p>
 

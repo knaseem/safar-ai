@@ -1,4 +1,5 @@
 import { Duffel } from '@duffel/api';
+import { applyMarkup } from './pricing';
 
 let duffelInstance: Duffel | null = null;
 
@@ -67,7 +68,6 @@ export async function createFlightSearch(params: {
         });
 
         // Apply Markups to real search results
-        const { applyMarkup } = await import('./pricing');
         const dataWithMarkup = {
             ...response.data,
             offers: response.data.offers.map((offer: any) => ({
@@ -92,6 +92,17 @@ export async function createLinkSession(params: {
     travellerCurrency?: string;
     enableFlights?: boolean;
     enableStays?: boolean;
+    metadata?: Record<string, any>;
+    markup?: {
+        amount: number;
+        currency: string;
+    };
+    searchParams?: {
+        origin: string;
+        destination: string;
+        departureDate: string;
+        adults: number;
+    };
 }) {
     const duffel = getDuffel();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.safar-ai.co';
@@ -105,22 +116,44 @@ export async function createLinkSession(params: {
     }
 
     try {
+        console.log('[Duffel Debug] Client Keys:', Object.keys(duffel));
+        if ((duffel as any).links) {
+            console.log('[Duffel Debug] Links Keys:', Object.keys((duffel as any).links));
+        } else {
+            console.log('[Duffel Debug] Links property is missing on Duffel client');
+        }
+
         // Use the sessions endpoint as documented: https://duffel.com/docs/guides/duffel-links
-        const response = await (duffel as any).links.sessions.create({
-            reference: params.reference,
-            success_url: `${appUrl}/trips/success`,
-            failure_url: `${appUrl}/trips/failure`,
-            abandonment_url: `${appUrl}/`,
-            logo_url: 'https://safar-ai.com/logo.png', // Replace with your actual branded logo
-            primary_color: '#10b981', // Safar AI Emerald
-            traveller_currency: params.travellerCurrency || 'USD',
-            flights: {
-                enabled: params.enableFlights ?? true
-            },
-            stays: {
-                enabled: params.enableStays ?? true
+        // Use raw request to bypass SDK typing issues/version mismatch
+        const response = await (duffel as any).client.request({
+            method: 'POST',
+            path: '/links/sessions',
+            data: {
+                reference: params.reference,
+                success_url: `${appUrl}/trips/success`,
+                failure_url: `${appUrl}/trips/failure`,
+                abandonment_url: `${appUrl}/`,
+                logo_url: 'https://safar-ai.com/logo.png',
+                primary_color: '#10b981',
+                traveller_currency: params.travellerCurrency || 'USD',
+                flights: {
+                    enabled: params.enableFlights ?? true,
+                    default_search_criteria: params.searchParams ? {
+                        origin: params.searchParams.origin,
+                        destination: params.searchParams.destination,
+                        departure_date: params.searchParams.departureDate,
+                        passengers: Array(params.searchParams.adults).fill({ type: 'adult' })
+                    } : undefined
+                },
+                stays: {
+                    enabled: params.enableStays ?? true
+                },
+                metadata: params.metadata,
+                markup_amount: params.markup?.amount ? String(params.markup.amount) : undefined,
+                markup_currency: params.markup?.currency || params.travellerCurrency || 'USD'
             }
         });
+
         return response.data;
     } catch (error) {
         console.error('Duffel Link Session Error:', error);
@@ -187,8 +220,8 @@ export interface CreateOrderParams {
 export async function createOrder(params: CreateOrderParams) {
     const duffel = getDuffel();
 
-    if (!duffel) {
-        // Mock order for testing without API key
+    if (!duffel || params.offerId.startsWith('mock_')) {
+        // Mock order for testing without API key or for mock offers
         return {
             id: 'ord_mock_' + Math.random().toString(36).substring(7),
             booking_reference: 'SFRMCK',
@@ -229,7 +262,7 @@ export async function createOrder(params: CreateOrderParams) {
 export async function getOrder(orderId: string) {
     const duffel = getDuffel();
 
-    if (!duffel) {
+    if (!duffel || orderId.startsWith('ord_mock_')) {
         return {
             id: orderId,
             booking_reference: 'SFRMCK',
@@ -311,7 +344,7 @@ export async function confirmOrderCancellation(cancellationId: string) {
 export async function getOffer(offerId: string) {
     const duffel = getDuffel();
 
-    if (!duffel) {
+    if (!duffel || offerId.startsWith('mock_')) {
         // Mock offer for testing
         return {
             id: offerId,
@@ -362,6 +395,112 @@ export async function getOffer(offerId: string) {
         };
     } catch (error) {
         console.error('Duffel Get Offer Error:', error);
+        throw error;
+    }
+}
+
+// ============================================
+// ORDER CHANGE APIs (Modifications)
+// ============================================
+
+/**
+ * Initialize an Order Change Request
+ * This searches for alternative flights for a specific slice of an existing order
+ */
+export async function createOrderChangeRequest(params: {
+    orderId: string;
+    sliceIds: string[]; // The slices (flights) you want to remove/change
+    origin: string;
+    destination: string;
+    departureDate: string;
+}) {
+    const duffel = getDuffel();
+
+    if (!duffel) {
+        // Mock Response
+        return {
+            id: 'ocr_mock_' + Math.random().toString(36).substring(7),
+            offers: [
+                {
+                    id: 'off_change_mock_1',
+                    total_amount: '150.00', // Cost difference
+                    total_currency: 'USD',
+                    price: { amount: '150.00', currency: 'USD' }, // Consistency
+                    penalty_amount: '50.00',
+                    penalty_currency: 'USD',
+                    slices: []
+                }
+            ]
+        };
+    }
+
+    try {
+        const response = await (duffel as any).orderChangeRequests.create({
+            order_id: params.orderId,
+            slices: {
+                remove: params.sliceIds,
+                add: [
+                    {
+                        origin: params.origin,
+                        destination: params.destination,
+                        departure_date: params.departureDate,
+                        cabin_class: 'economy' // Defaulting for simplicity
+                    }
+                ]
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Create Change Request Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Get an Order Change Offer details (Preview the new flight cost)
+ */
+export async function getOrderChangeOffer(offerId: string) {
+    const duffel = getDuffel();
+
+    if (!duffel) return null;
+
+    try {
+        const response = await (duffel as any).orderChangeOffers.get(offerId);
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Get Change Offer Error:', error);
+        throw error;
+    }
+}
+
+/**
+ * Confirm and Pay for an Order Change
+ */
+export async function confirmOrderChange(changeOfferId: string, payment: {
+    amount: string;
+    currency: string;
+}) {
+    const duffel = getDuffel();
+
+    if (!duffel) {
+        return {
+            id: 'och_mock_confirmed',
+            status: 'confirmed'
+        };
+    }
+
+    try {
+        const response = await (duffel as any).orderChangeOffers.create({
+            id: changeOfferId,
+            payment: {
+                amount: payment.amount,
+                currency: payment.currency,
+                type: 'balance' // We pay airline from balance
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Confirm Change Error:', error);
         throw error;
     }
 }

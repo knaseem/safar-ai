@@ -34,6 +34,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const [step, setStep] = useState<BookingStep>('details')
     const [processingText, setProcessingText] = useState('Securing Flights...')
     const [confirmationCode, setConfirmationCode] = useState<string | null>(null)
+    const [searchError, setSearchError] = useState<string | null>(null)
     const [showPackingList, setShowPackingList] = useState(false)
     const [portalUrl, setPortalUrl] = useState<string | null>(null)
     const [isPortalOpen, setIsPortalOpen] = useState(false)
@@ -69,6 +70,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
 
     // Pricing & Live Data
     const [liveFlightPrice, setLiveFlightPrice] = useState<number | null>(null)
+    const [flightDetails, setFlightDetails] = useState<{ airline: string; duration: string; flightNumber: string } | null>(null)
+    const [offerId, setOfferId] = useState<string | null>(null)
     const [destIata, setDestIata] = useState<string | null>(null)
     const [isLivePricing, setIsLivePricing] = useState(false)
 
@@ -158,6 +161,18 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 if (data.data && data.data.length > 0) {
                     const cheapest = data.data[0]
                     setLiveFlightPrice(parseFloat(cheapest.price.total))
+                    setOfferId(cheapest.id)
+
+                    // Extract flight details
+                    const firstSegment = cheapest.itineraries?.[0]?.segments?.[0]
+                    const duration = cheapest.itineraries?.[0]?.duration
+                    if (firstSegment) {
+                        setFlightDetails({
+                            airline: firstSegment.carrierCode, // We might need a map for full names, using code for now
+                            duration: duration,
+                            flightNumber: `${firstSegment.carrierCode}${firstSegment.number}`
+                        })
+                    }
                 }
             } catch (err) {
                 console.error('Pricing error:', err)
@@ -170,7 +185,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
         return () => clearTimeout(timer)
     }, [departureAirport, destIata, checkIn, travelers.adults, flightClass])
 
-    // Processing animation
+    // Processing animation with REAL Check
     useEffect(() => {
         if (step === 'processing') {
             const messages = [
@@ -187,11 +202,13 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 }
             }, 1200)
 
+            // Save booking (internal DB) regardless of flight search (it's a "Request")
             const saveBooking = async () => {
                 if (!user) return
                 try {
                     const supabase = createClient()
                     await supabase.from('booking_requests').insert({
+                        // ... existing fields ...
                         user_id: user.id,
                         trip_name: tripData.trip_name,
                         destination: destination,
@@ -201,32 +218,29 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                         check_in: checkIn?.toISOString().split('T')[0],
                         check_out: checkOut?.toISOString().split('T')[0],
                         travelers,
-                        room_type: roomType,
-                        flight_class: flightClass,
-                        contact,
-                        travel_insurance: travelInsurance,
-                        special_requests: specialRequests || undefined,
-                        seat_preference: seatPreference,
-                        baggage_count: baggageCount,
-                        dietary_requirements: dietaryRequirements,
-                        is_special_occasion: isSpecialOccasion,
-                        occasion_type: occasionType,
                         estimated_price: estimatedPrice,
                         booking_type: bookingType,
-                        budget: budget || undefined,
                     })
-                    setConfirmationCode(`SAFAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)
                 } catch (error) {
                     console.error('Booking save error:', error)
-                    setConfirmationCode(`SAFAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)
                 }
+                setConfirmationCode(`SAFAR-${Math.random().toString(36).substring(2, 8).toUpperCase()}`)
             }
 
             saveBooking()
 
             const timeout = setTimeout(() => {
                 clearInterval(interval)
-                setStep('success')
+
+                // CRITICAL CHECK: Did we actually find a flight?
+                if (bookingType !== 'hotel' && !offerId) {
+                    // Search failed or returned no results
+                    setSearchError("We couldn't significantly confirm a flight for these dates in the Sandbox. Please try different dates.")
+                    setStep('details') // Go back to let them fix it
+                    toast.error("Flight Unavailability", { description: "No flight offers returned from the live system." })
+                } else {
+                    setStep('success')
+                }
             }, 4800)
 
             return () => {
@@ -234,7 +248,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 clearTimeout(timeout)
             }
         }
-    }, [step, user, tripData, destination, isHalal, departureAirport, checkIn, checkOut, travelers, roomType, flightClass, contact, travelInsurance, specialRequests, estimatedPrice])
+    }, [step, user, tripData, destination, isHalal, departureAirport, checkIn, checkOut, travelers, roomType, flightClass, contact, travelInsurance, specialRequests, estimatedPrice, offerId, bookingType])
 
     const handleClose = () => {
         setStep('details')
@@ -294,6 +308,16 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                 </div>
                                 <h2 className="text-2xl font-bold text-white mb-1">Book Your Trip</h2>
                                 <p className="text-white/50 text-sm mb-6">{tripData.trip_name}</p>
+
+                                {searchError && (
+                                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-sm flex items-start gap-2">
+                                        <div className="mt-0.5"><Shield className="size-4" /></div>
+                                        <div>
+                                            <p className="font-bold">Live Booking Error</p>
+                                            <p>{searchError}</p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Halal Badge */}
                                 {isHalal && (
@@ -596,11 +620,59 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                             try {
                                                 // Create search params for checkout
                                                 const params = new URLSearchParams()
-                                                if (tripData.days[0]?.theme) params.set('offer_id', 'mock_offer_id') // Will be replaced by real ID in production
+
+                                                // Basic params
+                                                // if (tripData.days[0]?.theme) params.set('offer_id', 'mock_offer_layout')
+
+                                                // usage: if we have a real ID (from Duffel search), use it.
+                                                // Otherwise fallback to dynamic mock ID
+                                                if (offerId && !offerId.startsWith('mock_')) {
+                                                    params.set('offer_id', offerId)
+                                                } else {
+                                                    toast.error("No valid flight offer found for this itinerary.")
+                                                    return
+                                                }
+
                                                 params.set('type', bookingType === 'hotel' ? 'stay' : 'flight')
 
-                                                // If we have a live flight price, we should try to get that real offer ID
-                                                // For now, we'll send them to checkout page which handles fetching
+                                                // Pass dynamic details
+                                                if (departureAirport) {
+                                                    params.set('origin', departureAirport.code)
+                                                    params.set('originCity', departureAirport.city)
+                                                }
+
+                                                if (travelers.adults) {
+                                                    params.set('adults', travelers.adults.toString())
+                                                }
+
+                                                if (destIata) {
+                                                    params.set('destination', destIata)
+                                                } else if (destination) {
+                                                    // Fallback to city name/pseudo-code if IATA resolution failed
+                                                    params.set('destination', destination.substring(0, 3).toUpperCase())
+                                                }
+
+                                                if (destination) params.set('destinationCity', destination)
+
+                                                if (checkIn) params.set('date', checkIn.toISOString().split('T')[0])
+
+                                                // Pass price and flight details if available
+                                                if (liveFlightPrice) {
+                                                    params.set('price', liveFlightPrice.toString())
+                                                } else if (estimatedPrice) {
+                                                    params.set('price', estimatedPrice.toString())
+                                                }
+
+                                                if (flightDetails) {
+                                                    params.set('airline', flightDetails.airline)
+                                                    params.set('duration', flightDetails.duration)
+                                                    params.set('flightNumber', flightDetails.flightNumber)
+                                                } else {
+                                                    // Fallbacks if flight details (pricing API) didn't return
+                                                    params.set('airline', 'Safar Airways')
+                                                    params.set('duration', 'PT6H') // Generic duration
+                                                    params.set('flightNumber', 'SA101')
+                                                }
 
                                                 window.location.href = `/checkout?${params.toString()}`
                                             } catch (err) {
@@ -623,8 +695,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     <div className="grid grid-cols-2 gap-4">
                                         <button
                                             onClick={() => {
-                                                // Redirect to internal checkout for Hotels
-                                                window.location.href = `/checkout?type=stay&offer_id=mock_hotel_offer`
+                                                // Redirect to internal checkout for Hotels (Generic Search)
+                                                window.location.href = `/checkout?type=stay`
                                             }}
                                             className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-center group"
                                         >
