@@ -103,6 +103,7 @@ export async function createLinkSession(params: {
         departureDate: string;
         adults: number;
     };
+    offerId?: string; // Add offerId to interface
 }) {
     const duffel = getDuffel();
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.safar-ai.co';
@@ -138,6 +139,8 @@ export async function createLinkSession(params: {
                 traveller_currency: params.travellerCurrency || 'USD',
                 flights: {
                     enabled: params.enableFlights ?? true,
+                    // If we have an offer ID, use it to lock the selection!
+                    selected_offers: params.offerId ? [params.offerId] : undefined,
                     default_search_criteria: params.searchParams ? {
                         origin: params.searchParams.origin,
                         destination: params.searchParams.destination,
