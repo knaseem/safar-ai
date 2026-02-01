@@ -618,7 +618,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     disabled={!isStep2Valid}
                                     className="w-full bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg sticky bottom-0 z-10"
                                 >
-                                    Confirm Booking • ${estimatedPrice.toLocaleString()}
+                                    Proceed & Get Final Price • Est. ${estimatedPrice.toLocaleString()}
+                                    <span className="block text-[10px] font-normal opacity-80">This is an estimate. Final price calculated at checkout.</span>
                                 </Button>
                             </div>
                         )}
