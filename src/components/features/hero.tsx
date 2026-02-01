@@ -388,7 +388,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                             onClick={() => setMode('stays')}
                             className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'stays' ? 'bg-emerald-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
                         >
-                            Find Stays
+                            Find Hotels
                         </button>
                         <button
                             onClick={() => setMode('flights')}
