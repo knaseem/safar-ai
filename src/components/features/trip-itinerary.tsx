@@ -402,7 +402,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 <div className="mt-4 flex items-center justify-between text-white/40 text-sm bg-white/5 p-3 rounded-lg border border-white/5 hover:border-emerald-500/30 transition-colors group/stay">
                                     <div className="flex items-center gap-2">
                                         <MoonIcon className="size-4 text-indigo-300" />
-                                        <span className="uppercase tracking-widest text-[10px] text-indigo-300/60">Stay:</span>
+                                        <span className="uppercase tracking-widest text-[10px] text-indigo-300/60">Stay Suggestions:</span>
                                         <span className="text-white/80">{day.stay}</span>
                                         <HotelVerificationBadge hotel={day.stay} />
 
@@ -462,7 +462,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 </Button>
                             ) : (
                                 <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => setIsBookingOpen(true)}>
-                                    Request Custom Package <ArrowRight className="size-4 ml-2" />
+                                    Check Availability & Rates <ArrowRight className="size-4 ml-2" />
                                 </Button>
                             )}
                         </div>
