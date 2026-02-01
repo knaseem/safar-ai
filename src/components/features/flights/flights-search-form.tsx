@@ -27,8 +27,26 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
     const [passengers, setPassengers] = useState(1)
 
     const handleSubmit = () => {
-        if (!origin || !destination) {
-            toast.error("Missing Details", { description: "Please enter both origin and destination cities." })
+        // Validation Logic: Auto-resolve if user typed but didn't select
+        let finalOrigin = origin
+        let finalDest = destination
+
+        // Try to resolve Origin from suggestions if empty
+        if (!finalOrigin && fromSearch && fromSuggestions.length > 0) {
+            finalOrigin = fromSuggestions[0].iataCode
+            setFromSearch(fromSuggestions[0].name) // Update display
+            setOrigin(finalOrigin)
+        }
+
+        // Try to resolve Destination from suggestions if empty
+        if (!finalDest && toSearch && toSuggestions.length > 0) {
+            finalDest = toSuggestions[0].iataCode
+            setToSearch(toSuggestions[0].name) // Update display
+            setDestination(finalDest)
+        }
+
+        if (!finalOrigin || !finalDest) {
+            toast.error("Missing Details", { description: "Please select a valid airport from the list." })
             return
         }
         if (!checkIn) {
@@ -37,8 +55,8 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
         }
 
         onSearch({
-            origin,
-            destination,
+            origin: finalOrigin,
+            destination: finalDest,
             departureDate: checkIn,
             returnDate: checkOut,
             adults: passengers
