@@ -71,7 +71,6 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                 {/* Date Picker */}
                 <div className="flex-1 w-full relative z-40">
                     <DateRangePicker
-                        label="Trip Dates"
                         checkIn={checkIn}
                         checkOut={checkOut}
                         fromLabel="Depart"
