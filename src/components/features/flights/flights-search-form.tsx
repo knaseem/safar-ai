@@ -26,27 +26,42 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
     const [checkOut, setCheckOut] = useState<Date | null>(null) // Return (Optional)
     const [passengers, setPassengers] = useState(1)
 
-    const handleSubmit = () => {
-        // Validation Logic: Auto-resolve if user typed but didn't select
+    const handleSubmit = async () => {
         let finalOrigin = origin
         let finalDest = destination
 
-        // Try to resolve Origin from suggestions if empty
-        if (!finalOrigin && fromSearch && fromSuggestions.length > 0) {
-            finalOrigin = fromSuggestions[0].iataCode
-            setFromSearch(fromSuggestions[0].name) // Update display
-            setOrigin(finalOrigin)
+        // If origin is empty but user typed something, fetch and resolve it
+        if (!finalOrigin && fromSearch.trim()) {
+            try {
+                const res = await fetch(`/api/locations/search?keyword=${encodeURIComponent(fromSearch.trim())}`)
+                const data = await res.json()
+                if (data.data && data.data.length > 0) {
+                    finalOrigin = data.data[0].iataCode
+                    setOrigin(finalOrigin)
+                    setFromSearch(data.data[0].name)
+                }
+            } catch (err) {
+                console.error('Failed to resolve origin:', err)
+            }
         }
 
-        // Try to resolve Destination from suggestions if empty
-        if (!finalDest && toSearch && toSuggestions.length > 0) {
-            finalDest = toSuggestions[0].iataCode
-            setToSearch(toSuggestions[0].name) // Update display
-            setDestination(finalDest)
+        // If destination is empty but user typed something, fetch and resolve it
+        if (!finalDest && toSearch.trim()) {
+            try {
+                const res = await fetch(`/api/locations/search?keyword=${encodeURIComponent(toSearch.trim())}`)
+                const data = await res.json()
+                if (data.data && data.data.length > 0) {
+                    finalDest = data.data[0].iataCode
+                    setDestination(finalDest)
+                    setToSearch(data.data[0].name)
+                }
+            } catch (err) {
+                console.error('Failed to resolve destination:', err)
+            }
         }
 
         if (!finalOrigin || !finalDest) {
-            toast.error("Missing Details", { description: "Please select a valid airport from the list." })
+            toast.error("Missing Details", { description: "Please enter valid origin and destination cities." })
             return
         }
         if (!checkIn) {
