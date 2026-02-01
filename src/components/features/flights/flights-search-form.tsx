@@ -71,7 +71,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                             }
                         }}
                         placeholder="From"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                     />
                     {showFromSuggestions && fromSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
@@ -80,7 +80,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                     key={index}
                                     className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
                                     onClick={() => {
-                                        setFromSearch(`${suggestion.name} (${suggestion.iataCode})`)
+                                        setFromSearch(suggestion.name) // Show Name only
                                         setOrigin(suggestion.iataCode)
                                         setShowFromSuggestions(false)
                                     }}
@@ -119,7 +119,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                             }
                         }}
                         placeholder="To"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
                     />
                     {showToSuggestions && toSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
@@ -128,7 +128,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                     key={index}
                                     className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
                                     onClick={() => {
-                                        setToSearch(`${suggestion.name} (${suggestion.iataCode})`)
+                                        setToSearch(suggestion.name) // Show Name only
                                         setDestination(suggestion.iataCode)
                                         setShowToSuggestions(false)
                                     }}
