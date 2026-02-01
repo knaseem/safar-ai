@@ -190,19 +190,19 @@ export async function searchLocations(keyword: string) {
     // Test Data Fallbacks (Amadeus Test API has limited coverage)
     const upperKeyword = keyword.toUpperCase().trim();
     const fallbacks: Record<string, any> = {
-        'DUBAI': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' } }],
-        'DXB': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' } }],
-        'LONDON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' } }],
-        'LON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' } }],
-        'LHR': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' } }],
-        'TOKYO': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' } }],
-        'HND': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' } }],
-        'NRT': [{ iataCode: 'NRT', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' } }],
-        'SYDNEY': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' } }],
-        'SYD': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' } }],
-        'PARIS': [{ iataCode: 'CDG', name: 'PARIS', address: { cityName: 'PARIS', cityCode: 'PAR' } }],
-        'NYC': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' } }],
-        'NEW YORK': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' } }]
+        'DUBAI': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
+        'DXB': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
+        'LONDON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
+        'LON': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
+        'LHR': [{ iataCode: 'LHR', name: 'LONDON', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5074, longitude: -0.1278 } }],
+        'TOKYO': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
+        'HND': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
+        'NRT': [{ iataCode: 'NRT', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.7720, longitude: 140.3929 } }],
+        'SYDNEY': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
+        'SYD': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
+        'PARIS': [{ iataCode: 'CDG', name: 'PARIS', address: { cityName: 'PARIS', cityCode: 'PAR' }, geoCode: { latitude: 48.8566, longitude: 2.3522 } }],
+        'NYC': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7128, longitude: -74.0060 } }],
+        'NEW YORK': [{ iataCode: 'JFK', name: 'NEW YORK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7128, longitude: -74.0060 } }]
     };
 
     if (process.env.AMADEUS_HOSTNAME !== 'production' && fallbacks[upperKeyword]) {
