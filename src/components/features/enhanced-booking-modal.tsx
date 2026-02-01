@@ -140,6 +140,14 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 const data = await res.json()
                 if (data.data && data.data.length > 0) {
                     setDestIata(data.data[0].iataCode || data.data[0].address.cityCode)
+                } else {
+                    // Fallback for common major cities if API fails
+                    const commonMap: Record<string, string> = {
+                        'new york': 'NYC', 'london': 'LON', 'paris': 'PAR', 'dubai': 'DXB', 'tokyo': 'TYO',
+                        'singapore': 'SIN', 'los angeles': 'LAX', 'san francisco': 'SFO', 'miami': 'MIA'
+                    }
+                    const lowerDest = destination.toLowerCase()
+                    if (commonMap[lowerDest]) setDestIata(commonMap[lowerDest])
                 }
             } catch (err) {
                 console.error('Dest resolve error:', err)
@@ -547,7 +555,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                             {bookingType !== 'hotel' && (
                                                 <div className="flex justify-between text-white/70">
                                                     <span className="flex items-center gap-2"><Plane className="size-4" /> Flight</span>
-                                                    <span className="text-white">{departureAirport?.city} → {destination}</span>
+                                                    <span className="text-white capitalize">{departureAirport?.city} → {destination}</span>
                                                 </div>
                                             )}
                                             {bookingType !== 'flight' && (
@@ -672,8 +680,22 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                                 if (destIata) {
                                                     params.set('destination', destIata)
                                                 } else if (destination) {
-                                                    // Fallback to city name/pseudo-code if IATA resolution failed
-                                                    params.set('destination', destination.substring(0, 3).toUpperCase())
+                                                    // Try one more fallback map check before giving up
+                                                    const commonMap: Record<string, string> = {
+                                                        'new york': 'NYC', 'london': 'LON', 'paris': 'PAR', 'dubai': 'DXB', 'tokyo': 'TYO'
+                                                    }
+                                                    const code = commonMap[destination.toLowerCase()]
+                                                    if (code) {
+                                                        params.set('destination', code)
+                                                    } else {
+                                                        // Last resort: Use 3 chars but warn it might be wrong. 
+                                                        // Better to send nothing than wrong code? 
+                                                        // Sending nothing ensures at least Origin/Date triggers, 
+                                                        // but route code requires ALL to carry over.
+                                                        // Let's send substring but logging it.
+                                                        console.log("Using raw substring for dest:", destination)
+                                                        params.set('destination', destination.substring(0, 3).toUpperCase())
+                                                    }
                                                 }
 
                                                 if (destination) params.set('destinationCity', destination)
