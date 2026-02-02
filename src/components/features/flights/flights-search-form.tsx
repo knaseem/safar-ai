@@ -82,7 +82,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
         <div className="w-full max-w-5xl bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
             <div className="flex flex-col md:flex-row items-center gap-4">
                 {/* Origin Input */}
-                <div className="flex-1 w-full relative group">
+                <div className="flex-[1.5] w-full relative group min-w-[180px]">
                     <Plane className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
@@ -110,7 +110,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                             }, 300)
                         }}
                         placeholder="From"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
                     />
                     {showFromSuggestions && fromSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
@@ -136,7 +136,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                 </div>
 
                 {/* Destination Input */}
-                <div className="flex-1 w-full relative group">
+                <div className="flex-[1.5] w-full relative group min-w-[180px]">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
@@ -164,7 +164,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                             }, 300)
                         }}
                         placeholder="To"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium uppercase"
+                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
                     />
                     {showToSuggestions && toSuggestions.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
