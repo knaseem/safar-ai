@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { DateRangePicker } from "@/components/ui/date-range-picker"
 import { MapPin, Users, Plane, Search } from "lucide-react"
@@ -25,6 +25,24 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
     const [checkIn, setCheckIn] = useState<Date | null>(null) // Departure
     const [checkOut, setCheckOut] = useState<Date | null>(null) // Return (Optional)
     const [passengers, setPassengers] = useState(1)
+
+    // Refs for click-outside detection
+    const fromRef = useRef<HTMLDivElement>(null)
+    const toRef = useRef<HTMLDivElement>(null)
+
+    // Close dropdowns on click outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (fromRef.current && !fromRef.current.contains(event.target as Node)) {
+                setShowFromSuggestions(false)
+            }
+            if (toRef.current && !toRef.current.contains(event.target as Node)) {
+                setShowToSuggestions(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
 
     const handleSubmit = async () => {
         let finalOrigin = origin
@@ -82,7 +100,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
         <div className="w-full max-w-5xl bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
             <div className="flex flex-col md:flex-row items-center gap-4">
                 {/* Origin Input */}
-                <div className="flex-[1.5] w-full relative group min-w-[180px]">
+                <div ref={fromRef} className="flex-[1.5] w-full relative group min-w-[180px]">
                     <Plane className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
@@ -102,12 +120,6 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 setFromSuggestions([])
                                 setShowFromSuggestions(false)
                             }
-                        }}
-                        onBlur={() => {
-                            // Delay to allow click on suggestion to fire first
-                            setTimeout(() => {
-                                setShowFromSuggestions(false)
-                            }, 300)
                         }}
                         placeholder="From"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
@@ -137,7 +149,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                 </div>
 
                 {/* Destination Input */}
-                <div className="flex-[1.5] w-full relative group min-w-[180px]">
+                <div ref={toRef} className="flex-[1.5] w-full relative group min-w-[180px]">
                     <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
                     <input
                         type="text"
@@ -157,12 +169,6 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 setToSuggestions([])
                                 setShowToSuggestions(false)
                             }
-                        }}
-                        onBlur={() => {
-                            // Delay to allow click on suggestion to fire first
-                            setTimeout(() => {
-                                setShowToSuggestions(false)
-                            }, 300)
                         }}
                         placeholder="To"
                         className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
