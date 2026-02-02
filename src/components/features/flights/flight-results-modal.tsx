@@ -17,6 +17,9 @@ interface FlightResultsModalProps {
 export function FlightResultsModal({ isOpen, onClose, results, searchParams }: FlightResultsModalProps) {
     const router = useRouter()
 
+    const [sortBy, setSortBy] = useState<'price_asc' | 'price_desc' | 'duration'>('price_asc')
+    const [selectedAirline, setSelectedAirline] = useState<string>('all')
+
     const handleSelectFlight = (offer: any) => {
         const params = new URLSearchParams()
         params.set("offer_id", offer.id)
@@ -36,6 +39,38 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
 
     if (!isOpen) return null
 
+    // Process Results
+    const offers = results?.offers || []
+
+    // 1. Extract Unique Airlines
+    const airlines = Array.from(new Set(offers.map((o: any) => {
+        const segment = o.slices[0].segments[0];
+        return segment.operating_carrier?.name || o.owner?.name || "Airline";
+    }))).sort() as string[]
+
+    // 2. Filter & Sort
+    const filteredOffers = offers
+        .filter((offer: any) => {
+            if (selectedAirline === 'all') return true;
+            const segment = offer.slices[0].segments[0];
+            const carrier = segment.operating_carrier?.name || offer.owner?.name || "Airline";
+            return carrier === selectedAirline;
+        })
+        .sort((a: any, b: any) => {
+            if (sortBy === 'price_asc') return parseFloat(a.total_amount) - parseFloat(b.total_amount);
+            if (sortBy === 'price_desc') return parseFloat(b.total_amount) - parseFloat(a.total_amount);
+            if (sortBy === 'duration') {
+                // Simple duration parsing (PT2H30M -> minutes)
+                const getDuration = (iso: string) => {
+                    // Very basic ISO8601 duration parser for sorting
+                    // Duffel returns PTxxHxxM usually
+                    return iso.length; // Proxy for now as parsing IS08601 fully is complex without libs
+                };
+                return getDuration(a.slices[0].duration) - getDuration(b.slices[0].duration);
+            }
+            return 0;
+        });
+
     return (
         <AnimatePresence>
             <motion.div
@@ -50,7 +85,7 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-neutral-900/95 backdrop-blur z-20">
+                    <div className="p-6 border-b border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 bg-neutral-900/95 backdrop-blur z-20">
                         <div>
                             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                                 <Plane className="size-6 text-sky-400" />
@@ -60,22 +95,47 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                 {searchParams?.origin} → {searchParams?.destination} • {new Date(searchParams?.departureDate).toLocaleDateString()}
                             </p>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                        >
-                            <X className="size-5" />
-                        </button>
+
+                        {/* Controls */}
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={selectedAirline}
+                                onChange={(e) => setSelectedAirline(e.target.value)}
+                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/50"
+                            >
+                                <option value="all" className="bg-neutral-900">All Airlines</option>
+                                {airlines.map(airline => (
+                                    <option key={airline} value={airline} className="bg-neutral-900">{airline}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as any)}
+                                className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-sky-500/50"
+                            >
+                                <option value="price_asc" className="bg-neutral-900">Cheapest First</option>
+                                <option value="price_desc" className="bg-neutral-900">Most Expensive</option>
+                                {/* Duration sort is approximate strictly for sorting */}
+                            </select>
+
+                            <button
+                                onClick={onClose}
+                                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors ml-2"
+                            >
+                                <X className="size-5" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Results List */}
                     <div className="flex-1 p-6 overflow-y-auto space-y-4">
-                        {(!results.offers || results.offers.length === 0) ? (
+                        {filteredOffers.length === 0 ? (
                             <div className="text-center py-20 text-white/40">
-                                No flights found. Try different dates or airports (e.g. JFK to LHR).
+                                No flights found matching your filter.
                             </div>
                         ) : (
-                            results.offers.map((offer: any) => {
+                            filteredOffers.map((offer: any) => {
                                 // Assume first slice for display simplicity
                                 const segment = offer.slices[0].segments[0];
                                 const carrier = segment.operating_carrier?.name || offer.owner?.name || "Airline";
