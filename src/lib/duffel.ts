@@ -129,36 +129,42 @@ export async function createLinkSession(params: {
 
         // Use the sessions endpoint as documented: https://duffel.com/docs/guides/duffel-links
         // Use raw request to bypass SDK typing issues/version mismatch
+        const sessionPayload = {
+            reference: params.reference,
+            success_url: `${appUrl}/trips/success`,
+            failure_url: `${appUrl}/trips/failure`,
+            abandonment_url: `${appUrl}/`,
+            logo_url: 'https://safar-ai.com/logo.png',
+            primary_color: '#10b981',
+            traveller_currency: params.travellerCurrency || 'USD',
+            flights: {
+                enabled: params.enableFlights ?? true,
+                // CRITICAL: Only pass offerId if it's a REAL Duffel ID (starts with 'off_' and NOT 'off_mock')
+                // Sending a mock ID to the real API causes the session to break or land on empty search
+                selected_offers: (params.offerId && params.offerId.startsWith('off_') && !params.offerId.includes('mock'))
+                    ? [params.offerId]
+                    : undefined,
+                default_search_criteria: params.searchParams ? {
+                    origin: params.searchParams.origin,
+                    destination: params.searchParams.destination,
+                    departure_date: params.searchParams.departureDate,
+                    passengers: Array(params.searchParams.adults).fill({ type: 'adult' })
+                } : undefined
+            },
+            stays: {
+                enabled: params.enableStays ?? true
+            },
+            metadata: params.metadata,
+            markup_amount: params.markup?.amount ? String(params.markup.amount) : undefined,
+            markup_currency: params.markup?.currency || params.travellerCurrency || 'USD'
+        };
+
+        console.log('[Duffel Debug] Session Payload:', JSON.stringify(sessionPayload, null, 2));
+
         const response = await (duffel as any).client.request({
             method: 'POST',
             path: '/links/sessions',
-            data: {
-                reference: params.reference,
-                success_url: `${appUrl}/trips/success`,
-                failure_url: `${appUrl}/trips/failure`,
-                abandonment_url: `${appUrl}/`,
-                logo_url: 'https://safar-ai.com/logo.png',
-                primary_color: '#10b981',
-                traveller_currency: params.travellerCurrency || 'USD',
-                flights: {
-                    enabled: params.enableFlights ?? true,
-                    // If we have an offer ID, use it to lock the selection!
-                    // logging this for debugging
-                    selected_offers: params.offerId ? [params.offerId] : undefined,
-                    default_search_criteria: params.searchParams ? {
-                        origin: params.searchParams.origin,
-                        destination: params.searchParams.destination,
-                        departure_date: params.searchParams.departureDate,
-                        passengers: Array(params.searchParams.adults).fill({ type: 'adult' })
-                    } : undefined
-                },
-                stays: {
-                    enabled: params.enableStays ?? true
-                },
-                metadata: params.metadata,
-                markup_amount: params.markup?.amount ? String(params.markup.amount) : undefined,
-                markup_currency: params.markup?.currency || params.travellerCurrency || 'USD'
-            }
+            data: sessionPayload
         });
 
         return response.data;
