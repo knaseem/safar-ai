@@ -60,38 +60,53 @@ export async function POST(request: Request) {
             adults: adults || 1
         } : undefined
 
-        // SECURITY: Ignore client 'amount'. Fetch REAL price from provider + apply OUR markup
+        // SECURITY: Verify Price & Calculate Markup
         let verifiedMarkupParams = undefined;
-        let finalType = type;
 
         if (offer_id) {
             const { getOffer } = await import('@/lib/duffel')
             const { applyMarkup } = await import('@/lib/pricing')
 
-            // 1. Fetch the real offer from provider (Duffel)
-            // This ensures the price comes from the source of truth, not the URL
-            try {
-                const offer = await getOffer(offer_id)
-                if (offer) {
-                    // 2. Calculate Markup safely on server
-                    // The 'getOffer' util already returns a marked up 'total_amount'
-                    // but we need to extract the specific markup amount for the session params
-                    const baseAmount = parseFloat(offer.base_amount || offer.total_amount)
-                    const serverCalculatedTotal = applyMarkup(baseAmount, type === 'stay' ? 'hotel' : 'flight')
+            // FLIGHTS: Strict Server-Side Verification
+            if (type === 'flight') {
+                try {
+                    // 1. Fetch real flight offer
+                    const offer = await getOffer(offer_id)
+                    if (offer) {
+                        const baseAmount = parseFloat(offer.base_amount || offer.total_amount)
+                        const serverCalculatedTotal = applyMarkup(baseAmount, 'flight')
+                        const markupValue = (serverCalculatedTotal - baseAmount).toFixed(2)
 
-                    const markupValue = (serverCalculatedTotal - baseAmount).toFixed(2)
+                        verifiedMarkupParams = {
+                            amount: parseFloat(markupValue),
+                            currency: offer.total_currency || currency || 'USD'
+                        };
+
+                        console.log(`🔒 [Security] Verified Flight Price: Base=${baseAmount}, Markup=${markupValue}`)
+                    }
+                } catch (err) {
+                    console.error("Failed to verify flight offer:", err)
+                }
+            }
+
+            // HOTELS: Markup Calculation (Rate verification skipped for MVP as rates are transient)
+            else if (type === 'stay') {
+                // For hotels, 'amount' from client is the Total (Base + Markup). We reverse calculate.
+                // Ideally we would fetch the rate again here, but Duffel Stays API makes lookup by ID complex.
+                // We revert to trusting the passed amount for the *Session Request* but strictly defining the markup.
+
+                const clientTotal = parseFloat(amount || '0');
+                if (clientTotal > 0) {
+                    const markupRate = MARKUP_HOTEL_PERCENT / 100;
+                    const baseEst = clientTotal / (1 + markupRate);
+                    const markupVal = (clientTotal - baseEst).toFixed(2);
 
                     verifiedMarkupParams = {
-                        amount: parseFloat(markupValue),
-                        currency: offer.total_currency || currency || 'USD'
+                        amount: parseFloat(markupVal),
+                        currency: currency || 'USD'
                     };
-
-                    console.log(`🔒 [Security] Verified Price: Base=${baseAmount}, Markup=${markupValue}, Total=${serverCalculatedTotal}`)
+                    console.log(`ℹ️ [Info] Applied Hotel Markup: ${markupVal} (${MARKUP_HOTEL_PERCENT}%)`)
                 }
-            } catch (err) {
-                console.error("Failed to verify offer price:", err)
-                // If verification fails, we might choose to blocking the transaction 
-                // or proceed with caution. For high security, we should ideally block.
             }
         }
 
@@ -104,10 +119,13 @@ export async function POST(request: Request) {
             metadata: {
                 user_id: user?.id || 'guest',
                 offer_id: offer_id,
-                source: "safar-ai"
+                source: "safar-ai",
+                type: type // 'flight' or 'stay'
             },
-            offerId: offer_id, // Pass specifically to lock the flight offer
-            markup: verifiedMarkupParams, // Use the SECURE params
+            // CRITICAL: Only pass 'offerId' if it is a Flight Offer (starts with 'off_')
+            // Duffel Links only supports locking specific offers for Flights, not generic Hotel Rate IDs
+            offerId: (type === 'flight' && offer_id?.startsWith('off_')) ? offer_id : undefined,
+            markup: verifiedMarkupParams || markupParams,
             searchParams: searchCriteria
         })
 
