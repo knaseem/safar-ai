@@ -20,7 +20,7 @@ export async function POST(request: Request) {
             adults: adults || 1
         })
 
-        return NextResponse.json({ results })
+        return NextResponse.json(results)
     } catch (error: any) {
         console.error("Stays Search API Error:", error)
         return NextResponse.json(
