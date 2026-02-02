@@ -135,10 +135,14 @@ export async function createLinkSession(params: {
         } : undefined;
 
         // If for ANY reason search params are missing or incomplete, fallback to a known valid flight (LHR -> JFK)
-        const isValidCriteria = searchCriteria && searchCriteria.origin && searchCriteria.destination && searchCriteria.departure_date;
+        // STRICT CHECK: Origin/Dest must be 3-letter IATA codes. If they are city names (e.g. "New York"), Duffel fails.
+        const isValidCriteria = searchCriteria
+            && searchCriteria.origin && searchCriteria.origin.length === 3
+            && searchCriteria.destination && searchCriteria.destination.length === 3
+            && searchCriteria.departure_date;
 
         if (!isValidCriteria) {
-            console.warn("[Duffel Warning] Missing or Incomplete Search Params! Applying Hardcoded Safety Net (LHR->JFK).", searchCriteria);
+            console.warn("[Duffel Warning] Invalid Search Params (Likely not IATA codes)! Applying Hardcoded Safety Net (LHR->JFK).", searchCriteria);
             searchCriteria = {
                 origin: 'LHR',
                 destination: 'JFK',
