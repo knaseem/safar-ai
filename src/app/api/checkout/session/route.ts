@@ -57,8 +57,8 @@ export async function POST(request: Request) {
         const formattedDate = date ? new Date(date).toISOString().split('T')[0] : undefined;
 
         const searchCriteria = (origin && destination && formattedDate) ? {
-            origin,
-            destination,
+            origin: origin.substring(0, 3).toUpperCase(),
+            destination: destination.substring(0, 3).toUpperCase(),
             departureDate: formattedDate,
             adults: adults || 1
         } : undefined
