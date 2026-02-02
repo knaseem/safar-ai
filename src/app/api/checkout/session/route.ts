@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     try {
         const supabase = await createClient()
         const body = await request.json()
-        const { reference, type, offer_id, amount, currency, origin, destination, date, adults } = body
+        const { reference, type, offer_id, amount, currency, origin, destination, date, returnDate, adults } = body
 
         // Debugging logs to trace why params might be missing
         console.log("----------------------------------------------------------------")
@@ -55,12 +55,15 @@ export async function POST(request: Request) {
         // Create Search Params object
         // Duffel strictly requires YYYY-MM-DD for dates
         const formattedDate = date ? new Date(date).toISOString().split('T')[0] : undefined;
+        // Check for return date in body (need to add to destructuring above first)
+        const formattedReturnDate = (body.returnDate) ? new Date(body.returnDate).toISOString().split('T')[0] : undefined;
 
         const searchCriteria = (origin && destination && formattedDate) ? {
-            origin: origin.substring(0, 3).toUpperCase(),
-            destination: destination.substring(0, 3).toUpperCase(),
-            departureDate: formattedDate,
-            adults: adults || 1
+            origin: origin, // Revert destructive substring - Trust the frontend or validation elsewhere
+            destination: destination,
+            departure_date: formattedDate,
+            return_date: formattedReturnDate,
+            passengers: Array(adults || 1).fill({ type: 'adult' })
         } : undefined
 
         // SECURITY: Verify Price & Calculate Markup

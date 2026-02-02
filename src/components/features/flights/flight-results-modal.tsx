@@ -31,6 +31,7 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
         params.set("origin", searchParams.origin)
         params.set("destination", searchParams.destination)
         if (searchParams.departureDate) params.set("date", new Date(searchParams.departureDate).toISOString())
+        if (searchParams.returnDate) params.set("returnDate", new Date(searchParams.returnDate).toISOString())
         if (searchParams.adults) params.set("adults", searchParams.adults.toString())
 
         toast.loading("Redirecting to checkout...")
