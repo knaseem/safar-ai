@@ -181,61 +181,195 @@ export async function getHotelOffers(params: {
     }
 }
 /**
+ * Comprehensive airport fallback data for test mode
+ * This provides fuzzy search matching across 80+ global airports
+ */
+const AIRPORT_FALLBACKS = [
+    // US & Canada - Major Hubs
+    { iataCode: 'JFK', name: 'John F. Kennedy International', address: { cityName: 'NEW YORK', cityCode: 'NYC' } },
+    { iataCode: 'LAX', name: 'Los Angeles International', address: { cityName: 'LOS ANGELES', cityCode: 'LAX' } },
+    { iataCode: 'ORD', name: "O'Hare International", address: { cityName: 'CHICAGO', cityCode: 'CHI' } },
+    { iataCode: 'DFW', name: 'Dallas/Fort Worth International', address: { cityName: 'DALLAS', cityCode: 'DFW' } },
+    { iataCode: 'DEN', name: 'Denver International', address: { cityName: 'DENVER', cityCode: 'DEN' } },
+    { iataCode: 'ATL', name: 'Hartsfield-Jackson Atlanta', address: { cityName: 'ATLANTA', cityCode: 'ATL' } },
+    { iataCode: 'SFO', name: 'San Francisco International', address: { cityName: 'SAN FRANCISCO', cityCode: 'SFO' } },
+    { iataCode: 'SEA', name: 'Seattle-Tacoma International', address: { cityName: 'SEATTLE', cityCode: 'SEA' } },
+    { iataCode: 'MIA', name: 'Miami International', address: { cityName: 'MIAMI', cityCode: 'MIA' } },
+    { iataCode: 'BOS', name: 'Logan International', address: { cityName: 'BOSTON', cityCode: 'BOS' } },
+    { iataCode: 'EWR', name: 'Newark Liberty International', address: { cityName: 'NEWARK', cityCode: 'NYC' } },
+    { iataCode: 'LGA', name: 'LaGuardia', address: { cityName: 'NEW YORK', cityCode: 'NYC' } },
+    { iataCode: 'MCO', name: 'Orlando International', address: { cityName: 'ORLANDO', cityCode: 'ORL' } },
+    { iataCode: 'LAS', name: 'Harry Reid International', address: { cityName: 'LAS VEGAS', cityCode: 'LAS' } },
+    { iataCode: 'CLT', name: 'Charlotte Douglas International', address: { cityName: 'CHARLOTTE', cityCode: 'CLT' } },
+    { iataCode: 'PHX', name: 'Phoenix Sky Harbor', address: { cityName: 'PHOENIX', cityCode: 'PHX' } },
+    { iataCode: 'IAH', name: 'George Bush Intercontinental', address: { cityName: 'HOUSTON', cityCode: 'HOU' } },
+    { iataCode: 'YYZ', name: 'Pearson International', address: { cityName: 'TORONTO', cityCode: 'YTO' } },
+    { iataCode: 'YVR', name: 'Vancouver International', address: { cityName: 'VANCOUVER', cityCode: 'YVR' } },
+    { iataCode: 'YUL', name: 'Pierre Elliott Trudeau', address: { cityName: 'MONTREAL', cityCode: 'YMQ' } },
+    { iataCode: 'AUS', name: 'Austin-Bergstrom International', address: { cityName: 'AUSTIN', cityCode: 'AUS' } },
+    { iataCode: 'BNA', name: 'Nashville International', address: { cityName: 'NASHVILLE', cityCode: 'BNA' } },
+    { iataCode: 'IAD', name: 'Dulles International', address: { cityName: 'WASHINGTON DC', cityCode: 'WAS' } },
+    { iataCode: 'DCA', name: 'Reagan National', address: { cityName: 'WASHINGTON DC', cityCode: 'WAS' } },
+    { iataCode: 'PHL', name: 'Philadelphia International', address: { cityName: 'PHILADELPHIA', cityCode: 'PHL' } },
+    { iataCode: 'DTW', name: 'Detroit Metropolitan', address: { cityName: 'DETROIT', cityCode: 'DTT' } },
+    { iataCode: 'MSP', name: 'Minneapolis-Saint Paul', address: { cityName: 'MINNEAPOLIS', cityCode: 'MSP' } },
+    { iataCode: 'SLC', name: 'Salt Lake City International', address: { cityName: 'SALT LAKE CITY', cityCode: 'SLC' } },
+    { iataCode: 'FLL', name: 'Fort Lauderdale-Hollywood', address: { cityName: 'FORT LAUDERDALE', cityCode: 'FLL' } },
+    { iataCode: 'SAN', name: 'San Diego International', address: { cityName: 'SAN DIEGO', cityCode: 'SAN' } },
+    { iataCode: 'TPA', name: 'Tampa International', address: { cityName: 'TAMPA', cityCode: 'TPA' } },
+    { iataCode: 'HNL', name: 'Daniel K. Inouye International', address: { cityName: 'HONOLULU', cityCode: 'HNL' } },
+    { iataCode: 'PDX', name: 'Portland International', address: { cityName: 'PORTLAND', cityCode: 'PDX' } },
+    // Europe - Major Hubs
+    { iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' } },
+    { iataCode: 'LGW', name: 'London Gatwick', address: { cityName: 'LONDON', cityCode: 'LON' } },
+    { iataCode: 'STN', name: 'London Stansted', address: { cityName: 'LONDON', cityCode: 'LON' } },
+    { iataCode: 'LCY', name: 'London City', address: { cityName: 'LONDON', cityCode: 'LON' } },
+    { iataCode: 'CDG', name: 'Charles de Gaulle', address: { cityName: 'PARIS', cityCode: 'PAR' } },
+    { iataCode: 'ORY', name: 'Paris Orly', address: { cityName: 'PARIS', cityCode: 'PAR' } },
+    { iataCode: 'FRA', name: 'Frankfurt Airport', address: { cityName: 'FRANKFURT', cityCode: 'FRA' } },
+    { iataCode: 'AMS', name: 'Schiphol', address: { cityName: 'AMSTERDAM', cityCode: 'AMS' } },
+    { iataCode: 'MAD', name: 'Adolfo Suárez Madrid–Barajas', address: { cityName: 'MADRID', cityCode: 'MAD' } },
+    { iataCode: 'BCN', name: 'Josep Tarradellas Barcelona–El Prat', address: { cityName: 'BARCELONA', cityCode: 'BCN' } },
+    { iataCode: 'IST', name: 'Istanbul Airport', address: { cityName: 'ISTANBUL', cityCode: 'IST' } },
+    { iataCode: 'MUC', name: 'Munich Airport', address: { cityName: 'MUNICH', cityCode: 'MUC' } },
+    { iataCode: 'FCO', name: 'Leonardo da Vinci–Fiumicino', address: { cityName: 'ROME', cityCode: 'ROM' } },
+    { iataCode: 'ZRH', name: 'Zurich Airport', address: { cityName: 'ZURICH', cityCode: 'ZRH' } },
+    { iataCode: 'VIE', name: 'Vienna International', address: { cityName: 'VIENNA', cityCode: 'VIE' } },
+    { iataCode: 'CPH', name: 'Copenhagen Airport', address: { cityName: 'COPENHAGEN', cityCode: 'CPH' } },
+    { iataCode: 'DUB', name: 'Dublin Airport', address: { cityName: 'DUBLIN', cityCode: 'DUB' } },
+    { iataCode: 'OSL', name: 'Oslo Gardermoen', address: { cityName: 'OSLO', cityCode: 'OSL' } },
+    { iataCode: 'ARN', name: 'Stockholm Arlanda', address: { cityName: 'STOCKHOLM', cityCode: 'STO' } },
+    { iataCode: 'HEL', name: 'Helsinki-Vantaa', address: { cityName: 'HELSINKI', cityCode: 'HEL' } },
+    { iataCode: 'ATH', name: 'Athens International', address: { cityName: 'ATHENS', cityCode: 'ATH' } },
+    { iataCode: 'LIS', name: 'Humberto Delgado', address: { cityName: 'LISBON', cityCode: 'LIS' } },
+    { iataCode: 'MXP', name: 'Malpensa', address: { cityName: 'MILAN', cityCode: 'MIL' } },
+    { iataCode: 'GVA', name: 'Geneva Airport', address: { cityName: 'GENEVA', cityCode: 'GVA' } },
+    { iataCode: 'WAW', name: 'Chopin Airport', address: { cityName: 'WARSAW', cityCode: 'WAW' } },
+    { iataCode: 'BRU', name: 'Brussels Airport', address: { cityName: 'BRUSSELS', cityCode: 'BRU' } },
+    { iataCode: 'MAN', name: 'Manchester Airport', address: { cityName: 'MANCHESTER', cityCode: 'MAN' } },
+    { iataCode: 'EDI', name: 'Edinburgh Airport', address: { cityName: 'EDINBURGH', cityCode: 'EDI' } },
+    { iataCode: 'NCE', name: 'Nice Côte d\'Azur', address: { cityName: 'NICE', cityCode: 'NCE' } },
+    { iataCode: 'KEF', name: 'Keflavík International', address: { cityName: 'REYKJAVIK', cityCode: 'REK' } },
+    // Middle East
+    { iataCode: 'DXB', name: 'Dubai International', address: { cityName: 'DUBAI', cityCode: 'DXB' } },
+    { iataCode: 'DOH', name: 'Hamad International', address: { cityName: 'DOHA', cityCode: 'DOH' } },
+    { iataCode: 'AUH', name: 'Zayed International', address: { cityName: 'ABU DHABI', cityCode: 'AUH' } },
+    { iataCode: 'JED', name: 'King Abdulaziz International', address: { cityName: 'JEDDAH', cityCode: 'JED' } },
+    { iataCode: 'RUH', name: 'King Khalid International', address: { cityName: 'RIYADH', cityCode: 'RUH' } },
+    { iataCode: 'MED', name: 'Prince Mohammad bin Abdulaziz', address: { cityName: 'MEDINA', cityCode: 'MED' } },
+    { iataCode: 'CAI', name: 'Cairo International', address: { cityName: 'CAIRO', cityCode: 'CAI' } },
+    { iataCode: 'AMM', name: 'Queen Alia International', address: { cityName: 'AMMAN', cityCode: 'AMM' } },
+    { iataCode: 'MCT', name: 'Muscat International', address: { cityName: 'MUSCAT', cityCode: 'MCT' } },
+    { iataCode: 'KWI', name: 'Kuwait International', address: { cityName: 'KUWAIT CITY', cityCode: 'KWI' } },
+    { iataCode: 'BAH', name: 'Bahrain International', address: { cityName: 'BAHRAIN', cityCode: 'BAH' } },
+    { iataCode: 'TLV', name: 'Ben Gurion', address: { cityName: 'TEL AVIV', cityCode: 'TLV' } },
+    // Asia
+    { iataCode: 'SIN', name: 'Changi', address: { cityName: 'SINGAPORE', cityCode: 'SIN' } },
+    { iataCode: 'HND', name: 'Haneda', address: { cityName: 'TOKYO', cityCode: 'TYO' } },
+    { iataCode: 'NRT', name: 'Narita International', address: { cityName: 'TOKYO', cityCode: 'TYO' } },
+    { iataCode: 'ICN', name: 'Incheon International', address: { cityName: 'SEOUL', cityCode: 'SEL' } },
+    { iataCode: 'HKG', name: 'Hong Kong International', address: { cityName: 'HONG KONG', cityCode: 'HKG' } },
+    { iataCode: 'BKK', name: 'Suvarnabhumi', address: { cityName: 'BANGKOK', cityCode: 'BKK' } },
+    { iataCode: 'PEK', name: 'Capital International', address: { cityName: 'BEIJING', cityCode: 'BJS' } },
+    { iataCode: 'PVG', name: 'Pudong International', address: { cityName: 'SHANGHAI', cityCode: 'SHA' } },
+    { iataCode: 'DEL', name: 'Indira Gandhi International', address: { cityName: 'NEW DELHI', cityCode: 'DEL' } },
+    { iataCode: 'BOM', name: 'Chhatrapati Shivaji Maharaj', address: { cityName: 'MUMBAI', cityCode: 'BOM' } },
+    { iataCode: 'KUL', name: 'Kuala Lumpur International', address: { cityName: 'KUALA LUMPUR', cityCode: 'KUL' } },
+    { iataCode: 'SGN', name: 'Tan Son Nhat', address: { cityName: 'HO CHI MINH CITY', cityCode: 'SGN' } },
+    { iataCode: 'MNL', name: 'Ninoy Aquino', address: { cityName: 'MANILA', cityCode: 'MNL' } },
+    { iataCode: 'CGK', name: 'Soekarno-Hatta', address: { cityName: 'JAKARTA', cityCode: 'JKT' } },
+    { iataCode: 'TPE', name: 'Taoyuan International', address: { cityName: 'TAIPEI', cityCode: 'TPE' } },
+    { iataCode: 'DPS', name: 'Ngurah Rai International', address: { cityName: 'BALI', cityCode: 'DPS' } },
+    { iataCode: 'KIX', name: 'Kansai International', address: { cityName: 'OSAKA', cityCode: 'OSA' } },
+    // Oceania
+    { iataCode: 'SYD', name: 'Kingsford Smith', address: { cityName: 'SYDNEY', cityCode: 'SYD' } },
+    { iataCode: 'MEL', name: 'Tullamarine', address: { cityName: 'MELBOURNE', cityCode: 'MEL' } },
+    { iataCode: 'BNE', name: 'Brisbane Airport', address: { cityName: 'BRISBANE', cityCode: 'BNE' } },
+    { iataCode: 'AKL', name: 'Auckland Airport', address: { cityName: 'AUCKLAND', cityCode: 'AKL' } },
+    // Latin America
+    { iataCode: 'MEX', name: 'Benito Juárez International', address: { cityName: 'MEXICO CITY', cityCode: 'MEX' } },
+    { iataCode: 'GRU', name: 'Guarulhos International', address: { cityName: 'SAO PAULO', cityCode: 'SAO' } },
+    { iataCode: 'BOG', name: 'El Dorado International', address: { cityName: 'BOGOTA', cityCode: 'BOG' } },
+    { iataCode: 'LIM', name: 'Jorge Chávez International', address: { cityName: 'LIMA', cityCode: 'LIM' } },
+    { iataCode: 'SCL', name: 'Arturo Merino Benítez', address: { cityName: 'SANTIAGO', cityCode: 'SCL' } },
+    { iataCode: 'EZE', name: 'Ministro Pistarini', address: { cityName: 'BUENOS AIRES', cityCode: 'BUE' } },
+    { iataCode: 'PTY', name: 'Tocumen International', address: { cityName: 'PANAMA CITY', cityCode: 'PTY' } },
+    // Africa
+    { iataCode: 'JNB', name: 'O.R. Tambo International', address: { cityName: 'JOHANNESBURG', cityCode: 'JNB' } },
+    { iataCode: 'CPT', name: 'Cape Town International', address: { cityName: 'CAPE TOWN', cityCode: 'CPT' } },
+    { iataCode: 'CMN', name: 'Mohammed V International', address: { cityName: 'CASABLANCA', cityCode: 'CAS' } },
+    { iataCode: 'LOS', name: 'Murtala Muhammed International', address: { cityName: 'LAGOS', cityCode: 'LOS' } },
+    { iataCode: 'NBO', name: 'Jomo Kenyatta International', address: { cityName: 'NAIROBI', cityCode: 'NBO' } },
+];
+
+/**
+ * Fuzzy search airports by keyword (matches code, city, or name)
+ */
+function searchAirportFallbacks(keyword: string): any[] {
+    const upperKeyword = keyword.toUpperCase().trim();
+    if (!upperKeyword) return [];
+
+    // First, check for exact IATA code match
+    const exactMatch = AIRPORT_FALLBACKS.filter(a => a.iataCode === upperKeyword);
+    if (exactMatch.length > 0) {
+        return exactMatch;
+    }
+
+    // Fuzzy match on city name, airport name, or partial IATA code
+    const matches = AIRPORT_FALLBACKS.filter(airport => {
+        const cityName = airport.address.cityName;
+        const airportName = airport.name.toUpperCase();
+        const iataCode = airport.iataCode;
+
+        return cityName.includes(upperKeyword) ||
+            airportName.includes(upperKeyword) ||
+            iataCode.startsWith(upperKeyword);
+    });
+
+    // Sort: exact city matches first, then by city name
+    matches.sort((a, b) => {
+        const aExact = a.address.cityName === upperKeyword ? 0 : 1;
+        const bExact = b.address.cityName === upperKeyword ? 0 : 1;
+        if (aExact !== bExact) return aExact - bExact;
+        return a.address.cityName.localeCompare(b.address.cityName);
+    });
+
+    return matches.slice(0, 10); // Limit to 10 results
+}
+
+/**
  * Search for locations (cities/airports)
  */
 export async function searchLocations(keyword: string) {
     const amadeus = getAmadeus();
     if (!amadeus) return [];
 
-    // Test Data Fallbacks (Amadeus Test API has limited coverage)
     const upperKeyword = keyword.toUpperCase().trim();
-    const fallbacks: Record<string, any> = {
-        'DUBAI': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
-        'DXB': [{ iataCode: 'DXB', name: 'DUBAI', address: { cityName: 'DUBAI', cityCode: 'DXB' }, geoCode: { latitude: 25.2048, longitude: 55.2708 } }],
-        'LONDON': [
-            { iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } },
-            { iataCode: 'LGW', name: 'London Gatwick', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.1537, longitude: -0.1821 } },
-            { iataCode: 'STN', name: 'London Stansted', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.8860, longitude: 0.2389 } },
-            { iataCode: 'LCY', name: 'London City', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5048, longitude: 0.0495 } }
-        ],
-        'LON': [
-            { iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } },
-            { iataCode: 'LGW', name: 'London Gatwick', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.1537, longitude: -0.1821 } },
-            { iataCode: 'STN', name: 'London Stansted', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.8860, longitude: 0.2389 } },
-            { iataCode: 'LCY', name: 'London City', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.5048, longitude: 0.0495 } }
-        ],
-        'LHR': [{ iataCode: 'LHR', name: 'London Heathrow', address: { cityName: 'LONDON', cityCode: 'LON' }, geoCode: { latitude: 51.4700, longitude: -0.4543 } }],
-        'TOKYO': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
-        'HND': [{ iataCode: 'HND', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.6762, longitude: 139.6503 } }],
-        'NRT': [{ iataCode: 'NRT', name: 'TOKYO', address: { cityName: 'TOKYO', cityCode: 'TYO' }, geoCode: { latitude: 35.7720, longitude: 140.3929 } }],
-        'SYDNEY': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
-        'SYD': [{ iataCode: 'SYD', name: 'SYDNEY', address: { cityName: 'SYDNEY', cityCode: 'SYD' }, geoCode: { latitude: -33.8688, longitude: 151.2093 } }],
-        'PARIS': [{ iataCode: 'CDG', name: 'PARIS', address: { cityName: 'PARIS', cityCode: 'PAR' }, geoCode: { latitude: 48.8566, longitude: 2.3522 } }],
-        'NYC': [
-            { iataCode: 'JFK', name: 'New York JFK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.6413, longitude: -73.7781 } },
-            { iataCode: 'EWR', name: 'Newark Liberty', address: { cityName: 'NEWARK', cityCode: 'NYC' }, geoCode: { latitude: 40.6895, longitude: -74.1745 } },
-            { iataCode: 'LGA', name: 'LaGuardia', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7769, longitude: -73.8740 } }
-        ],
-        'NEW YORK': [
-            { iataCode: 'JFK', name: 'New York JFK', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.6413, longitude: -73.7781 } },
-            { iataCode: 'EWR', name: 'Newark Liberty', address: { cityName: 'NEWARK', cityCode: 'NYC' }, geoCode: { latitude: 40.6895, longitude: -74.1745 } },
-            { iataCode: 'LGA', name: 'LaGuardia', address: { cityName: 'NEW YORK', cityCode: 'NYC' }, geoCode: { latitude: 40.7769, longitude: -73.8740 } }
-        ]
-    };
+    if (!upperKeyword) return [];
 
-    if (process.env.AMADEUS_HOSTNAME !== 'production' && fallbacks[upperKeyword]) {
-        console.log('Using fallback for keyword:', upperKeyword);
-        return fallbacks[upperKeyword];
+    // In test mode, always use expanded fallback data with fuzzy matching
+    if (process.env.AMADEUS_HOSTNAME !== 'production') {
+        const fallbackResults = searchAirportFallbacks(upperKeyword);
+        if (fallbackResults.length > 0) {
+            console.log('Using fuzzy fallback for keyword:', upperKeyword, '- Found:', fallbackResults.length, 'results');
+            return fallbackResults;
+        }
     }
 
     try {
         const response = await (amadeus as any).referenceData.locations.get({
-            keyword: upperKeyword, // Force uppercase for better matching
+            keyword: upperKeyword,
             subType: ['CITY', 'AIRPORT']
         });
         return response.data || [];
     } catch (error) {
         console.error('Amadeus Location Search Error:', error);
+        // Fallback to local data if API fails
+        const fallbackResults = searchAirportFallbacks(upperKeyword);
+        if (fallbackResults.length > 0) {
+            console.log('API failed, using fallback for:', upperKeyword);
+            return fallbackResults;
+        }
         return [];
     }
 }
