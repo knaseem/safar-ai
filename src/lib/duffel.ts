@@ -172,8 +172,10 @@ export async function createLinkSession(params: {
                 enabled: params.enableStays ?? true
             },
             metadata: params.metadata,
-            markup_amount: params.markup?.amount ? String(params.markup.amount) : undefined,
-            markup_currency: params.markup?.currency || params.travellerCurrency || 'USD'
+            ...((params.markup?.amount !== undefined) ? {
+                markup_amount: String(params.markup.amount),
+                markup_currency: params.markup.currency || params.travellerCurrency || 'USD'
+            } : {})
         };
 
         console.log('[Duffel Debug] Session Payload:', JSON.stringify(sessionPayload, null, 2));
