@@ -220,7 +220,17 @@ export async function searchStays(params: {
             guests: Array(params.adults).fill({ type: 'adult' })
         });
 
-        return response.data;
+        const dataWithMarkup = {
+            ...response.data,
+            results: response.data.results.map((result: any) => ({
+                ...result,
+                cheapest_rate_total_amount: result.cheapest_rate_total_amount
+                    ? applyMarkup(result.cheapest_rate_total_amount, 'hotel').toFixed(2)
+                    : null
+            }))
+        }
+
+        return dataWithMarkup;
     } catch (error) {
         console.error('Duffel Stays Search Error:', error);
         throw error;

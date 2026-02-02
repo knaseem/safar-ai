@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createOrder, getOrder } from "@/lib/duffel"
 import { sendBookingConfirmation } from "@/lib/booking-emails"
+import { MARKUP_FLIGHT_PERCENT, MARKUP_HOTEL_PERCENT } from "@/lib/pricing"
 
 // POST - Create a new order (book)
 export async function POST(request: Request) {
@@ -26,8 +27,10 @@ export async function POST(request: Request) {
             )
         }
 
-        // Calculate markup amount (5% for flights, 8% for hotels)
-        const markupPercentage = type === "stay" ? 0.08 : 0.05
+        // Calculate markup amount using centralized constants
+        const markupPercentage = type === "stay"
+            ? MARKUP_HOTEL_PERCENT / 100
+            : MARKUP_FLIGHT_PERCENT / 100
         const baseAmount = parseFloat(totalAmount) / (1 + markupPercentage)
         const markupAmount = parseFloat(totalAmount) - baseAmount
 

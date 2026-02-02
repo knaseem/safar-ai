@@ -370,7 +370,10 @@ export function Hero({ initialPrompt }: HeroProps) {
                     </div>
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white text-center">
-                        Experience the World, <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-emerald-400 italic font-serif">Effortlessly.</span>
+                        Experience the World, <span className={`text-transparent bg-clip-text bg-gradient-to-r italic font-serif transition-all duration-700 ${isHalal
+                                ? "from-emerald-300 to-teal-500"
+                                : "from-sky-300 to-blue-500"
+                            }`}>Effortlessly.</span>
                     </h1>
 
                     {/* Halal Toggle - Global */}

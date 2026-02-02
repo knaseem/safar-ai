@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { getTrendingDestinations, getSeasonalityData, TrendingDestination, SeasonalityData } from "@/lib/amadeus-trends";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function TrendsPage() {
     const router = useRouter();
@@ -74,6 +75,7 @@ export default function TrendsPage() {
             </header>
 
             <main className="pt-28 pb-20 max-w-7xl mx-auto px-6 space-y-8">
+                <Breadcrumb />
 
                 {/* Intro Section - The "World is Moving" Hero */}
                 <motion.div

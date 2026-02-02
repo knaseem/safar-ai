@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     X, Plane, Building2, Car, CheckCircle, Sparkles,
     ChevronRight, ChevronLeft, Shield, User, Mail, Phone,
-    BedDouble, Star, Briefcase
+    BedDouble, Star, Briefcase, Loader2, AlertCircle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from "sonner"
@@ -16,6 +16,7 @@ import { TravelerCount, BookingContactInfo } from '@/types/booking'
 import { createClient } from '@/lib/supabase/client'
 import { TripData } from './trip-itinerary'
 import { PackingList } from './packing-list'
+import { ActivitiesSection } from '../activities/activities-section'
 import { generateAffiliateLink, extractCleanCity } from '@/lib/affiliate'
 import { ConciergePortal } from './concierge-portal'
 import { useAuth } from '@/lib/auth-context'
@@ -44,7 +45,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const { user } = useAuth()
 
     // Form state
-    const [bookingType, setBookingType] = useState<'all' | 'flight' | 'hotel'>('all')
+    const [bookingType, setBookingType] = useState<'all' | 'flight' | 'hotel' | 'experiences'>('all')
     const [budget, setBudget] = useState('')
     const [checkIn, setCheckIn] = useState<Date | null>(null)
     const [checkOut, setCheckOut] = useState<Date | null>(null)
@@ -98,8 +99,10 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const destination = extractCleanCity(destinationRaw)
 
     // Validation
-    const isStep1Valid = checkIn && checkOut && departureAirport
-    const isStep2Valid = contact.firstName && contact.lastName && contact.email && contact.phone
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)
+    const isValidPhone = contact.phone.replace(/\D/g, '').length >= 10
+    const isStep1Valid = checkIn && checkOut && (bookingType === 'hotel' || departureAirport)
+    const isStep2Valid = contact.firstName && contact.lastName && isValidEmail && isValidPhone
 
     // Pre-fill Departure from Profile
     useEffect(() => {
@@ -141,10 +144,33 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                 if (data.data && data.data.length > 0) {
                     setDestIata(data.data[0].iataCode || data.data[0].address.cityCode)
                 } else {
-                    // Fallback for common major cities if API fails
+                    // Fallback for common major cities if API fails (50+ destinations)
                     const commonMap: Record<string, string> = {
-                        'new york': 'NYC', 'london': 'LON', 'paris': 'PAR', 'dubai': 'DXB', 'tokyo': 'TYO',
-                        'singapore': 'SIN', 'los angeles': 'LAX', 'san francisco': 'SFO', 'miami': 'MIA'
+                        // North America
+                        'new york': 'NYC', 'los angeles': 'LAX', 'san francisco': 'SFO', 'miami': 'MIA',
+                        'chicago': 'CHI', 'boston': 'BOS', 'seattle': 'SEA', 'denver': 'DEN',
+                        'atlanta': 'ATL', 'dallas': 'DFW', 'houston': 'HOU', 'phoenix': 'PHX',
+                        'las vegas': 'LAS', 'orlando': 'MCO', 'washington': 'WAS', 'toronto': 'YYZ',
+                        'vancouver': 'YVR', 'montreal': 'YMQ', 'mexico city': 'MEX', 'cancun': 'CUN',
+                        // Europe
+                        'london': 'LON', 'paris': 'PAR', 'barcelona': 'BCN', 'rome': 'ROM',
+                        'amsterdam': 'AMS', 'berlin': 'BER', 'madrid': 'MAD', 'lisbon': 'LIS',
+                        'milan': 'MIL', 'vienna': 'VIE', 'prague': 'PRG', 'budapest': 'BUD',
+                        'athens': 'ATH', 'dublin': 'DUB', 'zurich': 'ZRH', 'munich': 'MUC',
+                        'frankfurt': 'FRA', 'stockholm': 'STO', 'copenhagen': 'CPH', 'brussels': 'BRU',
+                        'edinburgh': 'EDI', 'venice': 'VCE', 'florence': 'FLR', 'istanbul': 'IST',
+                        // Middle East & Africa
+                        'dubai': 'DXB', 'abu dhabi': 'AUH', 'doha': 'DOH', 'jeddah': 'JED',
+                        'riyadh': 'RUH', 'medina': 'MED', 'mecca': 'JED', 'cairo': 'CAI',
+                        'marrakech': 'RAK', 'casablanca': 'CMN', 'johannesburg': 'JNB', 'cape town': 'CPT',
+                        // Asia Pacific
+                        'tokyo': 'TYO', 'singapore': 'SIN', 'hong kong': 'HKG', 'bangkok': 'BKK',
+                        'bali': 'DPS', 'kuala lumpur': 'KUL', 'seoul': 'SEL', 'beijing': 'BJS',
+                        'shanghai': 'SHA', 'sydney': 'SYD', 'melbourne': 'MEL', 'auckland': 'AKL',
+                        'mumbai': 'BOM', 'delhi': 'DEL', 'phuket': 'HKT', 'manila': 'MNL',
+                        // South America
+                        'rio de janeiro': 'RIO', 'sao paulo': 'SAO', 'buenos aires': 'BUE',
+                        'lima': 'LIM', 'bogota': 'BOG', 'santiago': 'SCL', 'cartagena': 'CTG'
                     }
                     const lowerDest = destination.toLowerCase()
                     if (commonMap[lowerDest]) setDestIata(commonMap[lowerDest])
@@ -162,6 +188,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
             if (!departureAirport || !destIata || !checkIn) return
 
             setIsLivePricing(true)
+            setOfferId(null) // Reset validity
             try {
                 const depDate = checkIn.toISOString().split('T')[0]
                 const res = await fetch(`/api/flights/search?origin=${departureAirport.code}&destination=${destIata}&departureDate=${depDate}&adults=${travelers.adults}`)
@@ -338,86 +365,126 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
 
                                 {/* Booking Type Selector */}
                                 <div className="flex bg-white/5 p-1 rounded-xl mb-6">
-                                    {(['all', 'flight', 'hotel'] as const).map((type) => (
+                                    {(['all', 'flight', 'hotel', 'experiences'] as const).map((type) => (
                                         <button
                                             key={type}
-                                            onClick={() => setBookingType(type)}
+                                            onClick={() => setBookingType(type as any)}
                                             className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${bookingType === type
                                                 ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
                                                 : 'text-white/40 hover:text-white'
                                                 }`}
                                         >
-                                            {type === 'all' ? 'Flight + Hotel' : type === 'flight' ? 'Flight Only' : 'Hotel Only'}
+                                            {type === 'all' ? 'Flight+Hotel' : type === 'experiences' ? 'Activities' : type.charAt(0).toUpperCase() + type.slice(1)}
                                         </button>
                                     ))}
                                 </div>
 
-                                <div className="space-y-4">
-                                    <DateRangePicker
-                                        checkIn={checkIn}
-                                        checkOut={checkOut}
-                                        onDateChange={(ci, co) => { setCheckIn(ci); setCheckOut(co) }}
-                                        fromLabel={bookingType === 'hotel' ? "Check-In" : "Depart"}
-                                        toLabel={bookingType === 'hotel' ? "Check-Out" : "Return"}
-                                    />
-
-                                    <TravelerSelector
-                                        travelers={travelers}
-                                        onChange={setTravelers}
-                                    />
-
-                                    {bookingType !== 'hotel' && (
-                                        <AirportInput
-                                            value={departureAirport}
-                                            onChange={setDepartureAirport}
-                                        />
-                                    )}
-
-                                    {/* Budget Input */}
-                                    <div>
-                                        <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Total Budget (Optional)</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">$</span>
-                                            <input
-                                                type="text"
-                                                value={budget}
-                                                onChange={(e) => setBudget(e.target.value)}
-                                                placeholder="e.g. 5000"
-                                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-colors"
-                                            />
+                                {bookingType === 'experiences' ? (
+                                    <div className="space-y-6">
+                                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-4">
+                                            <div className="bg-emerald-500/20 p-2 rounded-lg text-emerald-400">
+                                                <Sparkles className="size-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-medium mb-1">Enhance Your Trip</h3>
+                                                <p className="text-sm text-white/60">Discover and book top-rated experiences in {destination}. Protected by Viator's 24h cancellation policy.</p>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {bookingType !== 'flight' && (
-                                            <>
-                                                <div>
-                                                    <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
-                                                    <div className="flex gap-2">
-                                                        {(['single', 'double', 'suite'] as const).map((type) => (
-                                                            <button
-                                                                key={type}
-                                                                type="button"
-                                                                onClick={() => setRoomType(type)}
-                                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
-                                                                    ? 'bg-emerald-500 text-black'
-                                                                    : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                                    }`}
-                                                            >
-                                                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                            </button>
-                                                        ))}
+                                        <ActivitiesSection
+                                            destination={destination}
+                                            dates={checkIn && checkOut ? { from: checkIn, to: checkOut } : undefined}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <DateRangePicker
+                                            checkIn={checkIn}
+                                            checkOut={checkOut}
+                                            onDateChange={(ci, co) => { setCheckIn(ci); setCheckOut(co) }}
+                                            fromLabel={bookingType === 'hotel' ? "Check-In" : "Depart"}
+                                            toLabel={bookingType === 'hotel' ? "Check-Out" : "Return"}
+                                        />
+
+                                        <TravelerSelector
+                                            travelers={travelers}
+                                            onChange={setTravelers}
+                                        />
+
+                                        {bookingType !== 'hotel' && (
+                                            <AirportInput
+                                                value={departureAirport}
+                                                onChange={setDepartureAirport}
+                                            />
+                                        )}
+
+                                        {/* Budget Input */}
+                                        <div>
+                                            <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Total Budget (Optional)</label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">$</span>
+                                                <input
+                                                    type="text"
+                                                    value={budget}
+                                                    onChange={(e) => setBudget(e.target.value)}
+                                                    placeholder="e.g. 5000"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {bookingType !== 'flight' && (
+                                                <>
+                                                    <div>
+                                                        <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Room Type</label>
+                                                        <div className="flex gap-2">
+                                                            {(['single', 'double', 'suite'] as const).map((type) => (
+                                                                <button
+                                                                    key={type}
+                                                                    type="button"
+                                                                    onClick={() => setRoomType(type)}
+                                                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${roomType === type
+                                                                        ? 'bg-emerald-500 text-black'
+                                                                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                        }`}
+                                                                >
+                                                                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                                </button>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                    <div>
+                                                        <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Hotel Class</label>
+                                                        <div className="flex gap-2">
+                                                            {(['standard', 'comfort', 'luxury'] as const).map((cls) => (
+                                                                <button
+                                                                    key={cls}
+                                                                    type="button"
+                                                                    onClick={() => setHotelClass(cls)}
+                                                                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${hotelClass === cls
+                                                                        ? 'bg-emerald-500 text-black'
+                                                                        : 'bg-white/5 text-white/70 hover:bg-white/10'
+                                                                        }`}
+                                                                >
+                                                                    {cls.charAt(0).toUpperCase() + cls.slice(1)}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {bookingType !== 'hotel' && (
                                                 <div>
-                                                    <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Hotel Class</label>
+                                                    <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Flight Class</label>
                                                     <div className="flex gap-2">
-                                                        {(['standard', 'comfort', 'luxury'] as const).map((cls) => (
+                                                        {(['economy', 'business', 'first'] as const).map((cls) => (
                                                             <button
                                                                 key={cls}
                                                                 type="button"
-                                                                onClick={() => setHotelClass(cls)}
-                                                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${hotelClass === cls
+                                                                onClick={() => setFlightClass(cls)}
+                                                                className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-colors ${flightClass === cls
                                                                     ? 'bg-emerald-500 text-black'
                                                                     : 'bg-white/5 text-white/70 hover:bg-white/10'
                                                                     }`}
@@ -427,110 +494,119 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                                         ))}
                                                     </div>
                                                 </div>
+                                            )}
+                                        </div>
+
+                                        {/* Advanced Preferences */}
+                                        <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-6">
+                                            <div className="grid grid-cols-2 gap-6">
+                                                {bookingType !== 'hotel' && (
+                                                    <div>
+                                                        <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Seat Preference</label>
+                                                        <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
+                                                            {(['aisle', 'window', 'no-preference'] as const).map((pref) => (
+                                                                <button
+                                                                    key={pref}
+                                                                    type="button"
+                                                                    onClick={() => setSeatPreference(pref)}
+                                                                    className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${seatPreference === pref
+                                                                        ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                                                        : 'text-white/40 hover:text-white'
+                                                                        }`}
+                                                                >
+                                                                    {pref.split('-')[0]}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {bookingType !== 'hotel' && (
+                                                    <div>
+                                                        <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Checked Bags</label>
+                                                        <div className="flex items-center justify-between bg-black/40 p-1 rounded-lg">
+                                                            <button onClick={() => setBaggageCount(Math.max(0, baggageCount - 1))} className="size-8 rounded-md hover:bg-white/10 text-white/60">-</button>
+                                                            <span className="text-sm font-bold text-white">{baggageCount}</span>
+                                                            <button onClick={() => setBaggageCount(baggageCount + 1)} className="size-8 rounded-md hover:bg-white/10 text-white/60">+</button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Dietary Requirements</label>
+                                                <input
+                                                    type="text"
+                                                    value={dietaryRequirements}
+                                                    onChange={(e) => setDietaryRequirements(e.target.value)}
+                                                    placeholder={isHalal ? "Already marked as Halal. Any others?" : "e.g. Vegan, Nut Allergy..."}
+                                                    className="w-full bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/30"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center justify-between pt-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`size-8 rounded-lg flex items-center justify-center transition-colors ${isSpecialOccasion ? 'bg-pink-500/20 text-pink-400' : 'bg-white/5 text-white/20'}`}>
+                                                        <Sparkles className="size-4" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-medium text-white">Special Occasion?</div>
+                                                        {isSpecialOccasion && (
+                                                            <input
+                                                                type="text"
+                                                                value={occasionType}
+                                                                onChange={(e) => setOccasionType(e.target.value)}
+                                                                placeholder="Anniversary, Birthday..."
+                                                                className="mt-1 bg-transparent border-0 border-pink-500/30 outline-none text-pink-400 text-xs py-0 w-32 placeholder:text-pink-500/20"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsSpecialOccasion(!isSpecialOccasion)}
+                                                    className={`w-10 h-5 rounded-full transition-colors relative ${isSpecialOccasion ? 'bg-pink-500' : 'bg-white/20'}`}
+                                                >
+                                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${isSpecialOccasion ? 'left-5.5' : 'left-0.5'}`} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {bookingType !== 'hotel' && bookingType !== 'experiences' && isStep1Valid && (
+                                    <div className={`mt-6 mb-2 p-3 rounded-xl border flex items-center gap-3 transition-colors ${isLivePricing ? 'bg-blue-500/10 border-blue-500/20 text-blue-200' :
+                                            offerId ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
+                                                'bg-red-500/10 border-red-500/20 text-red-200'
+                                        }`}>
+                                        {isLivePricing ? (
+                                            <>
+                                                <Loader2 className="size-4 animate-spin shrink-0" />
+                                                <span className="text-sm">Checking best connections...</span>
+                                            </>
+                                        ) : offerId ? (
+                                            <>
+                                                <CheckCircle className="size-4 shrink-0 text-emerald-400" />
+                                                <div>
+                                                    <span className="text-sm font-medium block">Flight Available</span>
+                                                    <span className="text-xs opacity-70">Best connection found from ${Math.round(liveFlightPrice || 0)}</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <AlertCircle className="size-4 shrink-0 text-red-400" />
+                                                <div>
+                                                    <span className="text-sm font-medium block">No Flights Found</span>
+                                                    <span className="text-xs opacity-70">Try changing dates or airports</span>
+                                                </div>
                                             </>
                                         )}
-
-                                        {bookingType !== 'hotel' && (
-                                            <div>
-                                                <label className="text-xs text-white/50 uppercase tracking-wider block mb-2">Flight Class</label>
-                                                <div className="flex gap-2">
-                                                    {(['economy', 'business', 'first'] as const).map((cls) => (
-                                                        <button
-                                                            key={cls}
-                                                            type="button"
-                                                            onClick={() => setFlightClass(cls)}
-                                                            className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-colors ${flightClass === cls
-                                                                ? 'bg-emerald-500 text-black'
-                                                                : 'bg-white/5 text-white/70 hover:bg-white/10'
-                                                                }`}
-                                                        >
-                                                            {cls.charAt(0).toUpperCase() + cls.slice(1)}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
-
-                                    {/* Advanced Preferences */}
-                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-6">
-                                        <div className="grid grid-cols-2 gap-6">
-                                            {bookingType !== 'hotel' && (
-                                                <div>
-                                                    <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Seat Preference</label>
-                                                    <div className="flex gap-1 bg-black/40 p-1 rounded-lg">
-                                                        {(['aisle', 'window', 'no-preference'] as const).map((pref) => (
-                                                            <button
-                                                                key={pref}
-                                                                type="button"
-                                                                onClick={() => setSeatPreference(pref)}
-                                                                className={`flex-1 py-1.5 px-2 rounded-md text-[10px] font-bold uppercase transition-all ${seatPreference === pref
-                                                                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                                                                    : 'text-white/40 hover:text-white'
-                                                                    }`}
-                                                            >
-                                                                {pref.split('-')[0]}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                            {bookingType !== 'hotel' && (
-                                                <div>
-                                                    <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Checked Bags</label>
-                                                    <div className="flex items-center justify-between bg-black/40 p-1 rounded-lg">
-                                                        <button onClick={() => setBaggageCount(Math.max(0, baggageCount - 1))} className="size-8 rounded-md hover:bg-white/10 text-white/60">-</button>
-                                                        <span className="text-sm font-bold text-white">{baggageCount}</span>
-                                                        <button onClick={() => setBaggageCount(baggageCount + 1)} className="size-8 rounded-md hover:bg-white/10 text-white/60">+</button>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="text-[10px] text-white/40 uppercase tracking-widest block mb-2 font-bold">Dietary Requirements</label>
-                                            <input
-                                                type="text"
-                                                value={dietaryRequirements}
-                                                onChange={(e) => setDietaryRequirements(e.target.value)}
-                                                placeholder={isHalal ? "Already marked as Halal. Any others?" : "e.g. Vegan, Nut Allergy..."}
-                                                className="w-full bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/30"
-                                            />
-                                        </div>
-
-                                        <div className="flex items-center justify-between pt-2">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`size-8 rounded-lg flex items-center justify-center transition-colors ${isSpecialOccasion ? 'bg-pink-500/20 text-pink-400' : 'bg-white/5 text-white/20'}`}>
-                                                    <Sparkles className="size-4" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm font-medium text-white">Special Occasion?</div>
-                                                    {isSpecialOccasion && (
-                                                        <input
-                                                            type="text"
-                                                            value={occasionType}
-                                                            onChange={(e) => setOccasionType(e.target.value)}
-                                                            placeholder="Anniversary, Birthday..."
-                                                            className="mt-1 bg-transparent border-0 border-b border-pink-500/30 outline-none text-pink-400 text-xs py-0 w-32 placeholder:text-pink-500/20"
-                                                        />
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsSpecialOccasion(!isSpecialOccasion)}
-                                                className={`w-10 h-5 rounded-full transition-colors relative ${isSpecialOccasion ? 'bg-pink-500' : 'bg-white/20'}`}
-                                            >
-                                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${isSpecialOccasion ? 'left-5.5' : 'left-0.5'}`} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                )}
 
                                 <Button
                                     onClick={handleNext}
-                                    disabled={!isStep1Valid}
-                                    className="w-full mt-6 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 z-10"
+                                    disabled={!isStep1Valid || (bookingType !== 'hotel' && bookingType !== 'experiences' && !offerId)}
+                                    className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 z-10"
                                 >
                                     Continue <ChevronRight className="size-5 ml-2" />
                                 </Button>
@@ -776,8 +852,9 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
 
                                         <button
                                             onClick={() => {
-                                                // Direct Viator link for activities
-                                                const viatorUrl = `https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination)}`
+                                                // Direct Viator link for activities with affiliate tracking
+                                                const viatorPartnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || ''
+                                                const viatorUrl = `https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination)}${viatorPartnerId ? `&pid=${viatorPartnerId}&mcid=42383` : ''}`
                                                 window.open(viatorUrl, '_blank')
                                             }}
                                             className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-center group"

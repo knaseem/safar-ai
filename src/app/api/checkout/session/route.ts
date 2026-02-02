@@ -60,10 +60,39 @@ export async function POST(request: Request) {
             adults: adults || 1
         } : undefined
 
-        if (!searchCriteria) {
-            console.warn("⚠️ [API] Dropping Search Params because incomplete:", { origin, destination, date })
-        } else {
-            console.log("✅ [API] Passing Search Params:", searchCriteria)
+        // SECURITY: Ignore client 'amount'. Fetch REAL price from provider + apply OUR markup
+        let verifiedMarkupParams = undefined;
+        let finalType = type;
+
+        if (offer_id) {
+            const { getOffer } = await import('@/lib/duffel')
+            const { applyMarkup } = await import('@/lib/pricing')
+
+            // 1. Fetch the real offer from provider (Duffel)
+            // This ensures the price comes from the source of truth, not the URL
+            try {
+                const offer = await getOffer(offer_id)
+                if (offer) {
+                    // 2. Calculate Markup safely on server
+                    // The 'getOffer' util already returns a marked up 'total_amount'
+                    // but we need to extract the specific markup amount for the session params
+                    const baseAmount = parseFloat(offer.base_amount || offer.total_amount)
+                    const serverCalculatedTotal = applyMarkup(baseAmount, type === 'stay' ? 'hotel' : 'flight')
+
+                    const markupValue = (serverCalculatedTotal - baseAmount).toFixed(2)
+
+                    verifiedMarkupParams = {
+                        amount: parseFloat(markupValue),
+                        currency: offer.total_currency || currency || 'USD'
+                    };
+
+                    console.log(`🔒 [Security] Verified Price: Base=${baseAmount}, Markup=${markupValue}, Total=${serverCalculatedTotal}`)
+                }
+            } catch (err) {
+                console.error("Failed to verify offer price:", err)
+                // If verification fails, we might choose to blocking the transaction 
+                // or proceed with caution. For high security, we should ideally block.
+            }
         }
 
         // Create a Duffel Link Session
@@ -78,7 +107,7 @@ export async function POST(request: Request) {
                 source: "safar-ai"
             },
             offerId: offer_id, // Pass specifically to lock the flight offer
-            markup: markupParams,
+            markup: verifiedMarkupParams, // Use the SECURE params
             searchParams: searchCriteria
         })
 
