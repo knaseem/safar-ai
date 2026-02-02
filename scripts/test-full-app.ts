@@ -86,7 +86,7 @@ async function runRegressionSuite() {
             } else {
                 console.warn("   ⚠️ API Key missing or Paris not found - Skipping detailed output check");
             }
-        } catch (e) {
+        } catch (e: any) {
             console.warn("   ⚠️ Viator API Skipped (Env check): " + e.message);
         }
 
@@ -118,7 +118,7 @@ async function runRegressionSuite() {
         assert("Booking Saved to DB", mockDB.bookings.length === 1, "DB Save failed");
         assert("Booking Data Integrity", mockDB.bookings[0].destination === 'Paris', "Data mismatch");
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("💥 CRITICAL FAILURE:", error);
         failed++;
     }
