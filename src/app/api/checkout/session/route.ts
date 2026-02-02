@@ -59,11 +59,11 @@ export async function POST(request: Request) {
         const formattedReturnDate = (body.returnDate) ? new Date(body.returnDate).toISOString().split('T')[0] : undefined;
 
         const searchCriteria = (origin && destination && formattedDate) ? {
-            origin: origin, // Revert destructive substring - Trust the frontend or validation elsewhere
+            origin: origin,
             destination: destination,
-            departure_date: formattedDate,
-            return_date: formattedReturnDate,
-            passengers: Array(adults || 1).fill({ type: 'adult' })
+            departureDate: formattedDate, // Fix: Use camelCase to match duffel.ts interface
+            returnDate: formattedReturnDate, // Fix: Use camelCase
+            adults: adults || 1 // Pass count, not array
         } : undefined
 
         // SECURITY: Verify Price & Calculate Markup
