@@ -53,10 +53,13 @@ export async function POST(request: Request) {
         }
 
         // Create Search Params object
-        const searchCriteria = (origin && destination && date) ? {
+        // Duffel strictly requires YYYY-MM-DD for dates
+        const formattedDate = date ? new Date(date).toISOString().split('T')[0] : undefined;
+
+        const searchCriteria = (origin && destination && formattedDate) ? {
             origin,
             destination,
-            departureDate: date,
+            departureDate: formattedDate,
             adults: adults || 1
         } : undefined
 
