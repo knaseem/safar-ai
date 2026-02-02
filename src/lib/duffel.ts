@@ -143,6 +143,7 @@ export async function createLinkSession(params: {
                 flights: {
                     enabled: params.enableFlights ?? true,
                     // If we have an offer ID, use it to lock the selection!
+                    // logging this for debugging
                     selected_offers: params.offerId ? [params.offerId] : undefined,
                     default_search_criteria: params.searchParams ? {
                         origin: params.searchParams.origin,

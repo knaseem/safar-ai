@@ -180,6 +180,9 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                                             <div className="text-lg font-bold text-white leading-none">
                                                                 {new Date(segment.departing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </div>
+                                                            <div className="text-[10px] text-white/50 mt-1">
+                                                                {new Date(segment.departing_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                                            </div>
                                                             <div className="text-xs text-white/40 font-mono mt-1">{segment.origin?.iata_code}</div>
                                                         </div>
 
@@ -200,6 +203,9 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                                         <div className="text-center">
                                                             <div className="text-lg font-bold text-white leading-none">
                                                                 {new Date(segment.arriving_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            </div>
+                                                            <div className="text-[10px] text-white/50 mt-1">
+                                                                {new Date(segment.arriving_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                                             </div>
                                                             <div className="text-xs text-white/40 font-mono mt-1">{segment.destination?.iata_code}</div>
                                                         </div>
