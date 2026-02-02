@@ -134,10 +134,11 @@ export async function createLinkSession(params: {
             passengers: Array(params.searchParams.adults).fill({ type: 'adult' })
         } : undefined;
 
-        // If for ANY reason search params are missing, fallback to a known valid flight (LHR -> JFK)
-        // This ensures the user NEVER sees an empty screen, even if our data passing failed.
-        if (!searchCriteria) {
-            console.warn("[Duffel Warning] Missing Search Params! Applying Hardcoded Safety Net (LHR->JFK).");
+        // If for ANY reason search params are missing or incomplete, fallback to a known valid flight (LHR -> JFK)
+        const isValidCriteria = searchCriteria && searchCriteria.origin && searchCriteria.destination && searchCriteria.departure_date;
+
+        if (!isValidCriteria) {
+            console.warn("[Duffel Warning] Missing or Incomplete Search Params! Applying Hardcoded Safety Net (LHR->JFK).", searchCriteria);
             searchCriteria = {
                 origin: 'LHR',
                 destination: 'JFK',
