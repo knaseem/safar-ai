@@ -53,19 +53,27 @@ const LOCATION_DATA: LocationResult[] = [
 /**
  * Perform a local fuzzy search for locations
  * @param keyword User input string
+ * @param type Optional filter for 'CITY' or 'AIRPORT'
  * @returns Array of matching LocationResults
  */
-export async function searchLocations(keyword: string): Promise<LocationResult[]> {
+export async function searchLocations(keyword: string, type?: 'CITY' | 'AIRPORT'): Promise<LocationResult[]> {
     const upperKeyword = keyword.toUpperCase().trim();
     if (!upperKeyword) return [];
 
-    // Prioritize CITIES if the keyword matches a city name exactly
-    const cityMatches = LOCATION_DATA.filter(l =>
+    let data = LOCATION_DATA;
+
+    // Filter by type if provided
+    if (type) {
+        data = data.filter(l => l.subType === type);
+    }
+
+    // Prioritize CITIES if the keyword matches a city name exactly (and we haven't filtered them out)
+    const cityMatches = data.filter(l =>
         l.subType === 'CITY' && (l.address.cityName === upperKeyword || l.name.toUpperCase() === upperKeyword)
     );
 
     // Fuzzy match remainder
-    const otherMatches = LOCATION_DATA.filter(l => {
+    const otherMatches = data.filter(l => {
         // Exclude what we already found
         if (cityMatches.includes(l)) return false;
 

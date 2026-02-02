@@ -51,7 +51,7 @@ export function StaysSearchForm({ onSearch, loading }: StaysSearchFormProps) {
                             setDisplayLocation(e.target.value)
                             // Basic debounce manually or just fetch on every keystroke for now (optimize later if needed)
                             if (e.target.value.length > 2) {
-                                fetch(`/api/locations/search?keyword=${e.target.value}`)
+                                fetch(`/api/locations/search?keyword=${e.target.value}&type=CITY`)
                                     .then(res => res.json())
                                     .then(data => {
                                         if (data.data) {
