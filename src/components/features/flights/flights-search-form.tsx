@@ -118,6 +118,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 <button
                                     key={index}
                                     className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => {
                                         setFromSearch(suggestion.name) // Show Name only
                                         setOrigin(suggestion.iataCode)
@@ -172,6 +173,7 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
                                 <button
                                     key={index}
                                     className="w-full text-left px-4 py-3 hover:bg-white/10 text-white text-sm flex items-center justify-between transition-colors"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => {
                                         setToSearch(suggestion.name) // Show Name only
                                         setDestination(suggestion.iataCode)
