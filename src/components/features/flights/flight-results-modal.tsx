@@ -145,63 +145,89 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                 const durationClean = duration?.replace("PT", "").toLowerCase() || "Direct";
 
                                 return (
-                                    <div
-                                        key={offer.id}
-                                        className="bg-white/5 border border-white/10 hover:border-sky-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 group transition-all"
-                                    >
-                                        {/* Airline Logo/Name */}
-                                        <div className="flex items-center gap-4 min-w-[200px]">
-                                            <div className="size-12 rounded-full bg-white flex items-center justify-center text-black font-bold text-xs uppercase overflow-hidden">
-                                                {/* If we had logos, we'd put them here. Initials for now */}
-                                                {carrier.substring(0, 2)}
-                                            </div>
-                                            <div>
-                                                <h3 className="font-bold text-white">{carrier}</h3>
-                                                <span className="text-xs text-white/40">Flight {segment.operating_carrier_flight_number}</span>
-                                            </div>
-                                        </div>
-
-                                        {/* Schedule */}
-                                        <div className="flex-1 flex items-center justify-center gap-8 text-center">
-                                            <div>
-                                                <div className="text-xl font-bold text-white">
-                                                    {segment.departing_at ? new Date(segment.departing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                                </div>
-                                                <div className="text-xs text-white/40">{segment.origin?.iata_code || 'N/A'}</div>
-                                            </div>
-
-                                            <div className="flex flex-col items-center gap-1 min-w-[100px]">
-                                                <span className="text-xs text-white/30">{durationClean}</span>
-                                                <div className="w-full h-px bg-white/20 relative">
-                                                    <Plane className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-3 text-white/50 rotate-90" />
-                                                </div>
-                                                <span className="text-[10px] text-emerald-400 font-medium">Direct</span>
-                                            </div>
-
-                                            <div>
-                                                <div className="text-xl font-bold text-white">
-                                                    {segment.arriving_at ? new Date(segment.arriving_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                                </div>
-                                                <div className="text-xs text-white/40">{segment.destination?.iata_code || 'N/A'}</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Price & Action */}
-                                        <div className="flex flex-col items-end gap-2 min-w-[150px]">
-                                            <div className="text-2xl font-bold text-white">
-                                                {offer.total_currency} {offer.total_amount}
-                                            </div>
-                                            <Button
-                                                onClick={() => handleSelectFlight(offer)}
-                                                className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl"
+                                    filteredOffers.map((offer: any) => {
+                                        // Iterate over slices to show Outbound + Return
+                                        return (
+                                            <div
+                                                key={offer.id}
+                                                className="bg-white/5 border border-white/10 hover:border-sky-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 group transition-all"
                                             >
-                                                Select <ArrowRight className="size-4 ml-2" />
-                                            </Button>
-                                        </div>
-                                    </div>
+                                                {/* Airline Info (Taken from first slice for simplicity, though could differ) */}
+                                                <div className="flex flex-col md:flex-row items-center md:items-start gap-4 min-w-[150px]">
+                                                    <div className="size-12 rounded-full bg-white flex items-center justify-center text-black font-bold text-xs uppercase overflow-hidden shrink-0">
+                                                        {(offer.slices[0].segments[0].operating_carrier?.name || "AL").substring(0, 2)}
+                                                    </div>
+                                                    <div className="text-center md:text-left">
+                                                        <h3 className="font-bold text-white text-sm">
+                                                            {offer.owner?.name || offer.slices[0].segments[0].operating_carrier?.name}
+                                                        </h3>
+                                                    </div>
+                                                </div>
+
+                                                {/* Slices (Outbound / Return) */}
+                                                <div className="flex-1 flex flex-col gap-4 w-full">
+                                                    {offer.slices.map((slice: any, sIdx: number) => {
+                                                        const segment = slice.segments[0];
+                                                        const duration = slice.duration?.replace("PT", "").toLowerCase() || "Direct";
+                                                        const isReturn = sIdx > 0;
+
+                                                        return (
+                                                            <div key={sIdx} className="flex items-center justify-between gap-4 w-full bg-black/20 p-3 rounded-xl border border-white/5">
+                                                                {/* Label */}
+                                                                <div className="hidden md:block w-20 text-[10px] uppercase font-bold text-white/30 tracking-wider">
+                                                                    {isReturn ? "Return" : "Outbound"}
+                                                                </div>
+
+                                                                {/* Origin */}
+                                                                <div className="text-center">
+                                                                    <div className="text-lg font-bold text-white leading-none">
+                                                                        {new Date(segment.departing_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </div>
+                                                                    <div className="text-xs text-white/40 font-mono mt-1">{segment.origin?.iata_code}</div>
+                                                                </div>
+
+                                                                {/* Duration Line */}
+                                                                <div className="flex flex-col items-center gap-1 flex-1 px-4">
+                                                                    <span className="text-[10px] text-white/30">{duration}</span>
+                                                                    <div className="w-full h-px bg-white/10 relative">
+                                                                        <Plane
+                                                                            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-3 text-white/30 ${isReturn ? '-rotate-90' : 'rotate-90'}`}
+                                                                        />
+                                                                    </div>
+                                                                    <span className="text-[10px] text-emerald-400 font-medium whitespace-nowrap">
+                                                                        {slice.segments.length > 1 ? `${slice.segments.length - 1} Stop` : "Direct"}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Dest */}
+                                                                <div className="text-center">
+                                                                    <div className="text-lg font-bold text-white leading-none">
+                                                                        {new Date(segment.arriving_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </div>
+                                                                    <div className="text-xs text-white/40 font-mono mt-1">{segment.destination?.iata_code}</div>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    })}
+                                                </div>
+
+                                                {/* Price & Action */}
+                                                <div className="flex flex-col items-end gap-2 min-w-[120px] pl-4 border-l border-white/5">
+                                                    <div className="text-2xl font-bold text-white">
+                                                        {offer.total_currency} {Math.round(parseFloat(offer.total_amount))}
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => handleSelectFlight(offer)}
+                                                        className="w-full bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl h-10 text-sm"
+                                                    >
+                                                        Select <ArrowRight className="size-4 ml-2" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
                                 )
-                            })
-                        )}
+                            }
                     </div>
                 </div>
             </motion.div>
