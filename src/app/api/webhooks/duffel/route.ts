@@ -321,6 +321,43 @@ export async function POST(request: Request) {
                 break
             }
 
+            // =============================================
+            // AIRLINE CHANGE EVENTS
+            // =============================================
+            case "order.airline_initiated_change_detected": {
+                const order = event.data.object
+
+                console.log(`✈️ Airline schedule change detected: ${order.id}`)
+
+                // Log the change - in production, notify the affected user
+                console.log("Schedule change details:", {
+                    order_id: order.id,
+                    booking_reference: order.booking_reference,
+                    changes: order.airline_initiated_changes
+                })
+
+                // TODO: Send email notification to user about schedule change
+                // You could store this in a notifications table or send an immediate email
+                break
+            }
+
+            case "air.airline_credit.created": {
+                const credit = event.data.object
+
+                console.log(`💳 Airline credit created: ${credit.id}`)
+
+                // Log airline credit - useful for tracking refunds/credits
+                console.log("Airline credit details:", {
+                    credit_id: credit.id,
+                    amount: credit.total_amount,
+                    currency: credit.total_currency,
+                    airline: credit.owner?.iata_code
+                })
+
+                // TODO: Notify user about available airline credit
+                break
+            }
+
             default:
                 console.log(`ℹ️ Unhandled event type: ${event.type}`)
         }
