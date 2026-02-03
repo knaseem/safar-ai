@@ -46,9 +46,9 @@ function verifySignature(payload: string, signatureHeader: string | null): boole
     console.log("📝 Timestamp:", timestamp)
     console.log("📝 Received signature (first 20):", receivedSignature.substring(0, 20))
 
-    // Decode the base64 secret to raw bytes
-    // The secret "iiRC1FatIvFdn1m2Vl3hLg==" is base64 encoded
-    const secretBytes = Buffer.from(WEBHOOK_SECRET, "base64")
+    // Use secret as raw UTF-8 bytes (NOT base64 decoded)
+    // The Python example uses b"secret" which is just the raw string as bytes
+    const secretBytes = Buffer.from(WEBHOOK_SECRET, "utf8")
 
     // Build signed payload: timestamp.payload (as bytes)
     const signedPayload = `${timestamp}.${payload}`
