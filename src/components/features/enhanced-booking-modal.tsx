@@ -364,21 +364,23 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     </div>
                                 )}
 
-                                {/* Booking Type Selector */}
-                                <div className="flex bg-white/5 p-1 rounded-xl mb-6">
-                                    {(['all', 'flight', 'hotel', 'experiences'] as const).map((type) => (
-                                        <button
-                                            key={type}
-                                            onClick={() => setBookingType(type as any)}
-                                            className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${bookingType === type
-                                                ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
-                                                : 'text-white/40 hover:text-white'
-                                                }`}
-                                        >
-                                            {type === 'all' ? 'Flight+Hotel' : type === 'experiences' ? 'Activities' : type.charAt(0).toUpperCase() + type.slice(1)}
-                                        </button>
-                                    ))}
-                                </div>
+                                {/* Booking Type Selector - Hide when opened specifically for Activities */}
+                                {initialTab !== 'experiences' && (
+                                    <div className="flex bg-white/5 p-1 rounded-xl mb-6">
+                                        {(['all', 'flight', 'hotel', 'experiences'] as const).map((type) => (
+                                            <button
+                                                key={type}
+                                                onClick={() => setBookingType(type as any)}
+                                                className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${bookingType === type
+                                                    ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                                    : 'text-white/40 hover:text-white'
+                                                    }`}
+                                            >
+                                                {type === 'all' ? 'Flight+Hotel' : type === 'experiences' ? 'Activities' : type.charAt(0).toUpperCase() + type.slice(1)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
 
                                 {bookingType === 'experiences' ? (
                                     <div className="space-y-6">
