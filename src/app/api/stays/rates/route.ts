@@ -13,8 +13,9 @@ export async function GET(request: Request) {
     }
 
     try {
-        const rates = await fetchStayRates(searchResultId)
-        return NextResponse.json({ rates })
+        const data = await fetchStayRates(searchResultId)
+        // fetchStayRates returns { rates: [...] }, so we return it directly
+        return NextResponse.json(data)
     } catch (error: any) {
         console.error("Fetch Rates API Error:", error)
         return NextResponse.json(

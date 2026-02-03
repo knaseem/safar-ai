@@ -84,6 +84,19 @@ function BookingSuccessContent() {
                 toast.success("Booking Confirmed!", {
                     description: `Reference: ${data.reference || orderId}`
                 })
+
+                // Auto-send confirmation email for stays (Duffel Go-Live requirement)
+                if (data.type === 'stay' && data.accommodation) {
+                    fetch('/api/bookings/confirm-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bookingId: data.id })
+                    }).then(() => {
+                        console.log('[Stays] Confirmation email sent automatically')
+                    }).catch(err => {
+                        console.error('[Stays] Auto-email failed:', err)
+                    })
+                }
             } catch (err: any) {
                 console.error("Failed to fetch booking:", err)
                 // Still show basic success with order ID
@@ -274,6 +287,24 @@ function BookingSuccessContent() {
                                                 </div>
                                             </div>
                                         )}
+                                    </div>
+                                )}
+
+                                {/* Cancellation Policy */}
+                                {booking.cancellation_policy && (
+                                    <div className="bg-white/5 rounded-xl p-4 print:bg-gray-50">
+                                        <div className="flex items-center gap-2 text-white/40 text-xs uppercase mb-2">
+                                            <AlertCircle className="size-3" /> Cancellation Policy
+                                        </div>
+                                        <div className="text-white print:text-black">
+                                            {booking.cancellation_policy.refundable ? (
+                                                <span className="text-emerald-400">
+                                                    Free cancellation until {new Date(booking.cancellation_policy.deadline).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                                </span>
+                                            ) : (
+                                                <span className="text-amber-400">Non-refundable</span>
+                                            )}
+                                        </div>
                                     </div>
                                 )}
 

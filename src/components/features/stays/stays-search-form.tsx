@@ -31,7 +31,8 @@ export function StaysSearchForm({ onSearch, loading }: StaysSearchFormProps) {
         }
 
         onSearch({
-            location,
+            location, // coordinates for API
+            locationName: displayLocation, // friendly name for UI
             checkIn,
             checkOut,
             guests

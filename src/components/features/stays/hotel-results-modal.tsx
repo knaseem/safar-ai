@@ -1,11 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, MapPin, Wifi, Coffee, Car, Check, BedDouble, Users, ArrowRight, Loader2 } from "lucide-react"
+import { X, Star, MapPin, Wifi, BedDouble, Users, ArrowRight, Loader2, ArrowUpDown, TrendingDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+
+// Fallback hotel images when Duffel doesn't return media (common in test mode)
+const FALLBACK_HOTEL_IMAGES = [
+    "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&q=80&w=800",
+    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&q=80&w=800",
+]
+
+type SortOption = 'default' | 'price-low' | 'price-high' | 'rating'
 
 interface HotelResultsModalProps {
     isOpen: boolean
@@ -20,11 +32,38 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
     const [selectedHotel, setSelectedHotel] = useState<any | null>(null)
     const [rooms, setRooms] = useState<any[]>([])
     const [loadingRooms, setLoadingRooms] = useState(false)
+    const [sortBy, setSortBy] = useState<SortOption>('default')
+
+    // Sort results based on selected option
+    const sortedResults = useMemo(() => {
+        if (!results || results.length === 0) return []
+
+        const sorted = [...results]
+        switch (sortBy) {
+            case 'price-low':
+                return sorted.sort((a, b) => {
+                    const priceA = parseFloat(a.cheapest_rate_total_amount) || 0
+                    const priceB = parseFloat(b.cheapest_rate_total_amount) || 0
+                    return priceA - priceB
+                })
+            case 'price-high':
+                return sorted.sort((a, b) => {
+                    const priceA = parseFloat(a.cheapest_rate_total_amount) || 0
+                    const priceB = parseFloat(b.cheapest_rate_total_amount) || 0
+                    return priceB - priceA
+                })
+            case 'rating':
+                return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+            default:
+                return sorted
+        }
+    }, [results, sortBy])
 
     // Reset when closing
     const handleClose = () => {
         setSelectedHotel(null)
         setRooms([])
+        setSortBy('default')
         onClose()
     }
 
@@ -71,15 +110,15 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md overflow-y-auto"
+                className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/95 backdrop-blur-md"
                 onClick={handleClose}
             >
                 <div
-                    className="relative w-full max-w-5xl min-h-[80vh] bg-neutral-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+                    className="relative w-full max-w-5xl max-h-[90vh] bg-neutral-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-white/10 flex items-center justify-between sticky top-0 bg-neutral-900/95 backdrop-blur z-20">
+                    <div className="p-6 border-b border-white/10 flex items-center justify-between bg-neutral-900/95 backdrop-blur z-20 shrink-0">
                         <div>
                             {selectedHotel ? (
                                 <div>
@@ -93,59 +132,91 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
                                 </div>
                             ) : (
                                 <>
-                                    <h2 className="text-2xl font-bold text-white">Stays in {searchParams?.location}</h2>
+                                    <h2 className="text-2xl font-bold text-white">Stays in {searchParams?.locationName || searchParams?.location}</h2>
                                     <p className="text-white/50 text-sm">
                                         {searchParams?.checkIn ? new Date(searchParams.checkIn).toLocaleDateString() : ''}
                                         {searchParams?.checkOut ? ` - ${new Date(searchParams.checkOut).toLocaleDateString()}` : ''}
                                         {searchParams?.guests ? ` • ${searchParams.guests} Guests` : ''}
+                                        {results.length > 0 && ` • ${results.length} hotels found`}
                                     </p>
                                 </>
                             )}
                         </div>
-                        <button
-                            onClick={handleClose}
-                            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                        >
-                            <X className="size-5" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {/* Sort Dropdown - Only show on hotel list */}
+                            {!selectedHotel && results.length > 1 && (
+                                <div className="relative">
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                        className="appearance-none bg-white/10 border border-white/20 text-white text-sm rounded-xl px-4 py-2 pr-10 cursor-pointer hover:bg-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    >
+                                        <option value="default" className="bg-neutral-900">Sort by</option>
+                                        <option value="price-low" className="bg-neutral-900">Price: Low to High</option>
+                                        <option value="price-high" className="bg-neutral-900">Price: High to Low</option>
+                                        <option value="rating" className="bg-neutral-900">Rating: Best First</option>
+                                    </select>
+                                    <ArrowUpDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-white/50 pointer-events-none" />
+                                </div>
+                            )}
+                            <button
+                                onClick={handleClose}
+                                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                            >
+                                <X className="size-5" />
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Content Area */}
+                    {/* Content Area - Scrollable */}
                     <div className="flex-1 p-6 overflow-y-auto">
                         {!selectedHotel ? (
                             /* HOTEL LIST */
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {results.length === 0 ? (
+                                {sortedResults.length === 0 ? (
                                     <div className="col-span-full text-center py-20 text-white/40">
                                         No hotels found directly. Try a different city or check affiliate partners.
                                     </div>
                                 ) : (
-                                    results.map((hotel, index) => (
-                                        <div
+                                    sortedResults.map((hotel, index) => (
+                                        <motion.div
                                             key={hotel.id || index}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
                                             className="group bg-black/40 border border-white/10 hover:border-emerald-500/50 rounded-2xl overflow-hidden transition-all duration-300 flex flex-col"
                                         >
-                                            {/* Image (Mock if missing) */}
-                                            <div className="aspect-video bg-neutral-800 relative">
-                                                <div className="absolute inset-0 flex items-center justify-center text-white/20">
-                                                    <MapPin className="size-8" />
-                                                </div>
-                                                {hotel.media?.[0]?.url && (
-                                                    <img
-                                                        src={hotel.media[0].url}
-                                                        alt={hotel.name}
-                                                        className="absolute inset-0 w-full h-full object-cover"
-                                                    />
+                                            {/* Image - Always show, with fallback */}
+                                            <div className="aspect-video bg-neutral-800 relative overflow-hidden">
+                                                <img
+                                                    src={hotel.media?.[0]?.url || FALLBACK_HOTEL_IMAGES[index % FALLBACK_HOTEL_IMAGES.length]}
+                                                    alt={hotel.name || "Hotel"}
+                                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    onError={(e) => {
+                                                        // If image fails to load, use fallback
+                                                        e.currentTarget.src = FALLBACK_HOTEL_IMAGES[index % FALLBACK_HOTEL_IMAGES.length]
+                                                    }}
+                                                />
+                                                {/* Sort indicator badge */}
+                                                {sortBy === 'price-low' && index === 0 && (
+                                                    <div className="absolute top-2 left-2 bg-emerald-500 text-black text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                        <TrendingDown className="size-3" /> Best Price
+                                                    </div>
+                                                )}
+                                                {sortBy === 'rating' && index === 0 && (
+                                                    <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                                        <Star className="size-3 fill-current" /> Top Rated
+                                                    </div>
                                                 )}
                                             </div>
 
                                             <div className="p-5 flex-1 flex flex-col">
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-lg font-bold text-white leading-tight group-hover:text-emerald-400 transition-colors">
+                                                    <h3 className="text-lg font-bold text-white leading-tight group-hover:text-emerald-400 transition-colors line-clamp-2">
                                                         {hotel.name}
                                                     </h3>
                                                     {hotel.rating && (
-                                                        <div className="flex items-center gap-1 text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full text-xs font-bold">
+                                                        <div className="flex items-center gap-1 text-yellow-500 bg-yellow-500/10 px-2 py-0.5 rounded-full text-xs font-bold shrink-0 ml-2">
                                                             <Star className="size-3 fill-current" />
                                                             {hotel.rating}
                                                         </div>
@@ -171,7 +242,7 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
                                                     </Button>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     ))
                                 )}
                             </div>
@@ -229,3 +300,4 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
         </AnimatePresence>
     )
 }
+
