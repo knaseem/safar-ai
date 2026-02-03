@@ -8,43 +8,56 @@ const WEBHOOK_SECRET = process.env.DUFFEL_WEBHOOK_SECRET
 
 /**
  * Verify Duffel webhook signature using HMAC SHA-256
- * Returns true if the signature matches, false otherwise
+ * Duffel format: X-Duffel-Signature: t=<timestamp>,v1=<signature>
+ * Signature is computed over: timestamp.rawBody
  */
-function verifySignature(payload: string, signature: string | null): boolean {
+function verifySignature(payload: string, signatureHeader: string | null): boolean {
     if (!WEBHOOK_SECRET) {
         console.warn("⚠️ DUFFEL_WEBHOOK_SECRET not set - skipping signature verification")
         return true // Allow in development, but warn
     }
 
-    if (!signature) {
-        console.error("❌ No Duffel-Signature header present")
+    if (!signatureHeader) {
+        console.error("❌ No X-Duffel-Signature header present")
         return false
     }
 
-    // Duffel sends signature in format: t=timestamp,v1=signature
-    const parts = signature.split(",")
+    // Parse: t=<timestamp>,v1=<signature>
+    const parts = signatureHeader.split(",")
+    const timestampPart = parts.find(p => p.startsWith("t="))
     const signaturePart = parts.find(p => p.startsWith("v1="))
 
-    if (!signaturePart) {
-        console.error("❌ Invalid signature format - missing v1=")
+    if (!timestampPart || !signaturePart) {
+        console.error("❌ Invalid signature format - missing t= or v1=")
         return false
     }
 
+    const timestamp = timestampPart.replace("t=", "")
     const receivedSignature = signaturePart.replace("v1=", "")
 
-    // Compute expected signature
+    // Duffel computes signature over: timestamp.payload
+    const signedPayload = `${timestamp}.${payload}`
     const expectedSignature = crypto
         .createHmac("sha256", WEBHOOK_SECRET)
-        .update(payload)
+        .update(signedPayload)
         .digest("hex")
 
     // Use timing-safe comparison to prevent timing attacks
     try {
-        return crypto.timingSafeEqual(
+        const isValid = crypto.timingSafeEqual(
             Buffer.from(receivedSignature, "hex"),
             Buffer.from(expectedSignature, "hex")
         )
-    } catch {
+
+        if (!isValid) {
+            console.error("❌ Signature mismatch")
+            console.log("Received:", receivedSignature.substring(0, 20) + "...")
+            console.log("Expected:", expectedSignature.substring(0, 20) + "...")
+        }
+
+        return isValid
+    } catch (e) {
+        console.error("❌ Signature comparison error:", e)
         return false
     }
 }
@@ -58,9 +71,11 @@ export async function POST(request: Request) {
     try {
         // 1. Get raw body for signature verification
         const rawBody = await request.text()
-        const signature = request.headers.get("Duffel-Signature")
 
-        // 2. Verify signature
+        // 2. Get signature header (Duffel uses X-Duffel-Signature)
+        const signature = request.headers.get("X-Duffel-Signature") || request.headers.get("Duffel-Signature")
+
+        // 3. Verify signature
         if (!verifySignature(rawBody, signature)) {
             console.error("❌ Webhook signature verification failed")
             return NextResponse.json(
