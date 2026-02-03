@@ -27,19 +27,21 @@ function verifySignature(payload: string, signatureHeader: string | null): boole
 
     console.log("📝 Signature header:", signatureHeader)
 
-    // Parse: t=<timestamp>,v1=<signature>
+    // Parse: t=<timestamp>,v1=<signature> OR t=<timestamp>,v2=<signature>
     const parts = signatureHeader.split(",")
     const timestampPart = parts.find(p => p.startsWith("t="))
-    const signaturePart = parts.find(p => p.startsWith("v1="))
+    // Accept both v1= and v2= signature formats
+    const signaturePart = parts.find(p => p.startsWith("v1=") || p.startsWith("v2="))
 
     if (!timestampPart || !signaturePart) {
-        console.error("❌ Invalid signature format - missing t= or v1=")
+        console.error("❌ Invalid signature format - missing t= or v1=/v2=")
         console.log("Parts found:", parts)
         return false
     }
 
     const timestamp = timestampPart.replace("t=", "")
-    const receivedSignature = signaturePart.replace("v1=", "").toLowerCase()
+    // Remove either v1= or v2= prefix
+    const receivedSignature = signaturePart.replace(/^v[12]=/, "").toLowerCase()
 
     console.log("📝 Timestamp:", timestamp)
     console.log("📝 Received signature (first 20):", receivedSignature.substring(0, 20))
