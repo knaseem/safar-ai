@@ -358,6 +358,69 @@ export async function POST(request: Request) {
                 break
             }
 
+            case "air.airline_credit.spent": {
+                const credit = event.data.object
+
+                console.log(`💸 Airline credit spent: ${credit.id}`)
+
+                console.log("Credit spent details:", {
+                    credit_id: credit.id,
+                    amount: credit.total_amount,
+                    currency: credit.total_currency,
+                    airline: credit.owner?.iata_code
+                })
+                break
+            }
+
+            case "air.airline_credit.invalidated": {
+                const credit = event.data.object
+
+                console.log(`❌ Airline credit invalidated: ${credit.id}`)
+
+                console.log("Credit invalidated details:", {
+                    credit_id: credit.id,
+                    amount: credit.total_amount,
+                    currency: credit.total_currency,
+                    reason: credit.invalidation_reason
+                })
+
+                // TODO: Notify user their credit has expired/been invalidated
+                break
+            }
+
+            // =============================================
+            // FAILURE EVENTS
+            // =============================================
+            case "order.creation_failed": {
+                const order = event.data.object
+
+                console.error(`❌ Order creation failed: ${order.id}`)
+
+                console.error("Order failure details:", {
+                    order_id: order.id,
+                    error: order.failure_reason,
+                    metadata: order.metadata
+                })
+
+                // In production: notify support team, potentially refund payment
+                break
+            }
+
+            case "stays.booking_creation_failed": {
+                const booking = event.data.object
+
+                console.error(`❌ Stay booking creation failed: ${booking.id}`)
+
+                console.error("Stay booking failure details:", {
+                    booking_id: booking.id,
+                    error: booking.failure_reason,
+                    accommodation: booking.accommodation?.name
+                })
+
+                // In production: notify support team, refund payment
+                break
+            }
+
             default:
                 console.log(`ℹ️ Unhandled event type: ${event.type}`)
         }
