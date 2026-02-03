@@ -166,6 +166,11 @@ export async function createLinkSession(params: {
                 selected_offers: (params.offerId && params.offerId.startsWith('off_') && !params.offerId.includes('mock'))
                     ? [params.offerId]
                     : undefined,
+                // CRITICAL DEBUG: Temporarily disabling selected_offers to prevent "Real Offer ID on Test Token" crash.
+                // We will rely on default_search_criteria to pre-fill the form so the user sees valid results.
+                // selected_offers: (params.offerId && params.offerId.startsWith('off_') && !params.offerId.includes('mock'))
+                //     ? [params.offerId]
+                //     : undefined,
                 default_search_criteria: searchCriteria
             },
             stays: {
