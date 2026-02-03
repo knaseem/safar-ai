@@ -8,8 +8,9 @@ const WEBHOOK_SECRET = process.env.DUFFEL_WEBHOOK_SECRET
 
 /**
  * Verify Duffel webhook signature using HMAC SHA-256
- * Duffel format: X-Duffel-Signature: t=<timestamp>,v1=<signature>
- * Signature is computed over: timestamp.rawBody
+ * Handles two formats:
+ * 1. Structured: t=<timestamp>,v1=<signature> (signature over timestamp.payload)
+ * 2. Raw: Just the signature (signature over payload only)
  */
 function verifySignature(payload: string, signatureHeader: string | null): boolean {
     if (!WEBHOOK_SECRET) {
@@ -18,25 +19,37 @@ function verifySignature(payload: string, signatureHeader: string | null): boole
     }
 
     if (!signatureHeader) {
-        console.error("❌ No X-Duffel-Signature header present")
+        console.error("❌ No signature header present")
         return false
     }
 
-    // Parse: t=<timestamp>,v1=<signature>
-    const parts = signatureHeader.split(",")
-    const timestampPart = parts.find(p => p.startsWith("t="))
-    const signaturePart = parts.find(p => p.startsWith("v1="))
+    console.log("📝 Signature header received:", signatureHeader.substring(0, 50) + "...")
 
-    if (!timestampPart || !signaturePart) {
-        console.error("❌ Invalid signature format - missing t= or v1=")
-        return false
+    let receivedSignature: string
+    let signedPayload: string
+
+    // Check if it's structured format (t=...,v1=...)
+    if (signatureHeader.includes("t=") && signatureHeader.includes("v1=")) {
+        const parts = signatureHeader.split(",")
+        const timestampPart = parts.find(p => p.startsWith("t="))
+        const signaturePart = parts.find(p => p.startsWith("v1="))
+
+        if (!timestampPart || !signaturePart) {
+            console.error("❌ Invalid structured signature format")
+            return false
+        }
+
+        const timestamp = timestampPart.replace("t=", "")
+        receivedSignature = signaturePart.replace("v1=", "")
+        signedPayload = `${timestamp}.${payload}`
+        console.log("📝 Using structured format with timestamp:", timestamp)
+    } else {
+        // Raw signature format - just compare against payload directly
+        receivedSignature = signatureHeader
+        signedPayload = payload
+        console.log("📝 Using raw signature format")
     }
 
-    const timestamp = timestampPart.replace("t=", "")
-    const receivedSignature = signaturePart.replace("v1=", "")
-
-    // Duffel computes signature over: timestamp.payload
-    const signedPayload = `${timestamp}.${payload}`
     const expectedSignature = crypto
         .createHmac("sha256", WEBHOOK_SECRET)
         .update(signedPayload)
@@ -44,10 +57,18 @@ function verifySignature(payload: string, signatureHeader: string | null): boole
 
     // Use timing-safe comparison to prevent timing attacks
     try {
-        const isValid = crypto.timingSafeEqual(
-            Buffer.from(receivedSignature, "hex"),
-            Buffer.from(expectedSignature, "hex")
-        )
+        // Ensure both are same length for timingSafeEqual
+        const receivedBuffer = Buffer.from(receivedSignature, "hex")
+        const expectedBuffer = Buffer.from(expectedSignature, "hex")
+
+        if (receivedBuffer.length !== expectedBuffer.length) {
+            console.error("❌ Signature length mismatch:", receivedBuffer.length, "vs", expectedBuffer.length)
+            console.log("Received sig:", receivedSignature.substring(0, 30))
+            console.log("Expected sig:", expectedSignature.substring(0, 30))
+            return false
+        }
+
+        const isValid = crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
 
         if (!isValid) {
             console.error("❌ Signature mismatch")
