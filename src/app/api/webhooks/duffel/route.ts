@@ -8,9 +8,11 @@ const WEBHOOK_SECRET = process.env.DUFFEL_WEBHOOK_SECRET
 
 /**
  * Verify Duffel webhook signature using HMAC SHA-256
- * Handles two formats:
- * 1. Structured: t=<timestamp>,v1=<signature> (signature over timestamp.payload)
- * 2. Raw: Just the signature (signature over payload only)
+ * Based on Duffel's official Python example:
+ * - Secret is base64 encoded, must be decoded to bytes first
+ * - Format: t=<timestamp>,v1=<signature>
+ * - Signature is computed over: timestamp.payload (as bytes)
+ * - Result is hex-encoded lowercase
  */
 function verifySignature(payload: string, signatureHeader: string | null): boolean {
     if (!WEBHOOK_SECRET) {
@@ -23,57 +25,57 @@ function verifySignature(payload: string, signatureHeader: string | null): boole
         return false
     }
 
-    console.log("📝 Signature header received:", signatureHeader.substring(0, 50) + "...")
+    console.log("📝 Signature header:", signatureHeader)
 
-    let receivedSignature: string
-    let signedPayload: string
+    // Parse: t=<timestamp>,v1=<signature>
+    const parts = signatureHeader.split(",")
+    const timestampPart = parts.find(p => p.startsWith("t="))
+    const signaturePart = parts.find(p => p.startsWith("v1="))
 
-    // Check if it's structured format (t=...,v1=...)
-    if (signatureHeader.includes("t=") && signatureHeader.includes("v1=")) {
-        const parts = signatureHeader.split(",")
-        const timestampPart = parts.find(p => p.startsWith("t="))
-        const signaturePart = parts.find(p => p.startsWith("v1="))
-
-        if (!timestampPart || !signaturePart) {
-            console.error("❌ Invalid structured signature format")
-            return false
-        }
-
-        const timestamp = timestampPart.replace("t=", "")
-        receivedSignature = signaturePart.replace("v1=", "")
-        signedPayload = `${timestamp}.${payload}`
-        console.log("📝 Using structured format with timestamp:", timestamp)
-    } else {
-        // Raw signature format - just compare against payload directly
-        receivedSignature = signatureHeader
-        signedPayload = payload
-        console.log("📝 Using raw signature format")
+    if (!timestampPart || !signaturePart) {
+        console.error("❌ Invalid signature format - missing t= or v1=")
+        console.log("Parts found:", parts)
+        return false
     }
 
+    const timestamp = timestampPart.replace("t=", "")
+    const receivedSignature = signaturePart.replace("v1=", "").toLowerCase()
+
+    console.log("📝 Timestamp:", timestamp)
+    console.log("📝 Received signature (first 20):", receivedSignature.substring(0, 20))
+
+    // Decode the base64 secret to raw bytes
+    // The secret "iiRC1FatIvFdn1m2Vl3hLg==" is base64 encoded
+    const secretBytes = Buffer.from(WEBHOOK_SECRET, "base64")
+
+    // Build signed payload: timestamp.payload (as bytes)
+    const signedPayload = `${timestamp}.${payload}`
+
+    // Compute HMAC-SHA256 and hex encode (lowercase)
     const expectedSignature = crypto
-        .createHmac("sha256", WEBHOOK_SECRET)
+        .createHmac("sha256", secretBytes)
         .update(signedPayload)
         .digest("hex")
+        .toLowerCase()
 
-    // Use timing-safe comparison to prevent timing attacks
+    console.log("📝 Expected signature (first 20):", expectedSignature.substring(0, 20))
+
+    // Compare signatures
+    if (receivedSignature.length !== expectedSignature.length) {
+        console.error("❌ Signature length mismatch:", receivedSignature.length, "vs", expectedSignature.length)
+        return false
+    }
+
     try {
-        // Ensure both are same length for timingSafeEqual
-        const receivedBuffer = Buffer.from(receivedSignature, "hex")
-        const expectedBuffer = Buffer.from(expectedSignature, "hex")
+        const isValid = crypto.timingSafeEqual(
+            Buffer.from(receivedSignature, "utf8"),
+            Buffer.from(expectedSignature, "utf8")
+        )
 
-        if (receivedBuffer.length !== expectedBuffer.length) {
-            console.error("❌ Signature length mismatch:", receivedBuffer.length, "vs", expectedBuffer.length)
-            console.log("Received sig:", receivedSignature.substring(0, 30))
-            console.log("Expected sig:", expectedSignature.substring(0, 30))
-            return false
-        }
-
-        const isValid = crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
-
-        if (!isValid) {
+        if (isValid) {
+            console.log("✅ Signature verified successfully!")
+        } else {
             console.error("❌ Signature mismatch")
-            console.log("Received:", receivedSignature.substring(0, 20) + "...")
-            console.log("Expected:", expectedSignature.substring(0, 20) + "...")
         }
 
         return isValid
