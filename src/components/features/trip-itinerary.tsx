@@ -462,7 +462,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 </Button>
                             ) : (
                                 <Button size="lg" className="bg-white text-black hover:bg-white/90" onClick={() => setIsBookingOpen(true)}>
-                                    Check Availability & Rates <ArrowRight className="size-4 ml-2" />
+                                    Check & Book Activities <ArrowRight className="size-4 ml-2" />
                                 </Button>
                             )}
                         </div>
