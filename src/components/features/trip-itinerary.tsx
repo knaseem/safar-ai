@@ -475,6 +475,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 isHalal={isHalal}
                 isOpen={isBookingOpen}
                 searchQuery={searchQuery}
+                initialTab="experiences"
                 onClose={() => setIsBookingOpen(false)}
             />
 

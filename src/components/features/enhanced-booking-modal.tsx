@@ -26,12 +26,13 @@ interface EnhancedBookingModalProps {
     isHalal?: boolean
     isOpen: boolean
     searchQuery?: string
+    initialTab?: 'all' | 'flight' | 'hotel' | 'experiences'
     onClose: () => void
 }
 
 type BookingStep = 'details' | 'review' | 'processing' | 'success'
 
-export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, searchQuery, onClose }: EnhancedBookingModalProps) {
+export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, searchQuery, initialTab, onClose }: EnhancedBookingModalProps) {
     const [step, setStep] = useState<BookingStep>('details')
     const [processingText, setProcessingText] = useState('Securing Flights...')
     const [confirmationCode, setConfirmationCode] = useState<string | null>(null)
@@ -45,7 +46,7 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const { user } = useAuth()
 
     // Form state
-    const [bookingType, setBookingType] = useState<'all' | 'flight' | 'hotel' | 'experiences'>('all')
+    const [bookingType, setBookingType] = useState<'all' | 'flight' | 'hotel' | 'experiences'>(initialTab || 'all')
     const [budget, setBudget] = useState('')
     const [checkIn, setCheckIn] = useState<Date | null>(null)
     const [checkOut, setCheckOut] = useState<Date | null>(null)
@@ -575,8 +576,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
 
                                 {bookingType !== 'hotel' && bookingType !== 'experiences' && isStep1Valid && (
                                     <div className={`mt-6 mb-2 p-3 rounded-xl border flex items-center gap-3 transition-colors ${isLivePricing ? 'bg-blue-500/10 border-blue-500/20 text-blue-200' :
-                                            offerId ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
-                                                'bg-red-500/10 border-red-500/20 text-red-200'
+                                        offerId ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200' :
+                                            'bg-red-500/10 border-red-500/20 text-red-200'
                                         }`}>
                                         {isLivePricing ? (
                                             <>
