@@ -389,6 +389,64 @@ export async function createStayBooking(params: {
     }
 }
 
+/**
+ * Get a Stay Booking by ID (for confirmation page)
+ * Returns all details needed for Go Live compliance
+ */
+export async function getStayBooking(bookingId: string) {
+    const duffel = getDuffel();
+
+    if (!duffel || bookingId.startsWith('bk_stay_mock')) {
+        // Mock booking for testing
+        return {
+            id: bookingId,
+            reference: 'STAY-MOCK123',
+            status: 'confirmed',
+            created_at: new Date().toISOString(),
+            accommodation: {
+                name: 'The Grand Safar Hotel',
+                address: {
+                    line_one: '123 Luxury Avenue',
+                    city: 'Dubai',
+                    country: 'UAE',
+                    postal_code: '12345'
+                },
+                phone_number: '+971 4 123 4567',
+                check_in_time: '15:00',
+                check_out_time: '11:00',
+                photos: [{ url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80' }]
+            },
+            check_in_date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0],
+            check_out_date: new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0],
+            rooms: [{
+                type: 'Deluxe King Room',
+                board_type: 'breakfast_included',
+                guests: [{ given_name: 'John', family_name: 'Doe' }]
+            }],
+            total_amount: '525.00',
+            total_currency: 'USD',
+            payment_status: 'paid',
+            // Key collection info (critical for Go Live)
+            key_collection: {
+                instructions: 'Check in at the front desk. Present your booking confirmation and valid ID.',
+                access_code: null // Some properties provide PIN codes
+            },
+            cancellation_policy: {
+                refundable: true,
+                deadline: new Date(Date.now() + 86400000 * 5).toISOString()
+            }
+        };
+    }
+
+    try {
+        const response = await (duffel as any).stays.bookings.get(bookingId);
+        return response.data;
+    } catch (error) {
+        console.error('Duffel Get Stay Booking Error:', error);
+        throw error;
+    }
+}
+
 // ============================================
 // ORDER MANAGEMENT APIs (Custom Checkout)
 // ============================================
