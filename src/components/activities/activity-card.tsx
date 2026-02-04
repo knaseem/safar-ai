@@ -83,7 +83,7 @@ interface ActivityDetailModalProps {
 export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetailModalProps) {
     if (!product) return null
 
-    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || '266f2684-0f17-41f7-b54b-dbc8d92c31e6'
+    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
     const affiliateUrl = `${product.productUrl}?pid=${partnerId}&mcid=42383&medium=link`
     const imageUrl = product.images?.[0]?.variants?.find(v => v.width >= 800)?.url || product.images?.[0]?.variants?.[0]?.url
 
