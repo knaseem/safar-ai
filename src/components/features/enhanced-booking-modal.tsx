@@ -102,7 +102,8 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     // Validation
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)
     const isValidPhone = contact.phone.replace(/\D/g, '').length >= 10
-    const isStep1Valid = checkIn && checkOut && (bookingType === 'hotel' || departureAirport)
+    // Experiences mode doesn't need dates/airport - users browse Viator directly
+    const isStep1Valid = bookingType === 'experiences' || (checkIn && checkOut && (bookingType === 'hotel' || departureAirport))
     const isStep2Valid = contact.firstName && contact.lastName && isValidEmail && isValidPhone
 
     // Pre-fill Departure from Profile
