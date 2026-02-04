@@ -15,6 +15,9 @@ interface ActivitiesSectionProps {
 // Fallback mock activities when API fails - directs users to Viator
 function getMockActivities(destination: string): ViatorProduct[] {
     const cleanDest = destination.trim()
+    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
+    const commonParams = `pid=${partnerId}&mcid=42383&medium=link`
+
     return [
         {
             productCode: 'mock-tour-1',
@@ -25,7 +28,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.8, totalReviews: 1250 },
             duration: { fixedDurationInMinutes: 180 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' tour')}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' tour')}&${commonParams}`,
             destinations: [],
             tags: ['Walking Tour', 'Sightseeing']
         },
@@ -38,7 +41,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.9, totalReviews: 890 },
             duration: { fixedDurationInMinutes: 240 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' food tour')}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' food tour')}&${commonParams}`,
             destinations: [],
             tags: ['Food Tour', 'Cultural']
         },
@@ -51,7 +54,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.7, totalReviews: 2100 },
             duration: { fixedDurationInMinutes: 300 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' skip the line')}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' skip the line')}&${commonParams}`,
             destinations: [],
             tags: ['Skip-the-Line', 'Must-See']
         }
@@ -64,6 +67,9 @@ export function ActivitiesSection({ destination, dates }: ActivitiesSectionProps
     const [error, setError] = useState<string | null>(null)
     const [selectedProduct, setSelectedProduct] = useState<ViatorProduct | null>(null)
     const [usingFallback, setUsingFallback] = useState(false)
+
+    // Retrieve partner ID from env or fallback
+    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
 
     useEffect(() => {
         async function fetchActivities() {
@@ -151,7 +157,7 @@ export function ActivitiesSection({ destination, dates }: ActivitiesSectionProps
             {/* Browse More on Viator Button */}
             <div className="mt-6 text-center">
                 <a
-                    href={`https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination)}`}
+                    href={`https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination)}&pid=${partnerId}&mcid=42383&medium=link`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold rounded-xl transition-colors"

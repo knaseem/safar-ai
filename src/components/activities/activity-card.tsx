@@ -84,7 +84,8 @@ export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetail
     if (!product) return null
 
     const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
-    const affiliateUrl = `${product.productUrl}?pid=${partnerId}&mcid=42383&medium=link`
+    const separator = product.productUrl.includes('?') ? '&' : '?'
+    const affiliateUrl = `${product.productUrl}${separator}pid=${partnerId}&mcid=42383&medium=link`
     const imageUrl = product.images?.[0]?.variants?.find(v => v.width >= 800)?.url || product.images?.[0]?.variants?.[0]?.url
 
     return (
