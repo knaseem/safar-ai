@@ -15,8 +15,6 @@ interface ActivitiesSectionProps {
 // Fallback mock activities when API fails - directs users to Viator
 function getMockActivities(destination: string): ViatorProduct[] {
     const cleanDest = destination.trim()
-    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
-    const commonParams = `pid=${partnerId}&mcid=42383&medium=link`
 
     return [
         {
@@ -28,7 +26,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.8, totalReviews: 1250 },
             duration: { fixedDurationInMinutes: 180 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' tour')}&${commonParams}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' tour')}`,
             destinations: [],
             tags: ['Walking Tour', 'Sightseeing']
         },
@@ -41,7 +39,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.9, totalReviews: 890 },
             duration: { fixedDurationInMinutes: 240 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' food tour')}&${commonParams}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' food tour')}`,
             destinations: [],
             tags: ['Food Tour', 'Cultural']
         },
@@ -54,7 +52,7 @@ function getMockActivities(destination: string): ViatorProduct[] {
             reviews: { combinedAverageRating: 4.7, totalReviews: 2100 },
             duration: { fixedDurationInMinutes: 300 },
             bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' skip the line')}&${commonParams}`,
+            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' skip the line')}`,
             destinations: [],
             tags: ['Skip-the-Line', 'Must-See']
         }
