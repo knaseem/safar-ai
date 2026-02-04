@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, Clock, X, ExternalLink, MapPin, Check } from 'lucide-react'
+import { Star, Clock, X, ExternalLink, MapPin, Check, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ViatorProduct } from '@/lib/viator'
 
@@ -108,6 +108,13 @@ export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetail
                         <div className="relative h-64 md:h-80 shrink-0">
                             <img src={imageUrl} alt={product.title} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent to-transparent" />
+                            <button
+                                onClick={onClose}
+                                className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-2 bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full text-white transition-colors text-sm font-medium"
+                            >
+                                <ChevronLeft className="size-4" />
+                                Back
+                            </button>
                             <button
                                 onClick={onClose}
                                 className="absolute top-4 right-4 p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-white transition-colors"
