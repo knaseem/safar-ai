@@ -607,13 +607,15 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     </div>
                                 )}
 
-                                <Button
-                                    onClick={handleNext}
-                                    disabled={!isStep1Valid || (bookingType !== 'hotel' && bookingType !== 'experiences' && !offerId)}
-                                    className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 z-10"
-                                >
-                                    Continue <ChevronRight className="size-5 ml-2" />
-                                </Button>
+                                {bookingType !== 'experiences' && (
+                                    <Button
+                                        onClick={handleNext}
+                                        disabled={!isStep1Valid || (bookingType !== 'hotel' && !offerId)}
+                                        className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-semibold py-6 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed sticky bottom-0 z-10"
+                                    >
+                                        Continue <ChevronRight className="size-5 ml-2" />
+                                    </Button>
+                                )}
                             </div>
                         )}
 

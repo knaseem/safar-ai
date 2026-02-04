@@ -64,7 +64,7 @@ export function ActivityCard({ product, onSelect }: ActivityCardProps) {
                                 ${price || 'Check'}
                             </div>
                         </div>
-                        <Button size="sm" variant="outline" className="h-8 text-xs bg-transparent border-white/20 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/50">
+                        <Button size="sm" variant="outline" className="h-8 text-xs bg-white/10 border-white/30 text-white hover:bg-emerald-500/20 hover:text-emerald-400 hover:border-emerald-500/50">
                             Details
                         </Button>
                     </div>
