@@ -115,7 +115,7 @@ export default function BudgetPage() {
                             </Link>
                             <Button
                                 variant="outline"
-                                className="border-white/10 hover:bg-white/5 font-bold rounded-xl px-6"
+                                className="border-white/20 text-white hover:bg-white/10 hover:text-white font-bold rounded-xl px-6"
                                 onClick={() => {
                                     setIsDemoMode(true)
                                     setTripsWithBudgets([{
