@@ -139,7 +139,7 @@ export default function BudgetPage() {
                                         user_id: 'demo-user',
                                         destination: 'Kyoto, Japan (Demo)',
                                         start_date: new Date().toISOString(),
-                                        end_date: new Date().toISOString(),
+                                        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
                                         created_at: new Date().toISOString(),
                                         trip_name: 'Kyoto Cultural Expedition',
                                         budget: {
@@ -260,6 +260,9 @@ export default function BudgetPage() {
                                                         totalBudget={trip.budget?.total_budget || 2500}
                                                         currency={trip.budget?.currency || "USD"}
                                                         initialCategories={trip.budget?.categories}
+                                                        startDate={trip.start_date}
+                                                        endDate={trip.end_date}
+                                                        tripName={trip.trip_name || trip.destination}
                                                         onSave={(cats) => handleSaveBudget(trip.id, cats, trip.budget?.total_budget || 2500, trip.budget?.currency || "USD")}
                                                     />
                                                 </div>

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-const MAX_FREE_TRIPS = 10
+const MAX_FREE_TRIPS = Number(process.env.MAX_FREE_TRIPS) || 10
 
 // GET: Fetch user's saved trips
 export async function GET() {

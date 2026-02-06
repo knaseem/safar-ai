@@ -13,11 +13,19 @@ import {
     Hotel,
     Utensils,
     Activity,
-    Plus
+    Plus,
+    Gauge,
+    Download,
+    RefreshCw
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useSpring, useTransform, animate } from "framer-motion"
+import { pdf } from '@react-pdf/renderer'
+import { saveAs } from 'file-saver'
+import { BudgetPDF } from './budget-pdf'
+import { EXCHANGE_RATES, convertCurrency, formatCurrency as formatCurrencyUtil } from "@/lib/currency"
+import { useExchangeRates } from "@/hooks/use-exchange-rates"
 
 function CountingNumber({ value, currency = "USD" }: { value: number; currency?: string }) {
     const spring = useSpring(0, { mass: 0.8, stiffness: 75, damping: 15 })
@@ -39,6 +47,9 @@ interface BudgetDashboardProps {
     totalBudget: number
     currency?: string
     initialCategories?: Record<string, number>
+    startDate?: string
+    endDate?: string
+    tripName?: string
     onSave?: (data: Record<string, number>) => void
     className?: string
 }
@@ -47,6 +58,9 @@ export function BudgetDashboard({
     totalBudget,
     currency = "USD",
     initialCategories,
+    startDate,
+    endDate,
+    tripName,
     onSave,
     className
 }: BudgetDashboardProps) {
@@ -60,6 +74,61 @@ export function BudgetDashboard({
     const [isExpanded, setIsExpanded] = useState(true)
     const [isEditing, setIsEditing] = useState(false)
     const [tempBudget, setTempBudget] = useState(totalBudget)
+    const [displayCurrency, setDisplayCurrency] = useState(currency)
+    const [isDownloading, setIsDownloading] = useState(false)
+    const { rates, loading: ratesLoading } = useExchangeRates()
+
+    // Derived Logic
+    const totalSpent = useMemo(() =>
+        Object.values(spentCategories).reduce((a, b) => a + b, 0),
+        [spentCategories])
+
+    const remaining = tempBudget - totalSpent
+    const spentPercentage = (totalSpent / tempBudget) * 100
+
+    // Burn Rate Logic
+    const burnRateData = useMemo(() => {
+        if (!startDate || !endDate) return null
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+        const diffTime = Math.abs(end.getTime() - start.getTime())
+        const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) || 1
+        return {
+            days,
+            dailyBurn: totalSpent / days,
+            dailyLimit: tempBudget / days
+        }
+    }, [startDate, endDate, totalSpent, tempBudget])
+
+    // Currency Helper
+    const getConverted = (amount: number) => convertCurrency(amount, currency, displayCurrency, rates)
+
+    // PDF Download
+    const handleDownloadPDF = async () => {
+        setIsDownloading(true)
+        try {
+            const cats = Object.entries(spentCategories).map(([id, value]) => ({
+                label: id.charAt(0).toUpperCase() + id.slice(1),
+                value: getConverted(value)
+            }))
+
+            const blob = await pdf(
+                <BudgetPDF
+                    tripName={tripName || "Expedition"}
+                    totalBudget={getConverted(tempBudget)}
+                    totalSpent={getConverted(totalSpent)}
+                    currency={displayCurrency}
+                    categories={cats}
+                    burnRate={getConverted(burnRateData?.dailyBurn || 0)}
+                />
+            ).toBlob()
+            saveAs(blob, `Budget_Brief_${tripName?.replace(/\s+/g, '_') || 'Trip'}.pdf`)
+        } catch (e) {
+            console.error("PDF Fail", e)
+        } finally {
+            setIsDownloading(false)
+        }
+    }
 
     const categories: BudgetCategory[] = [
         { id: 'flights', label: 'Flights', value: spentCategories.flights, color: '#3b82f6', icon: Plane },
@@ -68,14 +137,6 @@ export function BudgetDashboard({
         { id: 'activities', label: 'Activities', value: spentCategories.activities, color: '#8b5cf6', icon: Activity },
         { id: 'other', label: 'Other', value: spentCategories.other, color: '#ec4899', icon: Plus },
     ]
-
-
-    const totalSpent = useMemo(() =>
-        Object.values(spentCategories).reduce((a, b) => a + b, 0),
-        [spentCategories])
-
-    const remaining = tempBudget - totalSpent
-    const spentPercentage = (totalSpent / tempBudget) * 100
 
     const handleCategoryChange = (id: string, val: string) => {
         const num = parseInt(val) || 0
@@ -133,21 +194,33 @@ export function BudgetDashboard({
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-white leading-none">Budget Optimizer</h3>
-                        <p className="text-xs text-white/40 mt-1">SafarAI Intelligent Tracking</p>
+                        <p className="text-xs text-white/40 mt-1 flex items-center gap-1">
+                            SafarAI Intelligent Tracking
+                            {!ratesLoading && <span className="text-emerald-500 text-[9px] bg-emerald-500/10 px-1.5 rounded ml-1 animate-pulse border border-emerald-500/20">LIVE MARKET</span>}
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <select
+                        value={displayCurrency}
+                        onChange={(e) => setDisplayCurrency(e.target.value)}
+                        className="bg-black/40 border border-white/10 rounded-lg text-[10px] px-2 py-1.5 text-white/60 focus:outline-none focus:border-white/30 mr-1 uppercase"
+                    >
+                        {["USD", "EUR", "GBP", "JPY", "CNY", "AUD", "CAD", "CHF", "HKD", "SGD", "NZD", "KRW", "INR", "AED", "SAR"].map(c => (
+                            <option key={c} value={c}>{c}</option>
+                        ))}
+                    </select>
                     <button
                         onClick={() => setIsEditing(!isEditing)}
                         className="text-[10px] uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 hover:bg-white/5 transition-colors text-white/60"
                     >
-                        {isEditing ? "Cancel" : "Edit Budget"}
+                        {isEditing ? "Cancel" : "Edit"}
                     </button>
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                        className="p-1.5 hover:bg-white/5 rounded-full transition-colors"
                     >
-                        {isExpanded ? <ChevronUp className="size-5 text-white/40" /> : <ChevronDown className="size-5 text-white/40" />}
+                        {isExpanded ? <ChevronUp className="size-4 text-white/40" /> : <ChevronDown className="size-4 text-white/40" />}
                     </button>
                 </div>
             </div>
@@ -210,7 +283,7 @@ export function BudgetDashboard({
                             transition={{ duration: 3, repeat: Infinity }}
                             className="text-4xl font-black text-white tracking-tighter"
                         >
-                            <CountingNumber value={totalSpent} currency={currency} />
+                            <CountingNumber value={getConverted(totalSpent)} currency={displayCurrency} />
                         </motion.div>
                         {isEditing ? (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 flex flex-col items-center">
@@ -266,7 +339,7 @@ export function BudgetDashboard({
                                             ) : (
                                                 <div className="text-right">
                                                     <div className="text-xs font-black text-white">
-                                                        <CountingNumber value={cat.value} currency={currency} />
+                                                        <CountingNumber value={getConverted(cat.value)} currency={displayCurrency} />
                                                     </div>
                                                     <div className="text-[9px] text-white/30 uppercase tracking-widest font-bold">
                                                         {Math.round((cat.value / tempBudget) * 100)}% Usage
@@ -312,6 +385,35 @@ export function BudgetDashboard({
                         </div>
                     </motion.div>
 
+                    {/* Burn Rate Gauge */}
+                    {burnRateData && (
+                        <motion.div layout className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
+                            <div className="flex justify-between items-center mb-3">
+                                <div className="flex items-center gap-2">
+                                    <Gauge className="size-3 text-orange-400" />
+                                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Velocity (Burn Rate)</span>
+                                </div>
+                                <span className="text-xs font-black text-orange-400">
+                                    {displayCurrency} {Math.round(getConverted(burnRateData.dailyBurn)).toLocaleString()}<span className="text-white/30 text-[9px] font-normal"> / DAY</span>
+                                </span>
+                            </div>
+                            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden flex relative">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${Math.min((burnRateData.dailyBurn / (burnRateData.dailyLimit * 1.5)) * 100, 100)}%` }}
+                                    className={cn(
+                                        "h-full shadow-[0_0_10px_rgba(249,115,22,0.5)]",
+                                        burnRateData.dailyBurn > burnRateData.dailyLimit ? "bg-red-500" : "bg-orange-500"
+                                    )}
+                                />
+                            </div>
+                            <div className="flex justify-between mt-2 text-[9px] text-white/20 font-mono">
+                                <span>0</span>
+                                <span>SAFE: {Math.round(getConverted(burnRateData.dailyLimit))}</span>
+                            </div>
+                        </motion.div>
+                    )}
+
                     {/* AI Logic Alert */}
                     <motion.div
                         layout
@@ -341,17 +443,29 @@ export function BudgetDashboard({
                     </motion.div>
 
 
-                    <Button
-                        variant={isEditing ? "premium" : "outline"}
-                        size="sm"
-                        className={cn(
-                            "w-full rounded-xl transition-all font-bold",
-                            !isEditing && "border-white/10 bg-white text-emerald-900 hover:text-emerald-800"
-                        )}
-                        onClick={handleSave}
-                    >
-                        {isEditing ? "Save & Sync Ledger" : "Sync with Live Bookings"}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 rounded-xl transition-all font-bold border-white/10 bg-transparent hover:bg-white/5 disabled:opacity-50 text-white/60 hover:text-white"
+                            onClick={handleDownloadPDF}
+                            disabled={isDownloading}
+                        >
+                            {isDownloading ? <RefreshCw className="size-4 animate-spin mr-2" /> : <Download className="size-4 mr-2" />}
+                            {isDownloading ? "Generating..." : "Export Brief"}
+                        </Button>
+                        <Button
+                            variant={isEditing ? "premium" : "outline"}
+                            size="sm"
+                            className={cn(
+                                "flex-1 rounded-xl transition-all font-bold",
+                                !isEditing && "border-white/10 bg-white text-emerald-900 hover:text-emerald-800"
+                            )}
+                            onClick={handleSave}
+                        >
+                            {isEditing ? "Save & Sync" : "Sync Ledger"}
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

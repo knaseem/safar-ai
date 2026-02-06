@@ -21,7 +21,28 @@ export async function GET(
         const isMockStay = bookingId.startsWith('bk_stay_mock')
         const isMockFlight = bookingId.startsWith('ord_mock')
 
-        let bookingDetails: any = null
+        interface BookingDetails {
+            id: string
+            booking_reference?: string
+            reference?: string
+            status?: string
+            created_at?: string
+            total_amount?: string | number
+            total_currency?: string
+            payment_status?: string | unknown
+            slices?: unknown[]
+            passengers?: unknown[]
+            owner?: unknown
+            conditions?: unknown
+            accommodation?: unknown
+            check_in_date?: string
+            check_out_date?: string
+            rooms?: unknown[]
+            key_collection?: unknown
+            cancellation_policy?: unknown
+        }
+
+        let bookingDetails: BookingDetails | null = null
         let type: 'flight' | 'stay' = 'flight'
 
         if (isStayBooking || isMockStay) {

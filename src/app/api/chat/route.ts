@@ -24,6 +24,31 @@ export async function POST(req: Request) {
     }
 
     const { prompt, isHalal, selection } = await req.json();
+
+    // Input validation
+    const MAX_PROMPT_LENGTH = 1000;
+    if (!prompt || typeof prompt !== 'string') {
+      return NextResponse.json(
+        { error: "Please provide a trip description." },
+        { status: 400 }
+      );
+    }
+
+    const trimmedPrompt = prompt.trim();
+    if (trimmedPrompt.length === 0) {
+      return NextResponse.json(
+        { error: "Please provide a trip description." },
+        { status: 400 }
+      );
+    }
+
+    if (trimmedPrompt.length > MAX_PROMPT_LENGTH) {
+      return NextResponse.json(
+        { error: `Trip description is too long. Please keep it under ${MAX_PROMPT_LENGTH} characters.` },
+        { status: 400 }
+      );
+    }
+
     const supabase = await createClient();
 
     // 1. Get the user's "Travel DNA" (or default)
@@ -47,7 +72,7 @@ export async function POST(req: Request) {
       Your client is a "${profile.archetype}" with these traits: ${JSON.stringify(profile.traits)}.
       ${isHalal ? "CRITICAL REQUIREMENT: This is a HALAL trip. YOU MUST ONLY suggest hotels with no alcohol (or removal options), Halal food options nearby, and family-friendly activities. Avoid nightlife/clubs." : ""}
       
-      Design an ultra-personalized itinerary based on their request: "${prompt}".
+      Design an ultra-personalized itinerary based on their request: "${trimmedPrompt}".
       
       CRITICAL INSTRUCTION: Analyze the prompt for a specific duration (e.g., "5 days", "one week", "weekend"). 
       - If a duration is found, generate an itinerary for EXACTLY that many days.

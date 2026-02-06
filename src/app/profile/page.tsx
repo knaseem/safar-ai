@@ -7,7 +7,7 @@ import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BookingRequest } from "@/types/booking"
-import { Loader2, Plane, Calendar, MapPin, User as UserIcon, X, Sparkles, Trash2 } from "lucide-react"
+import { Loader2, Plane, Calendar, MapPin, User as UserIcon, X, Sparkles, Trash2, Upload } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PassportCard } from "@/components/features/passport-card"
 import { VibeCheck } from "@/components/features/vibe-check"
@@ -15,21 +15,61 @@ import { toast } from "sonner"
 import { BookingDetailModal } from "@/components/features/booking-detail-modal"
 import { NeighborhoodRadar } from "@/components/features/neighborhood-radar"
 import { DuffelBookings } from "@/components/features/duffel-bookings"
+import { ImportBookingsModal } from "@/components/features/import-bookings-modal"
 import { getCoordinates } from "@/lib/geocoding"
+import { User } from "@supabase/supabase-js"
+
+// Type definitions for profile page
+interface UserProfile {
+    id: string
+    full_name?: string
+    avatar_url?: string
+    created_at?: string
+}
+
+interface TravelProfile extends UserProfile {
+    archetype?: string
+    traits?: {
+        scores?: Record<string, number>
+        [key: string]: unknown
+    }
+    archetype_scores?: Record<string, number>
+}
+
+interface SavedTrip {
+    id: string
+    trip_name: string
+    destination?: string
+    trip_data: Record<string, unknown>
+    is_halal: boolean
+    created_at: string
+    user_id: string
+}
+
+interface ProfileBooking extends Omit<BookingRequest, 'contact'> {
+    id: string
+    user_id: string
+    created_at: string
+    contact_first_name: string
+    contact_last_name: string
+    contact_email: string
+    contact_phone: string
+}
 
 export default function ProfilePage() {
     const router = useRouter()
-    const [user, setUser] = useState<any>(null)
-    const [profile, setProfile] = useState<any>(null)
-    const [bookings, setBookings] = useState<any[]>([])
-    const [savedTrips, setSavedTrips] = useState<any[]>([])
+    const [user, setUser] = useState<User | null>(null)
+    const [profile, setProfile] = useState<TravelProfile | null>(null)
+    const [bookings, setBookings] = useState<ProfileBooking[]>([])
+    const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'duffel' | 'bookings' | 'trips'>('duffel')
     const [showPassport, setShowPassport] = useState(false)
     const [showVibeCheck, setShowVibeCheck] = useState(false)
-    const [selectedBooking, setSelectedBooking] = useState<any>(null)
+    const [selectedBooking, setSelectedBooking] = useState<ProfileBooking | null>(null)
     const [deletingTripId, setDeletingTripId] = useState<string | null>(null)
     const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null)
+    const [showImportModal, setShowImportModal] = useState(false)
 
     useEffect(() => {
         async function loadProfile() {
@@ -190,6 +230,13 @@ export default function ProfilePage() {
                                     className="bg-neutral-800 text-white hover:bg-neutral-700 border border-white/10 font-bold"
                                 >
                                     Retake Vibe Check
+                                </Button>
+                                <Button
+                                    onClick={() => setShowImportModal(true)}
+                                    className="bg-emerald-600 text-white hover:bg-emerald-500 font-bold"
+                                >
+                                    <Upload className="size-4 mr-2" />
+                                    Import Bookings
                                 </Button>
                             </div>
                         </div>
@@ -507,8 +554,8 @@ export default function ProfilePage() {
                             className="relative w-full max-w-4xl"
                         >
                             <PassportCard
-                                archetype={profile.archetype}
-                                scores={profile.archetype_scores}
+                                archetype={profile.archetype || "Explorer"}
+                                scores={profile.archetype_scores || {}}
                                 bookings={bookings}
                                 onClose={() => setShowPassport(false)}
                             />
@@ -548,6 +595,16 @@ export default function ProfilePage() {
                 onBookingUpdate={(updated) => {
                     setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
                     setSelectedBooking(updated)
+                }}
+            />
+
+            {/* Import Bookings Modal */}
+            <ImportBookingsModal
+                isOpen={showImportModal}
+                onClose={() => setShowImportModal(false)}
+                onImportSuccess={() => {
+                    // Refresh trips list after import
+                    window.location.reload()
                 }}
             />
         </main>

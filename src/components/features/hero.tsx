@@ -335,10 +335,10 @@ export function Hero({ initialPrompt }: HeroProps) {
                             animate={{ scale: 1.00 }}
                             transition={{ duration: 12, ease: "linear" }}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                                // Fallback or skip to next
-                                console.error("Image failed:", activeImages[currentImageIndex].url)
-                                e.currentTarget.style.display = 'none'
+                            onError={() => {
+                                // Skip to next image on error
+                                const list = isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES
+                                setCurrentImageIndex((prev) => (prev + 1) % list.length)
                             }}
                         />
                         {/* Location Credit Overlay - Centered */}
@@ -371,8 +371,8 @@ export function Hero({ initialPrompt }: HeroProps) {
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white text-center">
                         Experience the World, <span className={`text-transparent bg-clip-text bg-gradient-to-r italic font-serif transition-all duration-700 ${isHalal
-                                ? "from-emerald-300 to-teal-500"
-                                : "from-sky-300 to-blue-500"
+                            ? "from-emerald-300 to-teal-500"
+                            : "from-sky-300 to-blue-500"
                             }`}>Effortlessly.</span>
                     </h1>
 

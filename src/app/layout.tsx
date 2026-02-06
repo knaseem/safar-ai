@@ -22,6 +22,23 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SafarAI - Your AI Travel Concierge",
   description: "Experience the world effortlessly with AI-powered personalized travel planning",
+  openGraph: {
+    title: "SafarAI - Your AI Travel Concierge",
+    description: "Experience the world effortlessly with AI-powered personalized travel planning",
+    url: "https://safar-ai.com",
+    siteName: "SafarAI",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SafarAI - Your AI Travel Concierge",
+    description: "Experience the world effortlessly with AI-powered personalized travel planning",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -54,19 +54,22 @@ export function AIChatDrawer({ isOpen, onClose, tripData }: AIChatDrawerProps) {
         }
     }, [messages])
 
-    // Handle voice transcript
+    // Handle voice transcript - using ref to avoid dependency issues
     useEffect(() => {
         if (transcript && !isListening) {
             setInput(transcript)
             // Auto-send after voice input completes
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 if (transcript.trim()) {
+                    // Call handleSend inline to avoid stale closure
                     handleSend(transcript)
                     resetTranscript()
                 }
             }, 300)
+            return () => clearTimeout(timer)
         }
-    }, [transcript, isListening])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [transcript, isListening, resetTranscript])
 
     // Auto-speak AI responses
     useEffect(() => {
@@ -76,7 +79,7 @@ export function AIChatDrawer({ isOpen, onClose, tripData }: AIChatDrawerProps) {
                 speak(lastMessage.content)
             }
         }
-    }, [messages, autoSpeak, ttsSupported])
+    }, [messages, autoSpeak, ttsSupported, speak])
 
     // Show voice errors
     useEffect(() => {
@@ -232,8 +235,8 @@ export function AIChatDrawer({ isOpen, onClose, tripData }: AIChatDrawerProps) {
                                             setAutoSpeak(!autoSpeak)
                                         }}
                                         className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] uppercase tracking-wider transition-all ${autoSpeak
-                                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                                : 'bg-white/5 text-white/40 border border-white/10'
+                                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                            : 'bg-white/5 text-white/40 border border-white/10'
                                             }`}
                                     >
                                         {autoSpeak ? <Volume2 className="size-3" /> : <VolumeX className="size-3" />}
@@ -252,8 +255,8 @@ export function AIChatDrawer({ isOpen, onClose, tripData }: AIChatDrawerProps) {
                                         type="button"
                                         onClick={() => isListening ? stopListening() : startListening()}
                                         className={`relative p-3 rounded-xl transition-all ${isListening
-                                                ? 'bg-red-500 text-white'
-                                                : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-white/5 text-white/40 hover:bg-white/10 hover:text-white'
                                             }`}
                                     >
                                         {isListening && (

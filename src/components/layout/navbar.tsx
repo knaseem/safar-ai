@@ -77,9 +77,9 @@ export function Navbar() {
                     </Link>
 
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/70">
-                        <NavLink href="#destinations">Destinations</NavLink>
-                        <NavLink href="#experience">The Experience</NavLink>
-                        <NavLink href="#membership">Membership</NavLink>
+                        <NavLink href="/#destinations">Destinations</NavLink>
+                        <NavLink href="/#experience">The Experience</NavLink>
+                        <NavLink href="/#membership">Membership</NavLink>
                         <NavLink href="/trends">Trends</NavLink>
                         <NavLink href="/budget">Planning</NavLink>
                         <NavLink href="/blog">Blog</NavLink>
@@ -93,6 +93,8 @@ export function Navbar() {
                             <div className="relative">
                                 <button
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    aria-label="User menu"
+                                    aria-expanded={isUserMenuOpen}
                                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
                                 >
                                     <div className="size-7 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">

@@ -18,18 +18,6 @@ export type MarkupType = 'flight' | 'hotel' | 'ancillary';
 export function applyMarkup(amount: number | string, type: MarkupType): number {
     const baseAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
 
-    // The following lines appear to be intended for an API endpoint, not this utility function.
-    // Inserting them as provided would cause a syntax error due to 'body' being undefined.
-    // To maintain syntactic correctness as per instructions, these lines are commented out.
-    // If these logs are intended for a different context, please provide the correct file/location.
-    // const { reference, type, offer_id, amount, currency, origin, destination, date, adults } = body
-    // console.log("----------------------------------------------------------------")
-    // console.log("🛒 [API] Checkout Session - Incoming Request")
-    // console.log("----------------------------------------------------------------")
-    // console.log("📦 Body:", JSON.stringify(body, null, 2))
-    // console.log("📍 Validating Params:", { origin, destination, date, adults })
-    // console.log("----------------------------------------------------------------")
-
     if (isNaN(baseAmount)) return 0;
 
     let finalAmount = baseAmount;

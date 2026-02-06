@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server"
 import { searchStays } from "@/lib/duffel"
+import { chatRatelimit, isRateLimitEnabled, getRateLimitIdentifier } from "@/lib/ratelimit"
 
 export async function POST(request: Request) {
     try {
+        // Rate limiting check
+        if (isRateLimitEnabled()) {
+            const identifier = getRateLimitIdentifier(request)
+            const { success, remaining } = await chatRatelimit.limit(identifier)
+
+            if (!success) {
+                return NextResponse.json(
+                    { error: "Too many requests. Please wait a moment before trying again." },
+                    { status: 429, headers: { 'X-RateLimit-Remaining': remaining.toString() } }
+                )
+            }
+        }
+
         const body = await request.json()
         const { location, checkIn, checkOut, adults } = body
 

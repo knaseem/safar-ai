@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { createOrder, getOrder } from "@/lib/duffel"
+import { createOrder } from "@/lib/duffel"
 import { sendBookingConfirmation } from "@/lib/booking-emails"
 import { MARKUP_FLIGHT_PERCENT, MARKUP_HOTEL_PERCENT } from "@/lib/pricing"
 

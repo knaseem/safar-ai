@@ -60,14 +60,16 @@ export function FloatingChatBubble() {
     useEffect(() => {
         if (transcript && !isListening) {
             setInput(transcript)
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 if (transcript.trim()) {
                     handleSend(transcript)
                     resetTranscript()
                 }
             }, 300)
+            return () => clearTimeout(timer)
         }
-    }, [transcript, isListening])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [transcript, isListening, resetTranscript])
 
     // Auto-speak AI responses
     useEffect(() => {
@@ -77,7 +79,7 @@ export function FloatingChatBubble() {
                 speak(lastMessage.content)
             }
         }
-    }, [messages, autoSpeak, ttsSupported])
+    }, [messages, autoSpeak, ttsSupported, speak])
 
     // Show voice errors
     useEffect(() => {

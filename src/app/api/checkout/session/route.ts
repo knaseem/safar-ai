@@ -9,12 +9,6 @@ export async function POST(request: Request) {
         const body = await request.json()
         const { reference, type, offer_id, amount, currency, origin, destination, date, returnDate, adults } = body
 
-        // Debugging logs to trace why params might be missing
-        console.log("----------------------------------------------------------------")
-        console.log("🛒 [API] Checkout Session - Incoming Request")
-        console.log("📦 Params:", { origin, destination, date, adults })
-        console.log("----------------------------------------------------------------")
-
         if (!reference) {
             return NextResponse.json(
                 { error: "Missing required field: reference" },
