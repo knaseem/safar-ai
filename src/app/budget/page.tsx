@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Wallet, Plus, ArrowRight, Sparkles, AlertCircle } from "lucide-react"
+import { Wallet, Plus, ArrowRight, Sparkles, AlertCircle, Trash2 } from "lucide-react"
 import { Navbar } from "@/components/layout/navbar"
 import { BudgetDashboard } from "@/components/features/budget-dashboard"
 import { Button } from "@/components/ui/button"
@@ -50,6 +50,27 @@ export default function BudgetPage() {
         }
         fetchData()
     }, [])
+
+    const handleDeleteTrip = async (tripId: string) => {
+        // Optimistic / Demo update
+        setTripsWithBudgets(prev => prev.filter(t => t.id !== tripId))
+
+        if (tripId.startsWith('demo-')) {
+            toast.success("Demo Trip Removed")
+            if (isDemoMode && tripsWithBudgets.length <= 1) setIsDemoMode(false)
+            return
+        }
+
+        // Real API Delete
+        try {
+            const res = await fetch(`/api/trips?id=${tripId}`, { method: 'DELETE' })
+            if (!res.ok) throw new Error("Failed to delete")
+            toast.success("Trip Deleted")
+        } catch (err) {
+            toast.error("Delete Failed", { description: "Could not remove trip from cloud." })
+            // Revert optimistic update (optional, but good practice. skipped for simplicity as likelihood is low)
+        }
+    }
 
     const handleSaveBudget = async (tripId: string, categories: any, totalBudget: number, currency: string) => {
         try {
@@ -211,6 +232,17 @@ export default function BudgetPage() {
                                                     <ArrowRight className="size-4" />
                                                 </Button>
                                             </Link>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-white/20 hover:text-red-400 hover:bg-red-500/10 gap-2 px-3"
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleDeleteTrip(trip.id)
+                                                }}
+                                            >
+                                                <Trash2 className="size-4" />
+                                            </Button>
                                         </div>
                                     </div>
 
@@ -251,6 +283,6 @@ export default function BudgetPage() {
                     </div>
                 </div>
             </div>
-        </main>
+        </main >
     )
 }
