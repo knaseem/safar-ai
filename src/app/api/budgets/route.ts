@@ -5,10 +5,6 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const tripId = searchParams.get("tripId")
 
-    if (!tripId) {
-        return NextResponse.json({ error: "Trip ID is required" }, { status: 400 })
-    }
-
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -16,6 +12,20 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // SCENARIO 1: Bulk Fetch (No tripId provided)
+    if (!tripId) {
+        const { data, error } = await supabase
+            .from("travel_budgets")
+            .select("*")
+            .eq("user_id", user.id)
+
+        if (error) {
+            return NextResponse.json({ error: error.message }, { status: 500 })
+        }
+        return NextResponse.json(data)
+    }
+
+    // SCENARIO 2: Single Fetch (tripId provided)
     const { data, error } = await supabase
         .from("travel_budgets")
         .select("*")

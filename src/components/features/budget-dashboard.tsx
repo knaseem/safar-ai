@@ -33,19 +33,13 @@ function CountingNumber({ value, currency = "USD" }: { value: number; currency?:
 }
 
 
-interface BudgetCategory {
-    id: string
-    label: string
-    value: number
-    color: string
-    icon: any
-}
+import { BudgetCategory } from "@/lib/types"
 
 interface BudgetDashboardProps {
     totalBudget: number
     currency?: string
     initialCategories?: Record<string, number>
-    onSave?: (data: any) => void
+    onSave?: (data: Record<string, number>) => void
     className?: string
 }
 

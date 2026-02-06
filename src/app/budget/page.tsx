@@ -12,30 +12,38 @@ import { toast } from "sonner"
 import { AnimatePresence } from "framer-motion"
 
 
+import { Trip, Budget, TripWithBudget } from "@/lib/types"
+
 export default function BudgetPage() {
-    const [tripsWithBudgets, setTripsWithBudgets] = useState<any[]>([])
+    const [tripsWithBudgets, setTripsWithBudgets] = useState<TripWithBudget[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedTripId, setExpandedTripId] = useState<string | null>(null)
+    const [isDemoMode, setIsDemoMode] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch trips first
-                const tripsRes = await fetch("/api/trips")
+                // Parallel fetch for performance
+                const [tripsRes, budgetRes] = await Promise.all([
+                    fetch("/api/trips"),
+                    fetch("/api/budgets")
+                ])
+
                 const tripsData = await tripsRes.json()
+                const budgetsData = await budgetRes.json()
 
                 if (tripsData.trips) {
-                    const enrichedTrips = await Promise.all(
-                        tripsData.trips.map(async (trip: any) => {
-                            const budgetRes = await fetch(`/api/budgets?tripId=${trip.id}`)
-                            const budgetData = await budgetRes.json()
-                            return { ...trip, budget: budgetData }
-                        })
-                    )
+                    // Efficient in-memory mapping
+                    const enrichedTrips = tripsData.trips.map((trip: Trip) => {
+                        const budget = Array.isArray(budgetsData)
+                            ? budgetsData.find((b: Budget) => b.trip_id === trip.id)
+                            : null
+                        return { ...trip, budget: budget || null }
+                    })
                     setTripsWithBudgets(enrichedTrips)
                 }
             } catch (err) {
-                console.error("Failed to fetch budgets:", err)
+                console.error("Failed to fetch data:", err)
             } finally {
                 setLoading(false)
             }
@@ -94,17 +102,50 @@ export default function BudgetPage() {
                     </Link>
                 </div>
 
-                {tripsWithBudgets.length === 0 ? (
-                    /* ... (keep existing empty state) */
+                {tripsWithBudgets.length === 0 && !isDemoMode ? (
                     <div className="glass-dark rounded-3xl p-20 text-center border border-white/5">
                         <Wallet className="size-16 text-white/10 mx-auto mb-6" />
                         <h2 className="text-2xl font-bold mb-2">No active budgets found</h2>
                         <p className="text-white/40 mb-8">Save an itinerary to start optimizing your travel spend.</p>
-                        <Link href="/">
-                            <Button className="bg-white text-black hover:bg-white/90 font-bold rounded-xl px-6">
-                                Discover Destinations
+                        <div className="flex justify-center gap-4">
+                            <Link href="/">
+                                <Button className="bg-white text-black hover:bg-white/90 font-bold rounded-xl px-6">
+                                    Discover Destinations
+                                </Button>
+                            </Link>
+                            <Button
+                                variant="outline"
+                                className="border-white/10 hover:bg-white/5 font-bold rounded-xl px-6"
+                                onClick={() => {
+                                    setIsDemoMode(true)
+                                    setTripsWithBudgets([{
+                                        id: 'demo-trip',
+                                        user_id: 'demo-user',
+                                        destination: 'Kyoto, Japan (Demo)',
+                                        start_date: new Date().toISOString(),
+                                        end_date: new Date().toISOString(),
+                                        created_at: new Date().toISOString(),
+                                        trip_name: 'Kyoto Cultural Expedition',
+                                        budget: {
+                                            trip_id: 'demo-trip',
+                                            user_id: 'demo-user',
+                                            total_budget: 5000,
+                                            currency: 'USD',
+                                            categories: {
+                                                flights: 1200,
+                                                lodging: 1500,
+                                                food: 800,
+                                                activities: 400,
+                                                other: 200
+                                            }
+                                        }
+                                    }])
+                                    setExpandedTripId('demo-trip')
+                                }}
+                            >
+                                Try Demo
                             </Button>
-                        </Link>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-4">
