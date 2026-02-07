@@ -88,8 +88,7 @@ export async function POST(request: Request) {
                         user_id: user.id,
                         trip_name: trip.trip_name,
                         trip_data: trip.tripData,
-                        destination: trip.destination,
-                        source: 'email_import'
+                        destination: trip.destination
                     })
 
                 if (tripError) {

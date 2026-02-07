@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Mail, Upload, Loader2, CheckCircle, AlertCircle, Copy, Plane, Hotel, Train, Ticket, FileText } from "lucide-react"
+import { X, Mail, Upload, Loader2, CheckCircle, AlertCircle, Copy, Plane, Hotel, Train, Ticket, FileText, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
@@ -18,15 +19,33 @@ interface ParsedBooking {
     confirmationNumber: string
     provider: string
     startDate: string
-    location: { city: string }
+    endDate?: string
+    location: { city: string; country?: string }
+    details: {
+        origin?: string
+        destination?: string
+        airline?: string
+        flightNumber?: string | string[]
+        departureTime?: string
+        arrivalTime?: string
+        passengers?: string[]
+        hotelName?: string
+        roomType?: string
+        activityName?: string
+    }
+    price?: number
+    currency?: string
+    priceRaw?: string
 }
 
 export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImportEmail }: ImportBookingsModalProps) {
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState<'paste' | 'upload' | 'forward'>('paste')
     const [emailContent, setEmailContent] = useState('')
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [isDragging, setIsDragging] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [savedTripId, setSavedTripId] = useState<string | null>(null)
     const [result, setResult] = useState<{
         success: boolean
         message: string
@@ -93,6 +112,7 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
         setEmailContent('')
         setSelectedFile(null)
         setResult(null)
+        setSavedTripId(null)
         onClose()
     }
 
@@ -142,7 +162,9 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
             })
 
             if (data.success && data.bookings?.length > 0) {
-                if (save) {
+                toast.success(`Found ${data.bookings.length} booking(s)!`)
+                if (save && data.savedTripId) {
+                    setSavedTripId(data.savedTripId)
                     toast.success("Bookings imported successfully!")
                     onImportSuccess?.()
                 }
@@ -374,26 +396,71 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
                                                     {result.message}
                                                 </p>
                                                 {result.bookings.length > 0 && (
-                                                    <div className="mt-3 space-y-2">
+                                                    <div className="mt-3 space-y-3">
                                                         {result.bookings.map((booking, i) => (
                                                             <div
                                                                 key={i}
-                                                                className="flex items-center gap-3 p-2 bg-black/20 rounded-lg"
+                                                                className="p-3 bg-black/30 rounded-xl border border-white/10"
                                                             >
-                                                                <div className="p-1.5 rounded-md bg-white/10">
-                                                                    {getBookingIcon(booking.type)}
+                                                                {/* Header with provider and price */}
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="p-1.5 rounded-md bg-emerald-500/20">
+                                                                            {getBookingIcon(booking.type)}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-white font-medium">
+                                                                                {booking.provider}
+                                                                            </p>
+                                                                            <p className="text-xs text-white/50">
+                                                                                PNR: {booking.confirmationNumber}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {booking.price && (
+                                                                        <div className="text-right">
+                                                                            <p className="text-emerald-400 font-semibold">
+                                                                                {booking.currency || 'USD'} {booking.price.toLocaleString()}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p className="text-sm text-white font-medium truncate">
-                                                                        {booking.provider}
-                                                                    </p>
-                                                                    <p className="text-xs text-white/50">
-                                                                        {booking.confirmationNumber} • {booking.location.city}
-                                                                    </p>
+
+                                                                {/* Flight route */}
+                                                                {booking.type === 'flight' && booking.details?.origin && (
+                                                                    <div className="flex items-center gap-2 py-2 px-3 bg-white/5 rounded-lg text-sm">
+                                                                        <span className="text-white/70">{booking.details.origin}</span>
+                                                                        <span className="text-emerald-400">→</span>
+                                                                        <span className="text-white">{booking.details.destination || booking.location.city}</span>
+                                                                        {booking.details.flightNumber && (
+                                                                            <span className="ml-auto text-xs text-white/40">
+                                                                                {Array.isArray(booking.details.flightNumber)
+                                                                                    ? booking.details.flightNumber.join(' / ')
+                                                                                    : booking.details.flightNumber}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Hotel details */}
+                                                                {booking.type === 'hotel' && booking.details?.hotelName && (
+                                                                    <div className="py-2 px-3 bg-white/5 rounded-lg text-sm">
+                                                                        <p className="text-white">{booking.details.hotelName}</p>
+                                                                        {booking.details.roomType && (
+                                                                            <p className="text-xs text-white/50">{booking.details.roomType}</p>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Date */}
+                                                                <div className="mt-2 flex items-center justify-between text-xs text-white/40">
+                                                                    <span>
+                                                                        📅 {new Date(booking.startDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                        {booking.endDate && booking.endDate !== booking.startDate && (
+                                                                            <> - {new Date(booking.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                                                                        )}
+                                                                    </span>
                                                                 </div>
-                                                                <span className="text-xs text-white/40">
-                                                                    {new Date(booking.startDate).toLocaleDateString()}
-                                                                </span>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -465,7 +532,34 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
                     {/* Footer */}
                     {(activeTab === 'paste' || activeTab === 'upload') && (
                         <div className="p-6 border-t border-white/10 flex gap-3">
-                            {result?.success && result.bookings.length > 0 ? (
+                            {savedTripId ? (
+                                // Success state with View Trip button
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setResult(null)
+                                            setEmailContent('')
+                                            setSelectedFile(null)
+                                            setSavedTripId(null)
+                                        }}
+                                        className="flex-1"
+                                    >
+                                        Import Another
+                                    </Button>
+                                    <Button
+                                        className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black"
+                                        onClick={() => {
+                                            handleClose()
+                                            router.push(`/trips/${savedTripId}`)
+                                        }}
+                                    >
+                                        <ArrowRight className="size-4 mr-2" />
+                                        View Trip
+                                    </Button>
+                                </>
+                            ) : result?.success && result.bookings.length > 0 ? (
+                                // Parsed but not saved yet
                                 <>
                                     <Button
                                         variant="outline"
@@ -518,6 +612,6 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
                     )}
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     )
 }

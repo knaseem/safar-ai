@@ -3,13 +3,28 @@ import { createClient } from "@/lib/supabase/server"
 import { parseBookingEmail, isLikelyBookingEmail } from "@/lib/email-parser"
 import { groupBookingsIntoTrips } from "@/lib/trip-merger"
 import { chatRatelimit, isRateLimitEnabled, getRateLimitIdentifier } from "@/lib/ratelimit"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Use require for pdf-parse as it doesn't have proper ESM exports
-async function extractPdfText(buffer: Buffer): Promise<string> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require("pdf-parse")
-    const data = await pdfParse(buffer)
-    return data.text
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
+
+// Use Gemini Vision to extract text from PDF
+async function extractPdfText(buffer: Buffer, mimeType: string): Promise<string> {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
+
+    // Convert buffer to base64
+    const base64Data = buffer.toString('base64')
+
+    const result = await model.generateContent([
+        {
+            inlineData: {
+                mimeType: mimeType,
+                data: base64Data
+            }
+        },
+        "Extract ALL text content from this PDF document. Return the complete text exactly as it appears, preserving important details like confirmation numbers, dates, names, locations, flight numbers, and prices. Return ONLY the extracted text, no commentary."
+    ])
+
+    return result.response.text()
 }
 
 export async function POST(request: Request) {
@@ -55,21 +70,21 @@ export async function POST(request: Request) {
             )
         }
 
-        // Size limit: 5MB
-        if (file.size > 5 * 1024 * 1024) {
+        // Size limit: 10MB (Gemini supports larger files)
+        if (file.size > 10 * 1024 * 1024) {
             return NextResponse.json(
-                { error: "PDF must be under 5MB" },
+                { error: "PDF must be under 10MB" },
                 { status: 400 }
             )
         }
 
-        // Convert file to buffer and extract text
+        // Convert file to buffer and extract text using Gemini
         const arrayBuffer = await file.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
         let extractedText: string
         try {
-            extractedText = await extractPdfText(buffer)
+            extractedText = await extractPdfText(buffer, file.type)
         } catch (pdfError) {
             console.error("[PDFParse] Failed to extract text:", pdfError)
             return NextResponse.json({
@@ -80,7 +95,9 @@ export async function POST(request: Request) {
         }
 
         // Check if it looks like a booking
-        if (!extractedText || !isLikelyBookingEmail(extractedText)) {
+        const isBooking = isLikelyBookingEmail(extractedText)
+
+        if (!extractedText || !isBooking) {
             return NextResponse.json({
                 success: false,
                 message: "This PDF doesn't appear to contain booking information.",
@@ -105,7 +122,8 @@ export async function POST(request: Request) {
         // Optionally save
         if (saveToTrips && trips.length > 0) {
             for (const trip of trips) {
-                await supabase.from("imported_bookings").insert(
+                // Insert to imported_bookings (optional, may not have table)
+                const { error: bookingsError } = await supabase.from("imported_bookings").insert(
                     parseResult.bookings.map(booking => ({
                         user_id: user.id,
                         parsed_data: booking,
@@ -116,15 +134,45 @@ export async function POST(request: Request) {
                     }))
                 )
 
-                await supabase
+                if (bookingsError) {
+                    console.error("[PDFParse] Failed to insert imported_bookings:", bookingsError.message)
+                }
+
+                // Insert to saved_trips
+                const { data: savedTrip, error: tripError } = await supabase
                     .from("saved_trips")
                     .insert({
                         user_id: user.id,
                         trip_name: trip.trip_name,
                         trip_data: trip.tripData,
-                        destination: trip.destination,
-                        source: 'pdf_import'
+                        destination: trip.destination
                     })
+                    .select('id')
+                    .single()
+
+                if (tripError) {
+                    console.error("[PDFParse] Failed to insert saved_trips:", tripError.message)
+                    return NextResponse.json({
+                        success: false,
+                        message: "Failed to save trip: " + tripError.message,
+                        bookings: parseResult.bookings
+                    })
+                }
+
+                // Return with trip ID for navigation
+                return NextResponse.json({
+                    success: true,
+                    message: `Found ${parseResult.bookings.length} booking(s) - saved to "${trip.trip_name}"`,
+                    bookings: parseResult.bookings,
+                    savedTripId: savedTrip?.id,
+                    trips: trips.map(t => ({
+                        name: t.trip_name,
+                        destination: t.destination,
+                        startDate: t.startDate,
+                        endDate: t.endDate,
+                        bookingCount: t.bookings.length
+                    }))
+                })
             }
         }
 

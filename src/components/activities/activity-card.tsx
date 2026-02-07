@@ -74,6 +74,27 @@ export function ActivityCard({ product, onSelect }: ActivityCardProps) {
     )
 }
 
+
+export function ActivityCardSkeleton() {
+    return (
+        <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden h-full flex flex-col">
+            <div className="aspect-[4/3] bg-white/5 animate-pulse" />
+            <div className="p-4 flex flex-col flex-1 space-y-3">
+                <div className="h-6 bg-white/10 rounded w-3/4 animate-pulse" />
+                <div className="h-4 bg-white/5 rounded w-1/2 animate-pulse" />
+
+                <div className="mt-auto pt-4 border-t border-white/10 flex items-center justify-between">
+                    <div className="space-y-1">
+                        <div className="h-3 w-8 bg-white/5 rounded animate-pulse" />
+                        <div className="h-6 w-16 bg-white/10 rounded animate-pulse" />
+                    </div>
+                    <div className="h-8 w-20 bg-white/5 rounded-md animate-pulse" />
+                </div>
+            </div>
+        </div>
+    )
+}
+
 interface ActivityDetailModalProps {
     product: ViatorProduct | null
     isOpen: boolean
@@ -83,9 +104,14 @@ interface ActivityDetailModalProps {
 export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetailModalProps) {
     if (!product) return null
 
-    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
-    const separator = product.productUrl.includes('?') ? '&' : '?'
-    const affiliateUrl = `${product.productUrl}${separator}pid=${partnerId}&mcid=42383&medium=link`
+    const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID
+
+    // Check if the product URL already contains a partner ID (API sometimes returns it)
+    let affiliateUrl = product.productUrl
+    if (!affiliateUrl.includes('pid=')) {
+        const separator = affiliateUrl.includes('?') ? '&' : '?'
+        affiliateUrl = `${affiliateUrl}${separator}pid=${partnerId || 'P00285711'}&mcid=42383&medium=link`
+    }
     const imageUrl = product.images?.[0]?.variants?.find(v => v.width >= 800)?.url || product.images?.[0]?.variants?.[0]?.url
 
     return (

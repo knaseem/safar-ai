@@ -36,8 +36,10 @@ export interface ParsedBooking {
         // Generic
         [key: string]: unknown
     }
-    rawAmount?: string
-    currency?: string
+    // Price information
+    price?: number        // Numeric amount (e.g., 1847.50)
+    currency?: string     // ISO currency code (e.g., "USD", "EUR", "PKR")
+    priceRaw?: string     // Original price string from document
 }
 
 export interface EmailParseResult {
@@ -46,29 +48,37 @@ export interface EmailParseResult {
     error?: string
 }
 
-const EXTRACTION_PROMPT = `You are an expert at extracting booking information from confirmation emails.
+const EXTRACTION_PROMPT = `You are an expert at extracting booking information from confirmation emails and PDFs.
 
-Analyze the following email content and extract ALL booking information. Return a JSON array of bookings found.
+Analyze the following content and extract ALL booking information. Return a JSON array of bookings found.
 
 For each booking, extract:
 - type: "flight", "hotel", "train", "activity", or "car_rental"
-- confirmationNumber: the booking/confirmation reference
+- confirmationNumber: the booking/confirmation/PNR reference
 - provider: airline name, hotel chain, tour company, etc.
 - startDate: ISO date format (YYYY-MM-DD)
 - endDate: ISO date format if applicable
-- location: { city, country }
+- location: { city, country } for the destination
 - details: object with type-specific fields
+- price: the TOTAL FARE as a NUMBER (just the numeric value, no currency symbol)
+- currency: ISO currency code ("USD", "EUR", "GBP", "PKR", "CAD", etc.)
+- priceRaw: the original price string exactly as shown (e.g., "USD 1,847.50")
 
-For flights include: origin, destination, airline, flightNumber, departureTime, arrivalTime, passengers
-For hotels include: hotelName, address, checkInTime, checkOutTime, roomType, guests
-For activities include: activityName, duration, meetingPoint
-For all: rawAmount and currency if price is shown
+For flights include in details: origin, destination, airline, flightNumber (can be array for multi-leg), departureTime, arrivalTime, passengers
+For hotels include in details: hotelName, address, checkInTime, checkOutTime, roomType, guests
+For activities include in details: activityName, duration, meetingPoint
 
-If you cannot find a confirmation email or cannot parse booking info, return an empty array.
+PRICE EXTRACTION TIPS:
+- Look for "Total", "Grand Total", "Total Fare", "Amount Due", "Total Price"
+- For flights, look for "Ticket Price", "Fare Summary", "Total Amount"
+- Include taxes and fees in the total if shown
+- Convert the amount to a number (1847.50 not "1,847.50")
+
+If you cannot find a confirmation or cannot parse booking info, return an empty array.
 
 IMPORTANT: Return ONLY valid JSON, no markdown, no explanation.
 
-Email content:
+Content to parse:
 ---
 {EMAIL_CONTENT}
 ---

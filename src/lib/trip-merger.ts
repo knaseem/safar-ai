@@ -148,20 +148,34 @@ function createTripData(
             day: i + 1,
             theme: `Day in ${location.city}`,
             coordinates: primaryBooking?.location?.coordinates || { lat: 0, lng: 0 },
-            morning: formatMorningActivity(flights, activities, dateStr),
-            afternoon: formatAfternoonActivity(activities),
-            evening: formatEveningActivity(activities),
+            morning: formatMorningActivity(flights, activities, dateStr, i),
+            afternoon: formatAfternoonActivity(activities, i),
+            evening: formatEveningActivity(activities, i),
             stay: hotel ? formatHotelStay(hotel) : 'No accommodation booked'
         })
     }
 
     return {
         trip_name: tripName,
-        days
+        days,
+        // Include original bookings for display on trip details page
+        importedBookings: bookings.map(b => ({
+            type: b.type,
+            confirmationNumber: b.confirmationNumber,
+            provider: b.provider,
+            startDate: b.startDate,
+            endDate: b.endDate,
+            location: b.location,
+            details: b.details,
+            price: b.price,
+            currency: b.currency
+        }))
     }
 }
 
-function formatMorningActivity(flights: ParsedBooking[], activities: ParsedBooking[], date: string): string {
+
+
+function formatMorningActivity(flights: ParsedBooking[], activities: ParsedBooking[], date: string, dayIndex: number): string {
     const morningFlight = flights.find(f => {
         const time = f.details.departureTime
         if (!time) return false
@@ -182,10 +196,17 @@ function formatMorningActivity(flights: ParsedBooking[], activities: ParsedBooki
         return `🎯 ${morningActivity.details.activityName}`
     }
 
-    return 'Free time / Explore the area'
+    const defaults = [
+        'Free time / Explore the area',
+        'Visit local cafes and breakfast spots',
+        'City sightseeing tour',
+        'Visit historical landmarks',
+        'Relaxing morning start'
+    ]
+    return defaults[dayIndex % defaults.length]
 }
 
-function formatAfternoonActivity(activities: ParsedBooking[]): string {
+function formatAfternoonActivity(activities: ParsedBooking[], dayIndex: number): string {
     const afternoonActivity = activities.find(a => {
         const time = a.details.meetingPoint || ''
         return time.toLowerCase().includes('afternoon') || time.toLowerCase().includes('pm')
@@ -195,10 +216,17 @@ function formatAfternoonActivity(activities: ParsedBooking[]): string {
         return `🎯 ${afternoonActivity.details.activityName}`
     }
 
-    return 'Explore local attractions'
+    const defaults = [
+        'Explore local attractions',
+        'Shopping and leisure time',
+        'Visit museums or cultural sites',
+        'Local food tasting experience',
+        'Walk through city parks'
+    ]
+    return defaults[dayIndex % defaults.length]
 }
 
-function formatEveningActivity(activities: ParsedBooking[]): string {
+function formatEveningActivity(activities: ParsedBooking[], dayIndex: number): string {
     const eveningActivity = activities.find(a => {
         const time = a.details.meetingPoint || ''
         return time.toLowerCase().includes('evening') || time.toLowerCase().includes('night')
@@ -208,7 +236,14 @@ function formatEveningActivity(activities: ParsedBooking[]): string {
         return `🎯 ${eveningActivity.details.activityName}`
     }
 
-    return 'Dinner and evening leisure'
+    const defaults = [
+        'Dinner and evening leisure',
+        'Sunset view and local dining',
+        'Evening walk and street food',
+        'Night market exploration',
+        'Relaxing dinner at hotel'
+    ]
+    return defaults[dayIndex % defaults.length]
 }
 
 function formatHotelStay(hotel: ParsedBooking): string {

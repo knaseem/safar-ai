@@ -1,9 +1,11 @@
+// Forced recompile
 import { NextRequest, NextResponse } from 'next/server'
 import { searchProducts, resolveDestination } from '@/lib/viator'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const query = searchParams.get('query')
+    const category = searchParams.get('category')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
@@ -25,7 +27,8 @@ export async function GET(request: NextRequest) {
         // 2. Search products for that destination
         const products = await searchProducts(destination.destinationId, {
             startDate: startDate || undefined,
-            endDate: endDate || undefined
+            endDate: endDate || undefined,
+            keyword: category || undefined
         })
 
         return NextResponse.json({

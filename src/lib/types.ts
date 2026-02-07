@@ -30,6 +30,7 @@ export interface Trip {
     end_date: string
     trip_name?: string
     created_at: string
+    trip_data?: any
 }
 
 export interface TripWithBudget extends Trip {

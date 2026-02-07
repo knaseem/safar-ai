@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane } from "lucide-react"
+import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane, Save, Send, Map as MapIcon } from "lucide-react"
+import { ActivityCard as TimelineActivityCard, HotelVerificationBadge, MoonIcon } from "./trip-itinerary-items"
+import { ViatorActivityCard } from "@/components/features/activity-card"
+import { MOCK_VIATOR_ACTIVITIES } from "@/lib/viator"
 import { Button } from "@/components/ui/button"
 import { CinemaMap } from "./cinema-map"
 import { EnhancedBookingModal } from "./enhanced-booking-modal"
@@ -21,7 +24,7 @@ import { generateAffiliateLink, extractCleanCity } from "@/lib/affiliate"
 import { AtmosphericBackground } from "./atmospheric-background"
 import { useSound } from "./ambient-sound-provider"
 import { useTripAudio } from "@/hooks/use-trip-audio"
-import { ActivityCard, HotelVerificationBadge, MoonIcon } from "./trip-itinerary-items"
+
 import { VibeBadge } from "./vibe-badge"
 import { ConciergePortal } from "./concierge-portal"
 
@@ -44,6 +47,29 @@ export type TripData = {
         flight: any
         hotel: any
     }
+    // Imported booking data for display
+    importedBookings?: {
+        type: 'flight' | 'hotel' | 'train' | 'activity' | 'car_rental'
+        confirmationNumber: string
+        provider: string
+        startDate: string
+        endDate?: string
+        location: { city: string; country?: string }
+        details: {
+            origin?: string
+            destination?: string
+            airline?: string
+            flightNumber?: string | string[]
+            departureTime?: string
+            arrivalTime?: string
+            passengers?: string[]
+            hotelName?: string
+            roomType?: string
+            activityName?: string
+        }
+        price?: number
+        currency?: string
+    }[]
 }
 
 interface TripItineraryProps {
@@ -74,6 +100,13 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     // Standardized destination extraction using precision utility
     const destinationName = searchQuery || data.trip_name || data.days[0]?.theme || 'Destination'
     const cleanDestination = extractCleanCity(destinationName)
+
+    // Helper to clean AI generated text (remove coordinates)
+    const cleanText = (text: string) => {
+        if (!text) return text
+        // Remove coordinates like (48.8568, 2.3687) or similar formats
+        return text.replace(/\(\s*-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?\s*\)/g, '').trim()
+    }
 
     const [isMounted, setIsMounted] = useState(false)
     const dayRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -348,6 +381,64 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 {/* Bottom Section: Scrollable Timeline */}
                 <div className={`flex-1 overflow-y-auto relative bg-transparent scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent transition-all duration-500 ${isPresenting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                     <div className="flex-1 p-8 space-y-12">
+
+                        {/* Imported Bookings Section */}
+                        {data.importedBookings && data.importedBookings.length > 0 && (
+                            <div className="mb-8">
+                                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                    <Plane className="size-5 text-emerald-400" />
+                                    Booking Details
+                                </h3>
+                                <div className="grid gap-3">
+                                    {data.importedBookings.map((booking, idx) => (
+                                        <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                            {/* Header */}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-lg bg-emerald-500/20">
+                                                        <Plane className="size-4 text-emerald-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-white font-medium">{booking.provider}</p>
+                                                        <p className="text-xs text-white/50">PNR: {booking.confirmationNumber}</p>
+                                                    </div>
+                                                </div>
+                                                {booking.price && (
+                                                    <div className="text-right">
+                                                        <p className="text-emerald-400 font-semibold">
+                                                            {booking.currency || 'USD'} {booking.price.toLocaleString()}
+                                                        </p>
+                                                        <p className="text-xs text-white/40">Total Fare</p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Route for flights */}
+                                            {booking.type === 'flight' && booking.details?.origin && (
+                                                <div className="flex items-center gap-2 py-2 px-3 bg-black/30 rounded-lg text-sm">
+                                                    <span className="text-white/70">{booking.details.origin}</span>
+                                                    <span className="text-emerald-400">→</span>
+                                                    <span className="text-white">{booking.details.destination || booking.location.city}</span>
+                                                    {booking.details.flightNumber && (
+                                                        <span className="ml-auto text-xs text-white/40">
+                                                            {Array.isArray(booking.details.flightNumber)
+                                                                ? booking.details.flightNumber.join(' / ')
+                                                                : booking.details.flightNumber}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {/* Date */}
+                                            <div className="mt-3 text-xs text-white/40">
+                                                📅 {new Date(booking.startDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {data.days.map((day, index) => (
                             <motion.div
                                 key={day.day}
@@ -371,27 +462,27 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div onMouseEnter={() => setTimeOfDay('Morning')}>
-                                        <ActivityCard
+                                        <TimelineActivityCard
                                             time="Morning"
-                                            title={day.morning}
+                                            title={cleanText(day.morning)}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
 
                                         />
                                     </div>
                                     <div onMouseEnter={() => setTimeOfDay('Afternoon')}>
-                                        <ActivityCard
+                                        <TimelineActivityCard
                                             time="Afternoon"
-                                            title={day.afternoon}
+                                            title={cleanText(day.afternoon)}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
 
                                         />
                                     </div>
                                     <div onMouseEnter={() => setTimeOfDay('Evening')}>
-                                        <ActivityCard
+                                        <TimelineActivityCard
                                             time="Evening"
-                                            title={day.evening}
+                                            title={cleanText(day.evening)}
                                             destination={cleanDestination}
                                             isActive={activeDayIndex === index}
 

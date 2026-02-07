@@ -112,7 +112,6 @@ export async function POST(request: Request) {
                 .from("saved_trips")
                 .select("id, trip_data")
                 .eq("user_id", userId)
-                .eq("source", "email_import")
                 .gte("created_at", new Date(new Date(trip.startDate).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString())
                 .single()
 
@@ -128,8 +127,7 @@ export async function POST(request: Request) {
                         user_id: userId,
                         trip_name: trip.trip_name,
                         trip_data: trip.tripData,
-                        destination: trip.destination,
-                        source: 'email_import'
+                        destination: trip.destination
                     })
 
                 if (tripError) {

@@ -52,6 +52,8 @@ interface BudgetDashboardProps {
     tripName?: string
     onSave?: (data: Record<string, number>) => void
     className?: string
+    // Actual cost from imported bookings (for Budget vs Actual)
+    importedTotal?: number
 }
 
 export function BudgetDashboard({
@@ -62,7 +64,8 @@ export function BudgetDashboard({
     endDate,
     tripName,
     onSave,
-    className
+    className,
+    importedTotal
 }: BudgetDashboardProps) {
     const [spentCategories, setSpentCategories] = useState<Record<string, number>>(initialCategories || {
         lodging: 0,
@@ -224,6 +227,44 @@ export function BudgetDashboard({
                     </button>
                 </div>
             </div>
+
+            {/* Budget vs Actual - Show when we have imported booking costs */}
+            {importedTotal && importedTotal > 0 && (
+                <div className="mb-8">
+                    <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-2xl p-4">
+                        <h4 className="text-xs uppercase tracking-widest text-white/40 mb-3 flex items-center gap-2">
+                            <Plane className="size-3" />
+                            Imported Booking Cost
+                        </h4>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold text-emerald-400">
+                                        {displayCurrency} {getConverted(importedTotal).toLocaleString()}
+                                    </span>
+                                    <span className="text-xs text-white/40">actual cost</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 text-xs">
+                                    <span className="text-white/60">Budget:</span>
+                                    <span className="text-white/80">{displayCurrency} {getConverted(tempBudget).toLocaleString()}</span>
+                                    <span className={`px-2 py-0.5 rounded-full ${importedTotal <= tempBudget ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                        {importedTotal <= tempBudget
+                                            ? `${displayCurrency} ${getConverted(tempBudget - importedTotal).toLocaleString()} under`
+                                            : `${displayCurrency} ${getConverted(importedTotal - tempBudget).toLocaleString()} over`
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className={`text-3xl font-bold ${importedTotal <= tempBudget ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    {Math.round((importedTotal / tempBudget) * 100)}%
+                                </div>
+                                <div className="text-[10px] text-white/40 uppercase tracking-wider">of budget used</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* Visual Section: Spending Rings */}

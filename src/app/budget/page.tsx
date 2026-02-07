@@ -264,6 +264,12 @@ export default function BudgetPage() {
                                                         endDate={trip.end_date}
                                                         tripName={trip.trip_name || trip.destination}
                                                         onSave={(cats) => handleSaveBudget(trip.id, cats, trip.budget?.total_budget || 2500, trip.budget?.currency || "USD")}
+                                                        importedTotal={
+                                                            // Calculate total from imported bookings if available
+                                                            trip.trip_data?.importedBookings?.reduce(
+                                                                (sum: number, b: any) => sum + (b.price || 0), 0
+                                                            ) || undefined
+                                                        }
                                                     />
                                                 </div>
                                             </motion.div>

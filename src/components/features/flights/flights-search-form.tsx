@@ -234,180 +234,178 @@ export function FlightsSearchForm({ onSearch, loading }: FlightsSearchFormProps)
     )
 
     return (
-        <div className="w-full max-w-5xl bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl">
-            <div className="flex flex-col md:flex-row items-center gap-4">
-                {/* Origin Input */}
-                <div ref={fromRef} className="flex-[1.5] w-full relative group min-w-[180px]">
-                    <Plane className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
-                    {fromLoading && (
-                        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-emerald-400 animate-spin" />
-                    )}
-                    <input
-                        type="text"
-                        value={fromSearch}
-                        onChange={(e) => {
-                            setFromSearch(e.target.value)
-                            setFromHighlightIndex(-1)
-                            if (e.target.value.length <= 1) {
-                                setShowFromSuggestions(true)
-                            }
-                        }}
-                        onFocus={() => setShowFromSuggestions(true)}
-                        onKeyDown={handleFromKeyDown}
-                        placeholder="From"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
-                    />
-                    {showFromSuggestions && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto">
-                            {fromSearch.length <= 1 && (
-                                <div className="px-4 py-2 text-xs text-white/40 uppercase tracking-wider border-b border-white/10">
-                                    Popular Destinations
-                                </div>
-                            )}
-                            {(fromSearch.length > 1 ? fromSuggestions : POPULAR_AIRPORTS.map(a => ({
+        <div className="flex flex-col lg:flex-row items-center gap-3">
+            {/* Origin Input */}
+            <div ref={fromRef} className="flex-1 w-full relative group min-w-[200px]">
+                <Plane className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
+                {fromLoading && (
+                    <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-emerald-400 animate-spin" />
+                )}
+                <input
+                    type="text"
+                    value={fromSearch}
+                    onChange={(e) => {
+                        setFromSearch(e.target.value)
+                        setFromHighlightIndex(-1)
+                        if (e.target.value.length <= 1) {
+                            setShowFromSuggestions(true)
+                        }
+                    }}
+                    onFocus={() => setShowFromSuggestions(true)}
+                    onKeyDown={handleFromKeyDown}
+                    placeholder="From"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
+                />
+                {showFromSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto">
+                        {fromSearch.length <= 1 && (
+                            <div className="px-4 py-2 text-xs text-white/40 uppercase tracking-wider border-b border-white/10">
+                                Popular Destinations
+                            </div>
+                        )}
+                        {(fromSearch.length > 1 ? fromSuggestions : POPULAR_AIRPORTS.map(a => ({
+                            iataCode: a.iataCode,
+                            name: a.name,
+                            address: { cityName: a.cityName }
+                        }))).length > 0 ? (
+                            (fromSearch.length > 1 ? fromSuggestions : POPULAR_AIRPORTS.map(a => ({
                                 iataCode: a.iataCode,
                                 name: a.name,
                                 address: { cityName: a.cityName }
-                            }))).length > 0 ? (
-                                (fromSearch.length > 1 ? fromSuggestions : POPULAR_AIRPORTS.map(a => ({
-                                    iataCode: a.iataCode,
-                                    name: a.name,
-                                    address: { cityName: a.cityName }
-                                }))).map((suggestion, index) =>
-                                    renderSuggestionItem(
-                                        suggestion,
-                                        index,
-                                        index === fromHighlightIndex,
-                                        () => {
-                                            setFromSearch(suggestion.name)
-                                            setOrigin(suggestion.iataCode)
-                                            setShowFromSuggestions(false)
-                                            setFromHighlightIndex(-1)
-                                        }
-                                    )
+                            }))).map((suggestion, index) =>
+                                renderSuggestionItem(
+                                    suggestion,
+                                    index,
+                                    index === fromHighlightIndex,
+                                    () => {
+                                        setFromSearch(suggestion.name)
+                                        setOrigin(suggestion.iataCode)
+                                        setShowFromSuggestions(false)
+                                        setFromHighlightIndex(-1)
+                                    }
                                 )
-                            ) : fromSearch.length > 1 && !fromLoading ? (
-                                <div className="px-4 py-3 text-white/40 text-sm text-center">
-                                    No airports found for "{fromSearch}"
-                                </div>
-                            ) : null}
-                        </div>
-                    )}
-                </div>
+                            )
+                        ) : fromSearch.length > 1 && !fromLoading ? (
+                            <div className="px-4 py-3 text-white/40 text-sm text-center">
+                                No airports found for "{fromSearch}"
+                            </div>
+                        ) : null}
+                    </div>
+                )}
+            </div>
 
-                {/* Destination Input */}
-                <div ref={toRef} className="flex-[1.5] w-full relative group min-w-[180px]">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
-                    {toLoading && (
-                        <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-emerald-400 animate-spin" />
-                    )}
-                    <input
-                        type="text"
-                        value={toSearch}
-                        onChange={(e) => {
-                            setToSearch(e.target.value)
-                            setToHighlightIndex(-1)
-                            if (e.target.value.length <= 1) {
-                                setShowToSuggestions(true)
-                            }
-                        }}
-                        onFocus={() => setShowToSuggestions(true)}
-                        onKeyDown={handleToKeyDown}
-                        placeholder="To"
-                        className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
-                    />
-                    {showToSuggestions && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto">
-                            {toSearch.length <= 1 && (
-                                <div className="px-4 py-2 text-xs text-white/40 uppercase tracking-wider border-b border-white/10">
-                                    Popular Destinations
-                                </div>
-                            )}
-                            {(toSearch.length > 1 ? toSuggestions : POPULAR_AIRPORTS.map(a => ({
+            {/* Destination Input */}
+            <div ref={toRef} className="flex-1 w-full relative group min-w-[200px]">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-white/50 group-focus-within:text-emerald-400 transition-colors" />
+                {toLoading && (
+                    <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 size-4 text-emerald-400 animate-spin" />
+                )}
+                <input
+                    type="text"
+                    value={toSearch}
+                    onChange={(e) => {
+                        setToSearch(e.target.value)
+                        setToHighlightIndex(-1)
+                        if (e.target.value.length <= 1) {
+                            setShowToSuggestions(true)
+                        }
+                    }}
+                    onFocus={() => setShowToSuggestions(true)}
+                    onKeyDown={handleToKeyDown}
+                    placeholder="To"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-10 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/50 focus:bg-white/10 transition-all font-medium"
+                />
+                {showToSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-900 border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden max-h-72 overflow-y-auto">
+                        {toSearch.length <= 1 && (
+                            <div className="px-4 py-2 text-xs text-white/40 uppercase tracking-wider border-b border-white/10">
+                                Popular Destinations
+                            </div>
+                        )}
+                        {(toSearch.length > 1 ? toSuggestions : POPULAR_AIRPORTS.map(a => ({
+                            iataCode: a.iataCode,
+                            name: a.name,
+                            address: { cityName: a.cityName }
+                        }))).length > 0 ? (
+                            (toSearch.length > 1 ? toSuggestions : POPULAR_AIRPORTS.map(a => ({
                                 iataCode: a.iataCode,
                                 name: a.name,
                                 address: { cityName: a.cityName }
-                            }))).length > 0 ? (
-                                (toSearch.length > 1 ? toSuggestions : POPULAR_AIRPORTS.map(a => ({
-                                    iataCode: a.iataCode,
-                                    name: a.name,
-                                    address: { cityName: a.cityName }
-                                }))).map((suggestion, index) =>
-                                    renderSuggestionItem(
-                                        suggestion,
-                                        index,
-                                        index === toHighlightIndex,
-                                        () => {
-                                            setToSearch(suggestion.name)
-                                            setDestination(suggestion.iataCode)
-                                            setShowToSuggestions(false)
-                                            setToHighlightIndex(-1)
-                                        }
-                                    )
+                            }))).map((suggestion, index) =>
+                                renderSuggestionItem(
+                                    suggestion,
+                                    index,
+                                    index === toHighlightIndex,
+                                    () => {
+                                        setToSearch(suggestion.name)
+                                        setDestination(suggestion.iataCode)
+                                        setShowToSuggestions(false)
+                                        setToHighlightIndex(-1)
+                                    }
                                 )
-                            ) : toSearch.length > 1 && !toLoading ? (
-                                <div className="px-4 py-3 text-white/40 text-sm text-center">
-                                    No airports found for "{toSearch}"
-                                </div>
-                            ) : null}
-                        </div>
-                    )}
-                </div>
+                            )
+                        ) : toSearch.length > 1 && !toLoading ? (
+                            <div className="px-4 py-3 text-white/40 text-sm text-center">
+                                No airports found for "{toSearch}"
+                            </div>
+                        ) : null}
+                    </div>
+                )}
+            </div>
 
-                {/* Date Picker - Made Wider */}
-                <div className="flex-[1.4] w-full relative z-40">
-                    <DateRangePicker
-                        checkIn={checkIn}
-                        checkOut={checkOut}
-                        fromLabel="Depart"
-                        toLabel="Return"
-                        onDateChange={(inDate, outDate) => {
-                            setCheckIn(inDate)
-                            setCheckOut(outDate)
-                        }}
-                        className="w-full"
-                    />
-                </div>
+            {/* Date Picker - Compact */}
+            <div className="flex-[1.2] w-full relative z-40 min-w-[240px]">
+                <DateRangePicker
+                    checkIn={checkIn}
+                    checkOut={checkOut}
+                    fromLabel="Depart"
+                    toLabel="Return"
+                    onDateChange={(inDate, outDate) => {
+                        setCheckIn(inDate)
+                        setCheckOut(outDate)
+                    }}
+                    className="w-full"
+                />
+            </div>
 
-                {/* Passengers */}
-                <div className="w-full md:w-32">
-                    <div className="relative h-[58px] flex items-center bg-white/5 border border-white/10 rounded-xl px-4 hover:bg-white/10 transition-colors">
-                        <Users className="size-5 text-white/50 mr-3" />
-                        <div className="flex flex-col items-start gap-0.5">
-                            <span className="text-xs text-white/40 uppercase tracking-wider font-bold">Travelers</span>
-                            <select
-                                value={passengers}
-                                onChange={(e) => setPassengers(Number(e.target.value))}
-                                className="bg-transparent border-none outline-none text-sm font-medium text-white appearance-none cursor-pointer w-full"
-                            >
-                                {[1, 2, 3, 4, 5, 6].map(num => (
-                                    <option key={num} value={num} className="bg-neutral-900 text-white">{num}</option>
-                                ))}
-                            </select>
-                        </div>
+            {/* Passengers */}
+            <div className="w-full lg:w-[140px]">
+                <div className="relative h-[46px] flex items-center bg-white/5 border border-white/10 rounded-xl px-4 hover:bg-white/10 transition-colors">
+                    <Users className="size-4 text-white/50 mr-3" />
+                    <div className="flex flex-col items-start gap-0.5">
+                        <span className="text-[10px] text-white/40 uppercase tracking-wider font-bold">Travelers</span>
+                        <select
+                            value={passengers}
+                            onChange={(e) => setPassengers(Number(e.target.value))}
+                            className="bg-transparent border-none outline-none text-sm font-medium text-white appearance-none cursor-pointer w-full"
+                        >
+                            {[1, 2, 3, 4, 5, 6].map(num => (
+                                <option key={num} value={num} className="bg-neutral-900 text-white">{num}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
-
-                {/* Search Button */}
-                <Button
-                    size="lg"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="w-full md:w-auto h-[58px] px-8 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] transition-all"
-                >
-                    {loading ? (
-                        <>
-                            <Loader2 className="size-5 mr-2 animate-spin" />
-                            Searching...
-                        </>
-                    ) : (
-                        <>
-                            <Search className="size-5 mr-2" />
-                            Find Flights
-                        </>
-                    )}
-                </Button>
             </div>
+
+            {/* Search Button */}
+            <Button
+                size="lg"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full lg:w-auto h-[46px] px-8 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] transition-all whitespace-nowrap"
+            >
+                {loading ? (
+                    <>
+                        <Loader2 className="size-4 mr-2 animate-spin" />
+                        Searching...
+                    </>
+                ) : (
+                    <>
+                        <Search className="size-4 mr-2" />
+                        Search Flights
+                    </>
+                )}
+            </Button>
         </div>
     )
 }
