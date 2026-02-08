@@ -63,6 +63,10 @@ export type TripData = {
             departureTime?: string
             arrivalTime?: string
             passengers?: string[]
+            seats?: string
+            terminal?: string
+            gate?: string
+            baggage?: string
             hotelName?: string
             roomType?: string
             activityName?: string
@@ -72,16 +76,23 @@ export type TripData = {
     }[]
 }
 
+import { UnifiedBooking } from "@/types/booking"
+
+// ... (imports)
+
+// ... (TripData interface)
+
 interface TripItineraryProps {
     data: TripData
     onReset?: () => void
     isHalal?: boolean
     isShared?: boolean
-    tripId?: string // If present, enables sharing
-    searchQuery?: string // Original search context from user
+    tripId?: string
+    searchQuery?: string
+    linkedBookings?: UnifiedBooking[]
 }
 
-export function TripItinerary({ data, onReset, isHalal = false, isShared = false, tripId, searchQuery }: TripItineraryProps) {
+export function TripItinerary({ data, onReset, isHalal = false, isShared = false, tripId, searchQuery, linkedBookings = [] }: TripItineraryProps) {
     const [isBookingOpen, setIsBookingOpen] = useState(false)
     const [isChatOpen, setIsChatOpen] = useState(false)
     const [isShareModalOpen, setIsShareModalOpen] = useState(false)
@@ -94,6 +105,58 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     const [providerName, setProviderName] = useState("Expedia")
     const [isSaved, setIsSaved] = useState(!!tripId)
     const [savedTripId, setSavedTripId] = useState<string | null>(tripId || null)
+
+    // Merge trip_data.importedBookings with linkedBookings
+    const allBookings = [
+        ...(data.importedBookings || []),
+        ...linkedBookings.map(lb => {
+            // Map UnifiedBooking to Partial<ParsedBooking> format used by UI
+            const isFlight = lb.type === 'flight'
+            const details = lb.originalData?.metadata?.offer_details || lb.originalData?.parsed_data?.details || {}
+
+            // If it's a concierge request, map accordingly
+            if (lb.source === 'concierge') {
+                return {
+                    type: 'custom' as const,
+                    confirmationNumber: lb.id,
+                    provider: 'Concierge',
+                    startDate: lb.details.date || '',
+                    location: { city: lb.details.location || 'Unknown' },
+                    details: {
+                        activityName: `Concierge: ${lb.details.title}`,
+                        notes: lb.status
+                    },
+                    price: parseFloat(lb.details.price || '0'),
+                    currency: lb.details.currency
+                }
+            }
+
+            return {
+                type: lb.type as any,
+                confirmationNumber: lb.bookingReference || lb.id,
+                provider: lb.source === 'duffel' ? 'Duffel' : 'Import',
+                startDate: lb.details.date || '',
+                location: { city: lb.details.location || (isFlight ? details.destination : 'Unknown') },
+                details: {
+                    ...details,
+                    origin: details.origin,
+                    destination: details.destination,
+                    airline: details.airline,
+                    flightNumber: details.flightNumber,
+                    departureTime: details.departureTime,
+                    arrivalTime: details.arrivalTime,
+                    hotelName: lb.type === 'hotel' ? lb.details.title : undefined
+                },
+                price: parseFloat(lb.details.price || '0'),
+                currency: lb.details.currency
+            }
+        })
+    ]
+
+    // Use allBookings instead of data.importedBookings in the render
+    // We need to override data.importedBookings in useMemo or just use a derived variable
+    const displayData = { ...data, importedBookings: allBookings }
+
     const [activeDayIndex, setActiveDayIndex] = useState(0)
     const [timeOfDay, setTimeOfDay] = useState<'Morning' | 'Afternoon' | 'Evening'>('Morning')
 
@@ -289,7 +352,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                             {!isShared && (
                                 <div className="ml-1">
-                                    <ConciergeButton tripName={data.trip_name} onClick={() => setIsChatOpen(true)} />
+                                    <ConciergeButton tripName={displayData.trip_name} onClick={() => setIsChatOpen(true)} />
                                 </div>
                             )}
 
@@ -297,7 +360,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 <div className="relative group/tooltip">
                                     <button
                                         onClick={async () => {
-                                            const blob = await pdf(<TripPdfDocument data={data} />).toBlob()
+                                            const blob = await pdf(<TripPdfDocument data={displayData} />).toBlob()
                                             const url = URL.createObjectURL(blob)
                                             window.open(url, '_blank')
                                         }}
@@ -316,8 +379,8 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     {!isPresenting && (
                         <div className="absolute top-20 left-4 z-20">
                             <WeatherWidget
-                                lat={data.days[activeDayIndex].coordinates.lat}
-                                lng={data.days[activeDayIndex].coordinates.lng}
+                                lat={displayData.days[activeDayIndex].coordinates.lat}
+                                lng={displayData.days[activeDayIndex].coordinates.lng}
                             />
                         </div>
                     )}
@@ -343,12 +406,12 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 className="absolute bottom-12 left-0 right-0 z-40 flex justify-center px-4"
                             >
                                 <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-2xl w-full text-center shadow-2xl">
-                                    <h2 className="text-3xl font-bold text-white mb-2">Day {data.days[activeDayIndex].day}</h2>
-                                    <p className="text-emerald-400 font-medium uppercase tracking-widest text-sm mb-4">{data.days[activeDayIndex].theme}</p>
+                                    <h2 className="text-3xl font-bold text-white mb-2">Day {displayData.days[activeDayIndex].day}</h2>
+                                    <p className="text-emerald-400 font-medium uppercase tracking-widest text-sm mb-4">{displayData.days[activeDayIndex].theme}</p>
                                     <div className="flex justify-center gap-8 text-left">
                                         <div>
                                             <p className="text-xs text-white/40 uppercase mb-1">Morning</p>
-                                            <p className="text-white text-sm">{data.days[activeDayIndex].morning}</p>
+                                            <p className="text-white text-sm">{displayData.days[activeDayIndex].morning}</p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-white/40 uppercase mb-1">Stay</p>
@@ -358,8 +421,8 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                                     <div className="flex justify-center mt-6">
                                         <AudioConcierge
-                                            dayData={data.days[activeDayIndex]}
-                                            tripName={data.trip_name}
+                                            dayData={displayData.days[activeDayIndex]}
+                                            tripName={displayData.trip_name}
                                         />
                                     </div>
 
@@ -383,14 +446,14 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     <div className="flex-1 p-8 space-y-12">
 
                         {/* Imported Bookings Section */}
-                        {data.importedBookings && data.importedBookings.length > 0 && (
+                        {displayData.importedBookings && displayData.importedBookings.length > 0 && (
                             <div className="mb-8">
                                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                                     <Plane className="size-5 text-emerald-400" />
                                     Booking Details
                                 </h3>
                                 <div className="grid gap-3">
-                                    {data.importedBookings.map((booking, idx) => (
+                                    {displayData.importedBookings.map((booking, idx) => (
                                         <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4">
                                             {/* Header */}
                                             <div className="flex items-center justify-between mb-3">
@@ -415,17 +478,37 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                                             {/* Route for flights */}
                                             {booking.type === 'flight' && booking.details?.origin && (
-                                                <div className="flex items-center gap-2 py-2 px-3 bg-black/30 rounded-lg text-sm">
-                                                    <span className="text-white/70">{booking.details.origin}</span>
-                                                    <span className="text-emerald-400">→</span>
-                                                    <span className="text-white">{booking.details.destination || booking.location.city}</span>
-                                                    {booking.details.flightNumber && (
-                                                        <span className="ml-auto text-xs text-white/40">
-                                                            {Array.isArray(booking.details.flightNumber)
-                                                                ? booking.details.flightNumber.join(' / ')
-                                                                : booking.details.flightNumber}
-                                                        </span>
-                                                    )}
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2 py-2 px-3 bg-black/30 rounded-lg text-sm">
+                                                        <span className="text-white/70">{booking.details.origin}</span>
+                                                        <span className="text-emerald-400">→</span>
+                                                        <span className="text-white">{booking.details.destination || booking.location.city}</span>
+                                                        {booking.details.flightNumber && (
+                                                            <span className="ml-auto text-xs text-white/40">
+                                                                {Array.isArray(booking.details.flightNumber)
+                                                                    ? booking.details.flightNumber.join(' / ')
+                                                                    : booking.details.flightNumber}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* Enhanced Details from Email */}
+                                                    <div className="grid grid-cols-2 gap-2 text-xs text-white/60 px-1">
+                                                        {booking.details.departureTime && (
+                                                            <div>Dep: <span className="text-white/80">{booking.details.departureTime}</span></div>
+                                                        )}
+                                                        {booking.details.arrivalTime && (
+                                                            <div>Arr: <span className="text-white/80">{booking.details.arrivalTime}</span></div>
+                                                        )}
+                                                        {booking.details.seats && (
+                                                            <div>Seats: <span className="text-white/80">{booking.details.seats}</span></div>
+                                                        )}
+                                                        {booking.details.terminal && (
+                                                            <div>Term: <span className="text-white/80">{booking.details.terminal}</span></div>
+                                                        )}
+                                                        {booking.details.gate && (
+                                                            <div>Gate: <span className="text-white/80">{booking.details.gate}</span></div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -439,7 +522,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                             </div>
                         )}
 
-                        {data.days.map((day, index) => (
+                        {displayData.days.map((day, index) => (
                             <motion.div
                                 key={day.day}
                                 ref={(el: HTMLDivElement | null) => { dayRefs.current[index] = el }}
@@ -519,7 +602,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                             <button onClick={onReset} className="text-white/40 hover:text-white text-xs mb-1 text-left">
                                 ← Back to Vibe
                             </button>
-                            {data.selection && (
+                            {displayData.selection && (
                                 <div className="flex gap-2 text-[10px] text-emerald-400 font-bold uppercase tracking-tighter">
                                     <Plane className="size-3" /> Flight & Hotel Locked
                                 </div>
@@ -527,14 +610,14 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                         </div>
 
                         <div className="flex gap-3">
-                            {data.selection ? (
+                            {displayData.selection ? (
                                 <Button
                                     size="lg"
                                     className="bg-emerald-500 text-black hover:bg-emerald-400 font-bold"
                                     onClick={() => {
                                         const flightLink = generateAffiliateLink('flight', {
-                                            origin: data.selection?.flight.origin,
-                                            destination: data.selection?.flight.destination,
+                                            origin: displayData.selection?.flight.origin,
+                                            destination: displayData.selection?.flight.destination,
                                             checkIn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
                                         })
                                         // window.open(flightLink, '_blank') // Replaced with ConciergePortal
@@ -562,7 +645,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
             </motion.div>
 
             <EnhancedBookingModal
-                tripData={data}
+                tripData={displayData}
                 isHalal={isHalal}
                 isOpen={isBookingOpen}
                 searchQuery={searchQuery}
@@ -578,14 +661,14 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
             <AIChatDrawer
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
-                tripData={data}
+                tripData={displayData}
             />
 
             {savedTripId && (
                 <SocialShareModal
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
-                    tripName={data.trip_name}
+                    tripName={displayData.trip_name}
                     shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/${savedTripId}`}
                 />
             )}

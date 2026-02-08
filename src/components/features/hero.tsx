@@ -148,12 +148,40 @@ const HALAL_HERO_IMAGES = [
         url: "/images/ai-hero/doha-hero.png", // Generated AI Image (Cyberpunk West Bay)
         location: "Doha, Qatar",
         credit: "SafarAI Imagination"
+    },
+    {
+        url: "/images/ai-hero/doha-hero.png", // Generated AI Image (Cyberpunk West Bay)
+        location: "Doha, Qatar",
+        credit: "SafarAI Imagination"
+    }
+]
+
+const EXPERIENCE_HERO_IMAGES = [
+    {
+        url: "https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=2574&auto=format&fit=crop", // Santorini
+        location: "Santorini, Greece",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2594&auto=format&fit=crop", // Tokyo Street
+        location: "Tokyo, Japan",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2574&auto=format&fit=crop", // Cinque Terre
+        location: "Cinque Terre, Italy",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1512453979798-5ea904ac66de?q=80&w=2574&auto=format&fit=crop", // Dubai Desert
+        location: "Dubai Desert, UAE",
+        credit: "Unsplash"
     }
 ]
 
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
-    const [mode, setMode] = useState<'ai' | 'stays' | 'flights'>('ai')
+    const [mode, setMode] = useState<'ai' | 'stays' | 'flights' | 'experiences'>('ai')
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
@@ -246,7 +274,7 @@ export function Hero({ initialPrompt }: HeroProps) {
     // Rotate Hero Image every 5 seconds (Faster Pace)
     useEffect(() => {
         const interval = setInterval(() => {
-            const list = isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES
+            const list = mode === 'experiences' ? EXPERIENCE_HERO_IMAGES : (isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES)
             setCurrentImageIndex((prev) => (prev + 1) % list.length)
         }, 5000)
         return () => clearInterval(interval)
@@ -255,9 +283,9 @@ export function Hero({ initialPrompt }: HeroProps) {
     // Reset index when mode toggles
     useEffect(() => {
         setCurrentImageIndex(0)
-    }, [isHalal])
+    }, [isHalal, mode])
 
-    const activeImages = isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES
+    const activeImages = mode === 'experiences' ? EXPERIENCE_HERO_IMAGES : (isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES)
 
     const handlePlanTrip = async () => {
         if (!input.trim()) return
@@ -295,6 +323,11 @@ export function Hero({ initialPrompt }: HeroProps) {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleExperiencesSearch = () => {
+        if (!input.trim()) return
+        router.push(`/activities?query=${encodeURIComponent(input)}`)
     }
 
     if (tripData) {
@@ -412,6 +445,12 @@ export function Hero({ initialPrompt }: HeroProps) {
                         >
                             Find Flights
                         </button>
+                        <button
+                            onClick={() => setMode('experiences')}
+                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'experiences' ? 'bg-orange-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                        >
+                            Find Experiences
+                        </button>
                     </div>
 
                     {mode === 'ai' && (
@@ -452,6 +491,38 @@ export function Hero({ initialPrompt }: HeroProps) {
                                     </div>
                                 </div>
                                 <p className="mt-3 text-xs text-white/40 text-center">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
+                            </div>
+                        </>
+                    )}
+
+                    {mode === 'experiences' && (
+                        <>
+                            <p className="text-lg text-white/70 max-w-2xl text-center">
+                                Discover unforgettable tours, attractions, and local experiences.
+                            </p>
+
+                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                <div className="relative group w-full">
+                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-orange-500 to-red-500"></div>
+                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                        <input
+                                            type="text"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handleExperiencesSearch()}
+                                            placeholder="Where do you want to explore? (e.g. Kyoto, Dubai)"
+                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                        />
+                                        <Button
+                                            size="lg"
+                                            onClick={handleExperiencesSearch}
+                                            className="h-12 px-8 rounded-lg bg-orange-500 hover:bg-orange-600 text-white border-none"
+                                        >
+                                            <span className="mr-2">Explore</span>
+                                            <ArrowRight className="size-4" />
+                                        </Button>
+                                    </div>
+                                </div>
                             </div>
                         </>
                     )}

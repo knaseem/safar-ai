@@ -112,7 +112,10 @@ export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetail
         const separator = affiliateUrl.includes('?') ? '&' : '?'
         affiliateUrl = `${affiliateUrl}${separator}pid=${partnerId || 'P00285711'}&mcid=42383&medium=link`
     }
-    const imageUrl = product.images?.[0]?.variants?.find(v => v.width >= 800)?.url || product.images?.[0]?.variants?.[0]?.url
+    // Get the highest resolution image available
+    const variants = product.images?.[0]?.variants
+    const bestVariant = variants?.reduce((max, v) => (v.width > max.width ? v : max), variants[0])
+    const imageUrl = bestVariant?.url || variants?.[0]?.url
 
     return (
         <AnimatePresence>

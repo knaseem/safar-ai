@@ -206,6 +206,7 @@ export async function resolveDestination(query: string) {
     return { destinationId: 684, destinationName: query, destinationType: 'CITY' }
 }
 
+
 // This function is used by the API route /api/activities/search
 export async function searchProducts(destinationId: number | string, options?: any) {
     const apiKey = process.env.VIATOR_API_KEY
@@ -262,3 +263,5 @@ export async function searchProducts(destinationId: number | string, options?: a
     await new Promise(resolve => setTimeout(resolve, 800))
     return MOCK_VIATOR_PRODUCTS
 }
+
+

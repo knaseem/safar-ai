@@ -21,6 +21,11 @@ export interface ParsedBooking {
         flightNumber?: string
         departureTime?: string
         arrivalTime?: string
+        seats?: string // e.g. "12A, 12B"
+        terminal?: string
+        gate?: string
+        baggage?: string
+        class?: string // e.g. "Economy", "Business"
         passengers?: string[]
         // Hotel specific
         hotelName?: string
@@ -64,7 +69,20 @@ For each booking, extract:
 - currency: ISO currency code ("USD", "EUR", "GBP", "PKR", "CAD", etc.)
 - priceRaw: the original price string exactly as shown (e.g., "USD 1,847.50")
 
-For flights include in details: origin, destination, airline, flightNumber (can be array for multi-leg), departureTime, arrivalTime, passengers
+For flights include in details:
+- origin (city/airport code)
+- destination (city/airport code)
+- airline
+- flightNumber (can be array for multi-leg)
+- departureTime (HH:MM format, 24h)
+- arrivalTime (HH:MM format, 24h)
+- seats (e.g. "12A", "Unassigned")
+- terminal (e.g. "Terminal 3")
+- gate
+- baggage (e.g. "2 Checked Bags", "30kg")
+- class (e.g. "Economy", "Business")
+- passengers (array of names)
+
 For hotels include in details: hotelName, address, checkInTime, checkOutTime, roomType, guests
 For activities include in details: activityName, duration, meetingPoint
 

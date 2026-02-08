@@ -7,13 +7,16 @@ import { Wallet, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
+import { UnifiedBooking } from "@/types/booking"
+
 interface TripContentProps {
     tripId: string
     tripData: any
     isHalal: boolean
+    linkedBookings?: UnifiedBooking[]
 }
 
-export function TripContent({ tripId, tripData, isHalal }: TripContentProps) {
+export function TripContent({ tripId, tripData, isHalal, linkedBookings }: TripContentProps) {
     const [budgetData, setBudgetData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
@@ -95,6 +98,7 @@ export function TripContent({ tripId, tripData, isHalal }: TripContentProps) {
                     isHalal={isHalal}
                     isShared={false}
                     tripId={tripId}
+                    linkedBookings={linkedBookings}
                 />
             </motion.div>
         </div>

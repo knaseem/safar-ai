@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
 
     } catch (error) {
         console.error('Activities Search Error:', error)
+
         return NextResponse.json(
             { error: 'Failed to fetch activities' },
             { status: 500 }

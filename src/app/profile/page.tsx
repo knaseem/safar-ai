@@ -5,19 +5,16 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { BookingRequest } from "@/types/booking"
-import { Loader2, Plane, Calendar, MapPin, User as UserIcon, X, Sparkles, Trash2, Upload } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Loader2, User as UserIcon, X, Sparkles, Trash2, Upload, MapPin } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { PassportCard } from "@/components/features/passport-card"
 import { VibeCheck } from "@/components/features/vibe-check"
 import { toast } from "sonner"
-import { BookingDetailModal } from "@/components/features/booking-detail-modal"
-import { NeighborhoodRadar } from "@/components/features/neighborhood-radar"
-import { DuffelBookings } from "@/components/features/duffel-bookings"
 import { ImportBookingsModal } from "@/components/features/import-bookings-modal"
-import { getCoordinates } from "@/lib/geocoding"
 import { User } from "@supabase/supabase-js"
+import { UnifiedBooking } from "@/types/booking"
+import { UnifiedBookingCard } from "@/components/features/unified-booking-card"
 
 // Type definitions for profile page
 interface UserProfile {
@@ -46,29 +43,17 @@ interface SavedTrip {
     user_id: string
 }
 
-interface ProfileBooking extends Omit<BookingRequest, 'contact'> {
-    id: string
-    user_id: string
-    created_at: string
-    contact_first_name: string
-    contact_last_name: string
-    contact_email: string
-    contact_phone: string
-}
-
 export default function ProfilePage() {
     const router = useRouter()
     const [user, setUser] = useState<User | null>(null)
     const [profile, setProfile] = useState<TravelProfile | null>(null)
-    const [bookings, setBookings] = useState<ProfileBooking[]>([])
+    const [unifiedBookings, setUnifiedBookings] = useState<UnifiedBooking[]>([])
     const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState<'duffel' | 'bookings' | 'trips'>('duffel')
+    const [activeTab, setActiveTab] = useState<'all' | 'trips'>('all')
     const [showPassport, setShowPassport] = useState(false)
     const [showVibeCheck, setShowVibeCheck] = useState(false)
-    const [selectedBooking, setSelectedBooking] = useState<ProfileBooking | null>(null)
     const [deletingTripId, setDeletingTripId] = useState<string | null>(null)
-    const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null)
     const [showImportModal, setShowImportModal] = useState(false)
 
     useEffect(() => {
@@ -106,11 +91,11 @@ export default function ProfilePage() {
                 })
             }
 
-            // Fetch bookings
-            const response = await fetch('/api/bookings')
-            const bookingsJson = await response.json()
-            if (bookingsJson.bookings) {
-                setBookings(bookingsJson.bookings)
+            // Fetch Unified Bookings
+            const bookingsRes = await fetch('/api/bookings/all')
+            if (bookingsRes.ok) {
+                const data = await bookingsRes.json()
+                setUnifiedBookings(data.bookings || [])
             }
 
             // Fetch saved trips
@@ -152,31 +137,6 @@ export default function ProfilePage() {
         setDeletingTripId(null)
     }
 
-    const handleDeleteBooking = async (id: string, e: React.MouseEvent) => {
-        e.stopPropagation()
-        if (deletingBookingId !== id) {
-            setDeletingBookingId(id)
-            return
-        }
-
-        try {
-            const res = await fetch(`/api/bookings?id=${id}`, {
-                method: 'DELETE'
-            })
-
-            if (res.ok) {
-                setBookings(prev => prev.filter(b => b.id !== id))
-                toast.success("Booking request removed")
-            } else {
-                throw new Error("Failed to delete")
-            }
-        } catch (err) {
-            toast.error("Failed to delete booking")
-        } finally {
-            setDeletingBookingId(null)
-        }
-    }
-
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
@@ -184,6 +144,8 @@ export default function ProfilePage() {
             </div>
         )
     }
+
+    const bookingList = unifiedBookings
 
     return (
         <main className="min-h-screen bg-black pt-24 pb-12 px-4">
@@ -247,26 +209,14 @@ export default function ProfilePage() {
                 <div className="space-y-6">
                     <div className="flex gap-8 border-b border-white/5 px-2 overflow-x-auto">
                         <button
-                            onClick={() => setActiveTab('duffel')}
+                            onClick={() => setActiveTab('all')}
                             className={cn(
                                 "pb-4 text-sm font-bold uppercase tracking-widest relative transition-colors whitespace-nowrap",
-                                activeTab === 'duffel' ? "text-emerald-500" : "text-white/40 hover:text-white"
+                                activeTab === 'all' ? "text-emerald-500" : "text-white/40 hover:text-white"
                             )}
                         >
-                            My Bookings
-                            {activeTab === 'duffel' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
-                            )}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('bookings')}
-                            className={cn(
-                                "pb-4 text-sm font-bold uppercase tracking-widest relative transition-colors whitespace-nowrap",
-                                activeTab === 'bookings' ? "text-emerald-500" : "text-white/40 hover:text-white"
-                            )}
-                        >
-                            Concierge Requests
-                            {activeTab === 'bookings' && (
+                            All Bookings
+                            {activeTab === 'all' && (
                                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
                             )}
                         </button>
@@ -286,158 +236,37 @@ export default function ProfilePage() {
 
                     {/* Content Area */}
                     <div className="min-h-[400px]">
-                        {/* Duffel Direct Bookings */}
-                        {activeTab === 'duffel' && (
-                            <DuffelBookings />
-                        )}
-
-                        {/* Concierge Booking Requests */}
-                        {activeTab === 'bookings' && (
-                            <div className="grid gap-8">
-                                {/* Destination Intelligence Section */}
-                                {bookings.filter(b => b.status === 'booked').slice(0, 1).map(nextTrip => {
-                                    const coords = getCoordinates(nextTrip.destination);
-                                    if (!coords) return null;
-                                    return (
-                                        <div key="intelligence" className="animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <Sparkles className="size-4 text-emerald-400" />
-                                                <h3 className="text-sm font-bold text-white/40 uppercase tracking-[0.2em]">Upcoming Destination Intelligence</h3>
-                                            </div>
-                                            <div className="grid lg:grid-cols-3 gap-6">
-                                                <div className="lg:col-span-1">
-                                                    <NeighborhoodRadar
-                                                        lat={coords.lat}
-                                                        lng={coords.lng}
-                                                        cityName={nextTrip.destination}
-                                                    />
-                                                </div>
-                                                <div className="lg:col-span-2 bg-white/5 rounded-2xl border border-white/10 p-8 flex flex-col justify-center">
-                                                    <div className="space-y-4">
-                                                        <h4 className="text-2xl font-bold text-white">Why {nextTrip.destination}?</h4>
-                                                        <p className="text-white/60 leading-relaxed">
-                                                            Our AI is cross-referencing live Amadeus data with your traveler archetype.
-                                                            We've identified this neighborhood as a high-match for your preferred pace.
-                                                            The safety scores are verified, and the "Nightlife/Dining" balance aligns with your recent vibe checks.
-                                                        </p>
-                                                        <div className="flex gap-4 pt-4">
-                                                            <div className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                                                                AI Verified
-                                                            </div>
-                                                            <div className="px-4 py-2 bg-white/10 border border-white/10 rounded-full text-xs text-white/40 font-bold uppercase tracking-wider">
-                                                                Live Amadeus Feed
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-
-                                <div className="grid gap-4">
-                                    {bookings.length === 0 ? (
-                                        <div className="text-center py-12 bg-neutral-900/50 rounded-xl border border-white/5">
-                                            <Plane className="size-12 text-white/10 mx-auto mb-4" />
-                                            <h3 className="text-lg font-medium text-white mb-2">No Bookings Yet</h3>
-                                            <p className="text-white/40 mb-4">You haven't requested any concierge bookings.</p>
-                                            <Button
-                                                onClick={() => router.push('/')}
-                                                className="bg-white text-black hover:bg-white/90"
-                                            >
-                                                Plan a Trip
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        bookings.map((booking: any) => (
-                                            <Card key={booking.id} className="bg-neutral-900 border-white/10 hover:border-emerald-500/30 transition-all">
-                                                <CardContent className="p-6">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                        <div>
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider ${booking.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
-                                                                    booking.status === 'booked' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                                        'bg-white/10 text-white/60'
-                                                                    }`}>
-                                                                    {booking.status}
-                                                                </span>
-                                                                <span className="text-white/40 text-sm">#{booking.id.slice(0, 8)}</span>
-                                                            </div>
-                                                            <h3 className="text-xl font-bold text-white mb-1">{booking.trip_name || booking.destination}</h3>
-                                                            <div className="flex items-center gap-4 text-white/60 text-sm">
-                                                                <span className="flex items-center gap-1">
-                                                                    <Calendar className="size-4" />
-                                                                    {new Date(booking.check_in).toLocaleDateString()} - {new Date(booking.check_out).toLocaleDateString()}
-                                                                </span>
-                                                                <span className="flex items-center gap-1">
-                                                                    <MapPin className="size-4" />
-                                                                    {booking.destination}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="text-right">
-                                                            <p className="text-xs text-white/40 uppercase">Est. Budget</p>
-                                                            <p className="text-lg font-semibold text-white">${booking.estimated_price?.toLocaleString()}</p>
-                                                        </div>
-                                                        <div className="flex flex-col gap-2">
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                className="bg-transparent border-white/10 text-white hover:bg-white/10"
-                                                                onClick={() => setSelectedBooking(booking)}
-                                                            >
-                                                                View Details
-                                                            </Button>
-                                                            <AnimatePresence mode="wait">
-                                                                {deletingBookingId === booking.id ? (
-                                                                    <motion.div
-                                                                        key="confirm-booking-wrap"
-                                                                        initial={{ opacity: 0, scale: 0.9, x: 10 }}
-                                                                        animate={{ opacity: 1, scale: 1, x: 0 }}
-                                                                        exit={{ opacity: 0, scale: 0.9, x: 10 }}
-                                                                        className="flex items-center gap-2"
-                                                                    >
-                                                                        <button
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation()
-                                                                                setDeletingBookingId(null)
-                                                                            }}
-                                                                            className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-                                                                        >
-                                                                            Cancel
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={(e) => handleDeleteBooking(booking.id, e)}
-                                                                            className="px-3 py-1 bg-red-500 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/20 transition-all whitespace-nowrap"
-                                                                        >
-                                                                            Confirm Delete
-                                                                        </button>
-                                                                    </motion.div>
-                                                                ) : (
-                                                                    <motion.button
-                                                                        key="trash-booking"
-                                                                        initial={{ opacity: 0 }}
-                                                                        animate={{ opacity: 1 }}
-                                                                        exit={{ opacity: 0 }}
-                                                                        onClick={(e) => handleDeleteBooking(booking.id, e)}
-                                                                        className="p-1.5 text-white/20 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all self-end"
-                                                                        title="Delete Booking"
-                                                                    >
-                                                                        <Trash2 className="size-4" />
-                                                                    </motion.button>
-                                                                )}
-                                                            </AnimatePresence>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        ))
-                                    )}
-                                </div>
+                        {/* Unified Bookings Tab */}
+                        {activeTab === 'all' && (
+                            <div className="grid gap-4">
+                                {bookingList.length === 0 ? (
+                                    <div className="text-center py-12 bg-neutral-900/50 rounded-xl border border-white/5">
+                                        <Sparkles className="size-12 text-white/10 mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-white mb-2">No Bookings Found</h3>
+                                        <p className="text-white/40 mb-4">You haven't made any bookings yet.</p>
+                                        <Button onClick={() => router.push('/')} className="bg-white text-black hover:bg-white/90">
+                                            Plan a Trip
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    bookingList.map((booking) => (
+                                        <UnifiedBookingCard
+                                            key={`${booking.source}-${booking.id}`}
+                                            booking={booking}
+                                            trips={savedTrips.map(t => ({ id: t.id, name: t.trip_name }))}
+                                            onUpdate={(updated) => {
+                                                setUnifiedBookings(prev => prev.map(b => b.id === booking.id ? { ...b, ...updated } : b))
+                                            }}
+                                            onDelete={() => {
+                                                setUnifiedBookings(prev => prev.filter(b => b.id !== booking.id))
+                                            }}
+                                        />
+                                    ))
+                                )}
                             </div>
                         )}
 
+                        {/* Saved Trips Tab */}
                         {activeTab === 'trips' && (
                             <div className="grid gap-4 md:grid-cols-2">
                                 {savedTrips.length === 0 ? (
@@ -556,7 +385,7 @@ export default function ProfilePage() {
                             <PassportCard
                                 archetype={profile.archetype || "Explorer"}
                                 scores={profile.archetype_scores || {}}
-                                bookings={bookings}
+                                bookings={unifiedBookings.map(b => ({ id: b.id, destination: b.details.location || b.details.title, check_in: b.details.date || new Date().toISOString() }))}
                                 onClose={() => setShowPassport(false)}
                             />
                         </motion.div>
@@ -586,17 +415,6 @@ export default function ProfilePage() {
                     </div>
                 )}
             </AnimatePresence>
-
-            {/* Booking Detail Modal */}
-            <BookingDetailModal
-                booking={selectedBooking}
-                isOpen={!!selectedBooking}
-                onClose={() => setSelectedBooking(null)}
-                onBookingUpdate={(updated) => {
-                    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
-                    setSelectedBooking(updated)
-                }}
-            />
 
             {/* Import Bookings Modal */}
             <ImportBookingsModal

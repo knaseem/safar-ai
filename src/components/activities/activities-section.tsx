@@ -15,45 +15,129 @@ interface ActivitiesSectionProps {
 const CATEGORIES = ['All', 'Food', 'Adventure', 'Culture', 'Sightseeing']
 
 // Fallback mock activities when API fails - directs users to Viator
+// Fallback mock activities when API fails - directs users to Viator
 function getMockActivities(destination: string, category: string): ViatorProduct[] {
     const cleanDest = destination.trim()
-    const suffix = category === 'All' ? '' : ` ${category}`
 
-    return [
-        {
-            productCode: 'mock-tour-1',
-            title: `Best of ${cleanDest}${suffix} Tour`,
-            description: `Discover the highlights of ${cleanDest}${suffix} with an expert local guide. Visit iconic landmarks and hidden gems.`,
-            images: [{ variants: [{ url: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400', width: 400, height: 300 }] }],
-            pricing: { summary: { fromPrice: 45, currencyCode: 'USD' } },
-            reviews: { combinedAverageRating: 4.8, totalReviews: 1250 },
-            duration: { fixedDurationInMinutes: 180 },
-            bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + suffix + ' tour')}`
-        },
-        {
-            productCode: 'mock-tour-2',
-            title: `${cleanDest}${suffix} Experience`,
-            description: `Taste the best local cuisine and learn about the rich culture of ${cleanDest} on this unforgettable journey.`,
-            images: [{ variants: [{ url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400', width: 400, height: 300 }] }],
-            pricing: { summary: { fromPrice: 75, currencyCode: 'USD' } },
-            reviews: { combinedAverageRating: 4.9, totalReviews: 890 },
-            duration: { fixedDurationInMinutes: 240 },
-            bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + suffix + ' experience')}`
-        },
-        {
-            productCode: 'mock-tour-3',
-            title: `Skip-the-Line: Top ${cleanDest} Attractions`,
-            description: `Beat the crowds with priority access to ${cleanDest}'s most popular attractions. Includes expert guide.`,
-            images: [{ variants: [{ url: 'https://images.unsplash.com/photo-1551524559-8af4e6624178?w=400', width: 400, height: 300 }] }],
-            pricing: { summary: { fromPrice: 95, currencyCode: 'USD' } },
-            reviews: { combinedAverageRating: 4.7, totalReviews: 2100 },
-            duration: { fixedDurationInMinutes: 300 },
-            bookingQuestions: [],
-            productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(cleanDest + ' skip the line')}`
+    // Generate category-specific templates
+    const getTemplates = (cat: string) => {
+        switch (cat) {
+            case 'Food':
+                return [
+                    {
+                        title: `Best of ${cleanDest} Food Tour`,
+                        desc: `Discover the culinary delights of ${cleanDest} with an expert local foodie. Taste diverse dishes and street food.`,
+                        query: 'food tour'
+                    },
+                    {
+                        title: `${cleanDest} Culinary Experience`,
+                        desc: `A premium tasting journey through ${cleanDest}'s best restaurants and hidden local gems.`,
+                        query: 'culinary experience'
+                    },
+                    {
+                        title: `Private ${cleanDest} Market & Tasting Walk`,
+                        desc: `Explore the vibrant local markets of ${cleanDest} and sample fresh ingredients and traditional snacks.`,
+                        query: 'market tour'
+                    }
+                ]
+            case 'Adventure':
+                return [
+                    {
+                        title: `${cleanDest} Adventure Safari`,
+                        desc: `Get your adrenaline pumping with this thrilling outdoor adventure in ${cleanDest}.`,
+                        query: 'adventure'
+                    },
+                    {
+                        title: `Hiking & Nature in ${cleanDest}`,
+                        desc: `Explore the beautiful landscapes surrounding ${cleanDest} with an experienced guide.`,
+                        query: 'hiking'
+                    },
+                    {
+                        title: `${cleanDest} Action Sports Experience`,
+                        desc: `Experience the thrill of action sports in the heart of ${cleanDest}.`,
+                        query: 'sports'
+                    }
+                ]
+            case 'Culture':
+                return [
+                    {
+                        title: `Best of ${cleanDest} dedicated Culture Tour`,
+                        desc: `Immerse yourself in the rich history and heritage of ${cleanDest}.`,
+                        query: 'culture tour'
+                    },
+                    {
+                        title: `${cleanDest} Historical Walk`,
+                        desc: `Visit ancient landmarks and learn about the fascinating past of ${cleanDest}.`,
+                        query: 'history walk'
+                    },
+                    {
+                        title: `Art & Traditions of ${cleanDest}`,
+                        desc: `Discover the local art scene and traditional customs of ${cleanDest}.`,
+                        query: 'art culture'
+                    }
+                ]
+            case 'Sightseeing':
+                return [
+                    {
+                        title: `${cleanDest} City Highlights Tour`,
+                        desc: `See all the major landmarks of ${cleanDest} in this comprehensive sightseeing tour.`,
+                        query: 'sightseeing'
+                    },
+                    {
+                        title: `Hop-on Hop-off ${cleanDest}`,
+                        desc: `Explore ${cleanDest} at your own pace with a flexible bus tour of top attractions.`,
+                        query: 'bus tour'
+                    },
+                    {
+                        title: `Iconic ${cleanDest} Photography Tour`,
+                        desc: `Capture the best views and hidden angles of ${cleanDest} with a pro photographer.`,
+                        query: 'photo tour'
+                    }
+                ]
+            default: // 'All'
+                return [
+                    {
+                        title: `Best of ${cleanDest} City Tour`,
+                        desc: `Discover the highlights of ${cleanDest} with an expert local guide. Visit iconic landmarks and hidden gems.`,
+                        query: 'tour'
+                    },
+                    {
+                        title: `${cleanDest} Cultural Experience`,
+                        desc: `Learn about the rich culture and history of ${cleanDest} on this unforgettable journey.`,
+                        query: 'culture'
+                    },
+                    {
+                        title: `Skip-the-Line: Top ${cleanDest} Attractions`,
+                        desc: `Beat the crowds with priority access to ${cleanDest}'s most popular attractions.`,
+                        query: 'skip the line'
+                    }
+                ]
         }
-    ]
+    }
+
+    const templates = getTemplates(category)
+
+    return templates.map((t, i) => ({
+        productCode: `mock-${category.toLowerCase()}-${i}`,
+        title: t.title,
+        description: t.desc,
+        images: [{
+            variants: [{
+                url: category === 'Food'
+                    ? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400'
+                    : category === 'Adventure'
+                        ? 'https://images.unsplash.com/photo-1533669955200-c43eef6551b8?w=400'
+                        : 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=400',
+                width: 400,
+                height: 300
+            }]
+        }],
+        pricing: { summary: { fromPrice: 45 + (i * 20), currencyCode: 'USD' } },
+        reviews: { combinedAverageRating: 4.5 + (i * 0.1), totalReviews: 100 + (i * 50) },
+        duration: { fixedDurationInMinutes: 180 + (i * 60) },
+        bookingQuestions: [],
+        productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(destination + ' ' + t.query)}`
+    }))
 }
 
 export function ActivitiesSection({ destination, dates }: ActivitiesSectionProps) {

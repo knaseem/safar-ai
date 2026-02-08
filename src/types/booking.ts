@@ -52,6 +52,33 @@ export interface BookingRequest {
 }
 
 // Phase 8 additions (when APIs are integrated):
+export interface UnifiedBooking {
+    id: string
+    source: 'duffel' | 'concierge' | 'import'
+    type: 'flight' | 'hotel' | 'activity' | 'custom'
+    status: string
+    tripId?: string
+    tripName?: string // derived if linked
+    label?: string    // custom label
+    bookingReference?: string
+    details: {
+        title: string
+        subtitle?: string
+        date?: string
+        image?: string
+        price?: string
+        currency?: string
+        pnr?: string
+        location?: string
+    }
+    actions: {
+        canCancel: boolean
+        canModify: boolean
+        canLink: boolean
+    }
+    originalData: any // full record
+    createdAt: string
+}
 // - car_rental: boolean
 // - airport_transfer: boolean
 // - flexible_dates: boolean

@@ -149,8 +149,8 @@ function createTripData(
             theme: `Day in ${location.city}`,
             coordinates: primaryBooking?.location?.coordinates || { lat: 0, lng: 0 },
             morning: formatMorningActivity(flights, activities, dateStr, i),
-            afternoon: formatAfternoonActivity(activities, i),
-            evening: formatEveningActivity(activities, i),
+            afternoon: formatAfternoonActivity(flights, activities, i),
+            evening: formatEveningActivity(flights, activities, i),
             stay: hotel ? formatHotelStay(hotel) : 'No accommodation booked'
         })
     }
@@ -184,7 +184,8 @@ function formatMorningActivity(flights: ParsedBooking[], activities: ParsedBooki
     })
 
     if (morningFlight) {
-        return `✈️ Flight ${morningFlight.details.flightNumber || ''} from ${morningFlight.details.origin} to ${morningFlight.details.destination}`
+        const time = morningFlight.details.departureTime ? `${morningFlight.details.departureTime} ` : ''
+        return `${time}✈️ Flight ${morningFlight.details.flightNumber || ''} to ${morningFlight.details.destination}`
     }
 
     const morningActivity = activities.find(a => {
@@ -206,7 +207,19 @@ function formatMorningActivity(flights: ParsedBooking[], activities: ParsedBooki
     return defaults[dayIndex % defaults.length]
 }
 
-function formatAfternoonActivity(activities: ParsedBooking[], dayIndex: number): string {
+function formatAfternoonActivity(flights: ParsedBooking[], activities: ParsedBooking[], dayIndex: number): string {
+    const afternoonFlight = flights.find(f => {
+        const time = f.details.departureTime
+        if (!time) return false
+        const hour = parseInt(time.split(':')[0])
+        return hour >= 12 && hour < 17
+    })
+
+    if (afternoonFlight) {
+        const time = afternoonFlight.details.departureTime ? `${afternoonFlight.details.departureTime} ` : ''
+        return `${time}✈️ Flight ${afternoonFlight.details.flightNumber || ''} to ${afternoonFlight.details.destination}`
+    }
+
     const afternoonActivity = activities.find(a => {
         const time = a.details.meetingPoint || ''
         return time.toLowerCase().includes('afternoon') || time.toLowerCase().includes('pm')
@@ -226,7 +239,19 @@ function formatAfternoonActivity(activities: ParsedBooking[], dayIndex: number):
     return defaults[dayIndex % defaults.length]
 }
 
-function formatEveningActivity(activities: ParsedBooking[], dayIndex: number): string {
+function formatEveningActivity(flights: ParsedBooking[], activities: ParsedBooking[], dayIndex: number): string {
+    const eveningFlight = flights.find(f => {
+        const time = f.details.departureTime
+        if (!time) return false
+        const hour = parseInt(time.split(':')[0])
+        return hour >= 17
+    })
+
+    if (eveningFlight) {
+        const time = eveningFlight.details.departureTime ? `${eveningFlight.details.departureTime} ` : ''
+        return `${time}✈️ Flight ${eveningFlight.details.flightNumber || ''} to ${eveningFlight.details.destination}`
+    }
+
     const eveningActivity = activities.find(a => {
         const time = a.details.meetingPoint || ''
         return time.toLowerCase().includes('evening') || time.toLowerCase().includes('night')

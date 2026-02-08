@@ -29,6 +29,10 @@ interface ParsedBooking {
         departureTime?: string
         arrivalTime?: string
         passengers?: string[]
+        seats?: string
+        terminal?: string
+        gate?: string
+        baggage?: string
         hotelName?: string
         roomType?: string
         activityName?: string
@@ -428,17 +432,38 @@ export function ImportBookingsModal({ isOpen, onClose, onImportSuccess, userImpo
 
                                                                 {/* Flight route */}
                                                                 {booking.type === 'flight' && booking.details?.origin && (
-                                                                    <div className="flex items-center gap-2 py-2 px-3 bg-white/5 rounded-lg text-sm">
-                                                                        <span className="text-white/70">{booking.details.origin}</span>
-                                                                        <span className="text-emerald-400">→</span>
-                                                                        <span className="text-white">{booking.details.destination || booking.location.city}</span>
-                                                                        {booking.details.flightNumber && (
-                                                                            <span className="ml-auto text-xs text-white/40">
-                                                                                {Array.isArray(booking.details.flightNumber)
-                                                                                    ? booking.details.flightNumber.join(' / ')
-                                                                                    : booking.details.flightNumber}
-                                                                            </span>
-                                                                        )}
+                                                                    <div className="space-y-2">
+                                                                        <div className="flex items-center gap-2 py-2 px-3 bg-white/5 rounded-lg text-sm">
+                                                                            <span className="text-white/70">{booking.details.origin}</span>
+                                                                            <span className="text-emerald-400">→</span>
+                                                                            <span className="text-white">{booking.details.destination || booking.location.city}</span>
+                                                                            {booking.details.flightNumber && (
+                                                                                <span className="ml-auto text-xs text-white/40">
+                                                                                    {Array.isArray(booking.details.flightNumber)
+                                                                                        ? booking.details.flightNumber.join(' / ')
+                                                                                        : booking.details.flightNumber}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Enhanced Details: Times, Seats, Terminal */}
+                                                                        <div className="grid grid-cols-2 gap-2 text-xs text-white/60 px-1">
+                                                                            {booking.details.departureTime && (
+                                                                                <div>Dep: <span className="text-white/80">{booking.details.departureTime}</span></div>
+                                                                            )}
+                                                                            {booking.details.arrivalTime && (
+                                                                                <div>Arr: <span className="text-white/80">{booking.details.arrivalTime}</span></div>
+                                                                            )}
+                                                                            {booking.details.seats && (
+                                                                                <div>Seats: <span className="text-white/80">{booking.details.seats}</span></div>
+                                                                            )}
+                                                                            {booking.details.terminal && (
+                                                                                <div>Term: <span className="text-white/80">{booking.details.terminal}</span></div>
+                                                                            )}
+                                                                            {booking.details.gate && (
+                                                                                <div>Gate: <span className="text-white/80">{booking.details.gate}</span></div>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 )}
 

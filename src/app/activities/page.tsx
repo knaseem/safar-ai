@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, MapPin, Calendar, ArrowRight } from 'lucide-react'
 import { ActivitiesSection } from '@/components/activities/activities-section'
 import { Navbar } from '@/components/layout/navbar'
@@ -16,9 +17,31 @@ const POPULAR_DESTINATIONS = [
 ]
 
 export default function ActivitiesPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+            <ActivitiesContent />
+        </Suspense>
+    )
+}
+
+function ActivitiesContent() {
     const [searchQuery, setSearchQuery] = useState('')
     const [activeDestination, setActiveDestination] = useState<string | null>(null)
     const [isSearching, setIsSearching] = useState(false)
+    const searchParams = useSearchParams()
+    const router = useRouter()
+
+    useEffect(() => {
+        const query = searchParams.get('query')
+        if (query) {
+            setSearchQuery(query)
+            setActiveDestination(query)
+            setIsSearching(true)
+            setTimeout(() => {
+                document.getElementById('results-section')?.scrollIntoView({ behavior: 'smooth' })
+            }, 500)
+        }
+    }, [searchParams])
 
     // Handle Search Submission
     const handleSearch = (e: React.FormEvent) => {
