@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { motion, AnimatePresence } from "framer-motion"
-import { ArrowRight, Sparkles, Moon } from "lucide-react"
+import { ArrowRight, Sparkles, Moon, Anchor } from "lucide-react"
 import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
 import { StaysSearchForm } from "./stays/stays-search-form"
@@ -40,6 +40,35 @@ const halalPlaceholderSuggestions = [
     "Zanzibar beach holiday, halal food resorts",
     "Scenic train trip in Switzerland, halal dining options",
 ]
+
+const privateJetSuggestions = [
+    "One way flight London (LON) to Dubai (DXB)",
+    "Round trip New York (TEB) to Miami (OPF)",
+    "Private charter Paris (LBG) to Nice (NCE)",
+    "Heavy jet Los Angeles (VNY) to Las Vegas (LAS)",
+    "Group charter Singapore (XSP) to Phuket (HKT)",
+    "Empty leg search Geneva (GVA) to Ibiza (IBZ)",
+]
+
+const yachtSuggestions = [
+    "Weekly charter in Amalfi Coast, Italy",
+    "Luxury catamaran rental in Maldives",
+    "Day trip yacht in Dubai Marina",
+    "Sailing holiday in Croatia (Split)",
+    "Superyacht rental in French Riviera",
+    "Private boat tour in Santorini",
+]
+
+const experienceSuggestions = [
+    "Desert Safari in Dubai",
+    "Sushi cooking class in Tokyo",
+    "Private Louvre Museum tour in Paris",
+    "Helicopter ride over NYC",
+    "Snorkeling tour in Great Barrier Reef",
+    "Northern Lights hunt in Reykjavik",
+]
+
+// ... (existing helper functions or render start)
 
 interface HeroProps {
     initialPrompt?: string;
@@ -179,9 +208,75 @@ const EXPERIENCE_HERO_IMAGES = [
     }
 ]
 
+const YACHT_HERO_IMAGES = [
+    {
+        url: "https://images.unsplash.com/photo-1569263979104-45b0a27c2d96?q=80&w=2574&auto=format&fit=crop", // Yacht in Croatia
+        location: "Split, Croatia",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1605281317010-fe5ffe79ba02?q=80&w=2669&auto=format&fit=crop", // Yacht in Maldives
+        location: "Maldives",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?q=80&w=2670&auto=format&fit=crop", // Yacht Lifestyle
+        location: "Amalfi Coast, Italy",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2694&auto=format&fit=crop", // Luxury Yacht
+        location: "French Riviera",
+        credit: "Unsplash"
+    }
+]
+
+const JETS_HERO_IMAGES = [
+    {
+        url: "https://images.unsplash.com/photo-1540962351504-03099e0a754b?q=80&w=2574&auto=format&fit=crop", // Private Jet Interior
+        location: "Global 6000 Interior",
+        credit: "Bombardier"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1624479590262-d98c255d644d?q=80&w=2567&auto=format&fit=crop", // Private Jet Runway
+        location: "Private Terminal, Teterboro",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1583413230540-ddf90681a8f8?q=80&w=2574&auto=format&fit=crop", // Jet Window View
+        location: "Above the Clouds",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1582260654082-cdb61239c094?q=80&w=2574&auto=format&fit=crop", // Jet Exterior
+        location: "Gulfstream G650",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1559827260-dc66d52bec19?q=80&w=2670&auto=format&fit=crop", // Boarding Steps
+        location: "Geneva Airport VIP",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1696229562768-466d71b34c03?q=80&w=2574&auto=format&fit=crop", // Modern Bright Interior
+        location: "Challenger 350 Comfort",
+        credit: "Bombardier"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1563823251941-b84dc6475fc6?q=80&w=2574&auto=format&fit=crop", // Lifestyle/Champagne
+        location: "Luxury Service",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1610642372651-fe6e7bc209ef?q=80&w=2574&auto=format&fit=crop", // Wing View
+        location: "Above the Alps",
+        credit: "Unsplash"
+    }
+]
+
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
-    const [mode, setMode] = useState<'ai' | 'stays' | 'flights' | 'experiences'>('ai')
+    const [mode, setMode] = useState<'ai' | 'stays' | 'flights' | 'experiences' | 'yachts' | 'private-jets'>('ai')
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
@@ -274,18 +369,30 @@ export function Hero({ initialPrompt }: HeroProps) {
     // Rotate Hero Image every 5 seconds (Faster Pace)
     useEffect(() => {
         const interval = setInterval(() => {
-            const list = mode === 'experiences' ? EXPERIENCE_HERO_IMAGES : (isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES)
+            let list = HERO_IMAGES
+            if (isHalal) list = HALAL_HERO_IMAGES
+            else if (mode === 'experiences') list = EXPERIENCE_HERO_IMAGES
+            else if (mode === 'yachts') list = YACHT_HERO_IMAGES
+            else if (mode === 'private-jets') list = JETS_HERO_IMAGES
+
             setCurrentImageIndex((prev) => (prev + 1) % list.length)
         }, 5000)
         return () => clearInterval(interval)
-    }, [isHalal])
+    }, [isHalal, mode])
 
     // Reset index when mode toggles
     useEffect(() => {
         setCurrentImageIndex(0)
     }, [isHalal, mode])
 
-    const activeImages = mode === 'experiences' ? EXPERIENCE_HERO_IMAGES : (isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES)
+    const getActiveImages = () => {
+        if (mode === 'experiences') return EXPERIENCE_HERO_IMAGES
+        if (mode === 'yachts') return YACHT_HERO_IMAGES
+        if (mode === 'private-jets') return JETS_HERO_IMAGES
+        return isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES
+    }
+
+    const activeImages = getActiveImages()
 
     const handlePlanTrip = async () => {
         if (!input.trim()) return
@@ -330,12 +437,37 @@ export function Hero({ initialPrompt }: HeroProps) {
         router.push(`/activities?query=${encodeURIComponent(input)}`)
     }
 
+    const handleYachtSearch = () => {
+        // Searadar Affiliate Link
+        // Marker: 698501, TRS: 491790, Campaign: 258
+        const marker = "698501"
+        const trs = "491790"
+        const campaignId = "258"
+        // We'll try to pass the location if the user entered one, otherwise default to home
+        const baseUrl = input.trim()
+            ? `https://searadar.com?location=${encodeURIComponent(input.trim())}`
+            : "https://searadar.com"
+
+        const finalUrl = `https://tp.media/r?marker=${marker}&trs=${trs}&p=5907&u=${encodeURIComponent(baseUrl)}&campaign_id=${campaignId}`
+
+        window.open(finalUrl, '_blank')
+    }
+
+    const handleJetSearch = () => {
+        // Villiers Private Jet Affiliate Link
+        // Placeholder ID: 57252 (or user provided). Standard entry is usually just home with ID.
+        // We will default to a generic ID until user updates it.
+        const affiliateId = "57252" // Placeholder / Default
+        const finalUrl = `https://www.villiersjets.com/?id=${affiliateId}`
+        window.open(finalUrl, '_blank')
+    }
+
     if (tripData) {
         return (
             <section className="relative min-h-screen py-24 flex items-center justify-center bg-black/90">
                 <div className="absolute inset-0 z-0">
                     <img
-                        src={activeImages[currentImageIndex].url}
+                        src={(activeImages[currentImageIndex] || activeImages[0]).url}
                         alt="Background"
                         className="w-full h-full object-cover opacity-20 blur-sm"
                     />
@@ -362,23 +494,22 @@ export function Hero({ initialPrompt }: HeroProps) {
                     >
                         {/* Ken Burns Scale Effect */}
                         <motion.img
-                            src={activeImages[currentImageIndex].url}
-                            alt={activeImages[currentImageIndex].location}
+                            src={(activeImages[currentImageIndex] || activeImages[0]).url}
+                            alt={(activeImages[currentImageIndex] || activeImages[0]).location}
                             initial={{ scale: 0.95 }}
                             animate={{ scale: 1.00 }}
                             transition={{ duration: 12, ease: "linear" }}
                             className="w-full h-full object-cover"
                             onError={() => {
                                 // Skip to next image on error
-                                const list = isHalal ? HALAL_HERO_IMAGES : HERO_IMAGES
-                                setCurrentImageIndex((prev) => (prev + 1) % list.length)
+                                setCurrentImageIndex((prev) => (prev + 1) % activeImages.length)
                             }}
                         />
                         {/* Location Credit Overlay - Centered */}
                         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50 text-center">
                             <span className="text-xs uppercase tracking-[0.2em] font-light border-b border-white/20 pb-1 mb-1">Location</span>
-                            <span className="text-sm font-medium text-white/90">{activeImages[currentImageIndex].location}</span>
-                            <span className="text-[10px] text-white/30">Photo by {activeImages[currentImageIndex].credit}</span>
+                            <span className="text-sm font-medium text-white/90">{activeImages[currentImageIndex]?.location || "Unknown"}</span>
+                            <span className="text-[10px] text-white/30">Photo by {activeImages[currentImageIndex]?.credit || "SafarAI"}</span>
                         </div>
                     </motion.div>
                 </AnimatePresence>
@@ -422,34 +553,46 @@ export function Hero({ initialPrompt }: HeroProps) {
                         />
                     </div>
 
-                    {/* Mode Tabs */}
-                    <div className="flex p-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-2">
+                    {/* Mode Tabs - Glassmorphism */}
+                    <div className="flex p-1.5 bg-black/20 backdrop-blur-xl rounded-full border border-white/10 mb-8 overflow-x-auto max-w-full shadow-2xl">
                         <button
                             onClick={() => {
                                 setMode('ai')
                                 setIsHalal(false)
                             }}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'ai' ? 'bg-white text-black shadow-lg' : 'text-white/60 hover:text-white'}`}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'ai' ? 'bg-white/20 text-white border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
                             AI Planner
                         </button>
                         <button
-                            onClick={() => setMode('stays')}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'stays' ? 'bg-emerald-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                            onClick={() => setMode('flights')}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'flights' ? 'bg-sky-500/30 text-sky-50 border-sky-400/50 shadow-[0_0_20px_rgba(14,165,233,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
-                            Find Hotels
+                            Flights
                         </button>
                         <button
-                            onClick={() => setMode('flights')}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'flights' ? 'bg-sky-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                            onClick={() => setMode('private-jets')}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'private-jets' ? 'bg-indigo-600/30 text-indigo-50 border-indigo-400/50 shadow-[0_0_20px_rgba(79,70,229,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
-                            Find Flights
+                            Private Jets
+                        </button>
+                        <button
+                            onClick={() => setMode('stays')}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'stays' ? 'bg-emerald-500/30 text-emerald-50 border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                        >
+                            Hotels
+                        </button>
+                        <button
+                            onClick={() => setMode('yachts')}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'yachts' ? 'bg-blue-600/30 text-blue-50 border-blue-400/50 shadow-[0_0_20px_rgba(37,99,235,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                        >
+                            Yachts
                         </button>
                         <button
                             onClick={() => setMode('experiences')}
-                            className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${mode === 'experiences' ? 'bg-orange-500 text-white shadow-lg' : 'text-white/60 hover:text-white'}`}
+                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'experiences' ? 'bg-orange-500/30 text-orange-50 border-orange-400/50 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
-                            Find Experiences
+                            Experiences
                         </button>
                     </div>
 
@@ -510,7 +653,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                                             value={input}
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={(e) => e.key === "Enter" && handleExperiencesSearch()}
-                                            placeholder="Where do you want to explore? (e.g. Kyoto, Dubai)"
+                                            placeholder={experienceSuggestions[placeholderIndex % experienceSuggestions.length]}
                                             className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
                                         />
                                         <Button
@@ -522,6 +665,75 @@ export function Hero({ initialPrompt }: HeroProps) {
                                             <ArrowRight className="size-4" />
                                         </Button>
                                     </div>
+                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{experienceSuggestions[placeholderIndex % experienceSuggestions.length]}"</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {mode === 'yachts' && (
+                        <>
+                            <p className="text-lg text-white/70 max-w-2xl text-center">
+                                Rent luxury yachts and catamarans worldwide. Powered by Searadar.
+                            </p>
+
+                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                <div className="relative group w-full">
+                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                        <Anchor className="size-5 text-blue-400" />
+                                        <input
+                                            type="text"
+                                            value={input}
+                                            onChange={(e) => setInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handleYachtSearch()}
+                                            placeholder={yachtSuggestions[placeholderIndex % yachtSuggestions.length]}
+                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                        />
+                                        <Button
+                                            size="lg"
+                                            onClick={handleYachtSearch}
+                                            className="h-12 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none"
+                                        >
+                                            <span className="mr-2">Search Yachts</span>
+                                            <ArrowRight className="size-4" />
+                                        </Button>
+                                    </div>
+                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{yachtSuggestions[placeholderIndex % yachtSuggestions.length]}"</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {mode === 'private-jets' && (
+                        <>
+                            <p className="text-lg text-white/70 max-w-2xl text-center">
+                                Access 10,000+ private jets globally. Powered by Villiers.
+                            </p>
+
+                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                <div className="relative group w-full">
+                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                        <div className="size-5 flex items-center justify-center text-indigo-400">✈️</div>
+                                        <input
+                                            type="text"
+                                            value={input} // Villiers often doesn't pre-fill easily, but we keep input for UX
+                                            onChange={(e) => setInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && handleJetSearch()}
+                                            placeholder={privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}
+                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                        />
+                                        <Button
+                                            size="lg"
+                                            onClick={handleJetSearch}
+                                            className="h-12 px-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+                                        >
+                                            <span className="mr-2">Find Jets</span>
+                                            <ArrowRight className="size-4" />
+                                        </Button>
+                                    </div>
+                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}"</p>
                                 </div>
                             </div>
                         </>

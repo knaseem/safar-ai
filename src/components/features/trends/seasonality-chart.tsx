@@ -1,7 +1,7 @@
 "use client"
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
-import { SeasonalityData } from "@/lib/amadeus-trends"
+import { SeasonalityData } from "@/lib/trends-data"
 
 export function SeasonalityChart({ data }: { data: SeasonalityData[] }) {
     if (!data || data.length === 0) return <div className="h-full flex items-center justify-center text-white/20">Loading data...</div>

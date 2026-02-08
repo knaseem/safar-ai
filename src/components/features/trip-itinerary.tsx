@@ -283,12 +283,18 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     <CinemaMap locations={locations} activeIndex={activeDayIndex} />
 
                     {/* Overlay Title */}
-                    <div className="absolute bottom-6 left-8 right-20 pointer-events-none">
+                    <div className="absolute bottom-6 left-8 right-20 pointer-events-none flex flex-wrap gap-2">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium uppercase tracking-wider border border-emerald-500/20 mb-3 backdrop-blur-md">
                             <CheckCircle className="size-3" />
                             {isShared ? "Shared Application" : "AI Curated"}
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-1 drop-shadow-lg max-w-full">{data.trip_name}</h2>
+                        {isHalal && (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium uppercase tracking-wider border border-emerald-500/20 mb-3 backdrop-blur-md">
+                                <MoonIcon className="size-3" />
+                                Halal Trip
+                            </div>
+                        )}
+                        <h2 className="text-4xl md:text-5xl font-bold text-white mb-1 drop-shadow-lg max-w-full w-full">{data.trip_name}</h2>
                     </div>
 
                     {/* Action Buttons Group (Left) */}

@@ -6,7 +6,7 @@ import { TrendingUp, Calendar, ArrowLeft, Globe, Plane } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
-import { getTrendingDestinations, getSeasonalityData, TrendingDestination, SeasonalityData } from "@/lib/amadeus-trends";
+import { getTrendingDestinations, getSeasonalityData, TrendingDestination, SeasonalityData } from "@/lib/trends-data";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default function TrendsPage() {
@@ -91,7 +91,7 @@ export default function TrendsPage() {
                         <div className="relative z-10">
                             <h2 className="text-3xl md:text-5xl font-bold mb-4">The World is Moving.</h2>
                             <p className="text-white/60 max-w-xl text-lg">
-                                Real-time travel intelligence powered by Amadeus.
+                                Real-time travel intelligence powered by Duffel.
                                 Analyze seasonality, discover rising stars, and book at the perfect moment.
                             </p>
                         </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingDestination } from "@/lib/amadeus-trends"
+import { TrendingDestination } from "@/lib/trends-data"
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react"
 
 export function DestinationRankings({ data }: { data: TrendingDestination[] }) {
