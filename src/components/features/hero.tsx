@@ -440,9 +440,9 @@ export function Hero({ initialPrompt }: HeroProps) {
     const handleYachtSearch = () => {
         // Searadar Affiliate Link
         // Marker: 698501, TRS: 491790, Campaign: 258
-        const marker = "698501"
-        const trs = "491790"
-        const campaignId = "258"
+        const marker = process.env.NEXT_PUBLIC_AFFILIATE_ID_SEARADAR_MARKER || "698501"
+        const trs = process.env.NEXT_PUBLIC_AFFILIATE_ID_SEARADAR_TRS || "491790"
+        const campaignId = process.env.NEXT_PUBLIC_AFFILIATE_ID_SEARADAR_CAMPAIGN || "258"
         // We'll try to pass the location if the user entered one, otherwise default to home
         const baseUrl = input.trim()
             ? `https://searadar.com?location=${encodeURIComponent(input.trim())}`
@@ -457,7 +457,7 @@ export function Hero({ initialPrompt }: HeroProps) {
         // Villiers Private Jet Affiliate Link
         // Placeholder ID: 57252 (or user provided). Standard entry is usually just home with ID.
         // We will default to a generic ID until user updates it.
-        const affiliateId = "57252" // Placeholder / Default
+        const affiliateId = process.env.NEXT_PUBLIC_AFFILIATE_ID_VILLIERS || "57252" // Placeholder / Default
         const finalUrl = `https://www.villiersjets.com/?id=${affiliateId}`
         window.open(finalUrl, '_blank')
     }

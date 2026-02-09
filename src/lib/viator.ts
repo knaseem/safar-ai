@@ -69,7 +69,7 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
             { url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=800" }
         ],
         duration: "3 hours",
-        bookingLink: "https://www.viator.com/tours/Paris/Private-Food-Tour/d479-5678XE?pid=YOUR_PID_HERE",
+        bookingLink: "https://www.viator.com/tours/Paris/Private-Food-Tour/d479-5678XE",
         features: ["Free Cancellation", "Private Tour", "Food & Drinks Included"]
     },
     {
@@ -89,7 +89,7 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
             { url: "https://images.unsplash.com/photo-1499856871940-a09627c6ac02?auto=format&fit=crop&q=80&w=800" }
         ],
         duration: "2.5 hours",
-        bookingLink: "https://www.viator.com/tours/Paris/Louvre-Museum-Tour/d479-9012YZ?pid=YOUR_PID_HERE",
+        bookingLink: "https://www.viator.com/tours/Paris/Louvre-Museum-Tour/d479-9012YZ",
         features: ["Skip the Line", "Expert Guide", "Headsets Included"]
     },
     {
@@ -109,7 +109,7 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
             { url: "https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&q=80&w=800" }
         ],
         duration: "1 hour",
-        bookingLink: "https://www.viator.com/tours/Paris/Seine-Cruise/d479-3456AB?pid=YOUR_PID_HERE",
+        bookingLink: "https://www.viator.com/tours/Paris/Seine-Cruise/d479-3456AB",
         features: ["Instant Confirmation", "Mobile Ticket"]
     }
 ]

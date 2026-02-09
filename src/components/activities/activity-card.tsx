@@ -110,7 +110,8 @@ export function ActivityDetailModal({ product, isOpen, onClose }: ActivityDetail
     let affiliateUrl = product.productUrl
     if (!affiliateUrl.includes('pid=')) {
         const separator = affiliateUrl.includes('?') ? '&' : '?'
-        affiliateUrl = `${affiliateUrl}${separator}pid=${partnerId || 'P00285711'}&mcid=42383&medium=link`
+        const mcid = process.env.NEXT_PUBLIC_VIATOR_MCID || '42383'
+        affiliateUrl = `${affiliateUrl}${separator}pid=${partnerId}&mcid=${mcid}&medium=link`
     }
     // Get the highest resolution image available
     const variants = product.images?.[0]?.variants
