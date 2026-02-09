@@ -216,7 +216,29 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                         </div>
 
                                         {/* Price & Action */}
-                                        <div className="flex flex-col items-end gap-2 min-w-[120px] pl-4 border-l border-white/5">
+                                        <div className="flex flex-col items-end gap-2 min-w-[140px] pl-4 border-l border-white/5">
+                                            {/* Compliance: Baggage & Conditions */}
+                                            <div className="flex flex-col items-end gap-1 mb-2">
+                                                {/* Baggage Badge */}
+                                                <div className="flex items-center gap-1 text-[10px] text-white/50">
+                                                    <span className="bg-white/10 px-1.5 py-0.5 rounded">
+                                                        {offer.passengers?.[0]?.baggages?.length > 0
+                                                            ? `${offer.passengers[0].baggages.length} Checked Bag`
+                                                            : "Cabin Bag Only"}
+                                                    </span>
+                                                </div>
+
+                                                {/* Refundable/Changeable Badges */}
+                                                {offer.conditions?.change_before_departure?.allowed && (
+                                                    <span className="text-[10px] text-emerald-400">Changeable</span>
+                                                )}
+                                                {offer.conditions?.refund_before_departure?.allowed ? (
+                                                    <span className="text-[10px] text-emerald-400">Refundable</span>
+                                                ) : (
+                                                    <span className="text-[10px] text-white/30">Non-Refundable</span>
+                                                )}
+                                            </div>
+
                                             <div className="text-2xl font-bold text-white">
                                                 {offer.total_currency} {Math.round(parseFloat(offer.total_amount))}
                                             </div>

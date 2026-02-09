@@ -270,18 +270,54 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
                                                     {/* Duffel sometimes nests room type info */}
                                                     {rate.room_type || "Standard Room"}
                                                 </h3>
-                                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-white/50">
+                                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-white/50 mb-3">
                                                     <span className="flex items-center gap-1"><Users className="size-4" /> 2 Guests</span>
                                                     <span className="flex items-center gap-1"><Wifi className="size-4" /> Free Wifi</span>
                                                     {rate.board_type && <span className="uppercase text-emerald-400 text-xs font-bold border border-emerald-500/20 px-2 py-0.5 rounded">{rate.board_type}</span>}
                                                 </div>
+
+                                                {/* Go-Live Compliance: Policies & Conditions */}
+                                                <div className="flex flex-wrap gap-2 mb-2">
+                                                    {rate.conditions?.cancellation_deadline ? (
+                                                        <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
+                                                            Free Cancellation until {new Date(rate.conditions.cancellation_deadline).toLocaleDateString()}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-xs text-white/40 bg-white/5 px-2 py-1 rounded border border-white/10">
+                                                            Non-Refundable
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-white/40">
+                                                    {rate.conditions?.check_in_instructions && (
+                                                        <p className="line-clamp-1" title={rate.conditions.check_in_instructions}>
+                                                            Check-in: {rate.conditions.check_in_instructions}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="flex flex-col items-center md:items-end gap-2 shrink-0">
-                                                <div className="text-2xl font-bold text-white">
+                                            <div className="flex flex-col items-center md:items-end gap-1 shrink-0">
+                                                {/* Price Breakdown Tooltip/Display */}
+                                                <div className="text-2xl font-bold text-white leading-none">
                                                     {rate.total_currency} {rate.total_amount}
                                                 </div>
                                                 <span className="text-xs text-white/40">Total for {searchParams?.guests} guests</span>
+
+                                                {/* Tax & Fee Breakdown */}
+                                                {(rate.tax_amount || rate.fee_amount) && (
+                                                    <div className="text-[10px] text-white/30 text-right space-y-0.5 mb-2">
+                                                        {rate.base_amount && <div>Base: {rate.total_currency} {rate.base_amount}</div>}
+                                                        {rate.tax_amount && <div>+ Tax: {rate.total_currency} {rate.tax_amount}</div>}
+                                                        {rate.fee_amount && <div>+ Fees: {rate.total_currency} {rate.fee_amount}</div>}
+                                                        {rate.due_at_accommodation_amount && (
+                                                            <div className="text-orange-400">
+                                                                Due at hotel: {rate.total_currency} {rate.due_at_accommodation_amount}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 <Button
                                                     onClick={() => handleBookRoom(rate)}
                                                     className="w-full md:w-auto px-8 bg-emerald-500 hover:bg-emerald-600 text-black font-bold rounded-xl flex items-center gap-2"
