@@ -156,7 +156,7 @@ export async function createLinkSession(params: {
             success_url: `${appUrl}/trips/success`,
             failure_url: `${appUrl}/trips/failure`,
             abandonment_url: `${appUrl}/`,
-            logo_url: 'https://safar-ai.com/logo.png',
+            logo_url: 'https://safar-ai.co/logo.png',
             primary_color: '#10b981',
             traveller_currency: params.travellerCurrency || 'USD',
             flights: {

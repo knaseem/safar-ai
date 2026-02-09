@@ -43,7 +43,7 @@ export async function POST(request: Request) {
         } = payload
 
         // Extract user from recipient email
-        // Format: {user-token}@import.safar-ai.com
+        // Format: {user-token}@import.safar-ai.co
         const recipientEmail = Array.isArray(to) ? to[0] : to
         const userToken = recipientEmail?.split('@')[0]
 

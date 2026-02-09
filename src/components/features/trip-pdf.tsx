@@ -236,7 +236,7 @@ export const TripPdfDocument = ({ data }: TripPdfProps) => (
             {/* Footer */}
             <View style={styles.footer} fixed>
                 <Text style={styles.footerText}>© 2026 SafarAI. All rights reserved. Confidential Itinerary.</Text>
-                <Text style={styles.brandText}>safar-ai.com</Text>
+                <Text style={styles.brandText}>safar-ai.co</Text>
             </View>
         </Page>
     </Document>

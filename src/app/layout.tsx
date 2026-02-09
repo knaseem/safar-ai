@@ -8,6 +8,7 @@ import { TravelHUD } from "@/components/features/travel-hud";
 import { AmbientSoundProvider } from "@/components/features/ambient-sound-provider";
 import { FloatingChatBubble } from "@/components/features/floating-chat-bubble";
 import { Analytics } from "@/components/analytics";
+import { JsonLd } from "@/components/seo/json-ld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,13 +21,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SafarAI - Your AI Travel Concierge",
-  description: "Experience the world effortlessly with AI-powered personalized travel planning",
+  metadataBase: new URL("https://safar-ai.co"),
+  title: {
+    default: "SafarAI - Your AI Travel Concierge",
+    template: "%s | SafarAI"
+  },
+  description: "Experience the world effortlessly with AI-powered personalized travel planning. Custom itineraries, flight & hotel booking, and 24/7 travel assistance.",
+  keywords: ["AI travel planner", "custom itineraries", "travel concierge", "flight booking", "hotel booking", "vacation planning", "artificial intelligence travel"],
+  authors: [{ name: "SafarAI Team" }],
+  creator: "SafarAI",
+  publisher: "SafarAI",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "SafarAI - Your AI Travel Concierge",
-    description: "Experience the world effortlessly with AI-powered personalized travel planning",
-    url: "https://safar-ai.com",
+    description: "Experience the world effortlessly with AI-powered personalized travel planning. Custom itineraries, flight & hotel booking, and 24/7 travel assistance.",
+    url: "https://safar-ai.co",
     siteName: "SafarAI",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SafarAI - AI Travel Concierge",
+      },
+    ],
     locale: "en_US",
     type: "website",
   },
@@ -34,10 +59,24 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SafarAI - Your AI Travel Concierge",
     description: "Experience the world effortlessly with AI-powered personalized travel planning",
+    creator: "@safarai",
+    images: ["/og-image.jpg"],
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -52,6 +91,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <JsonLd />
         <AuthProvider>
           <AmbientSoundProvider>
             <TravelHUD />
