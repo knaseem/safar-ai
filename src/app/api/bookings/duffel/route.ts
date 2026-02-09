@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getDuffel } from "@/lib/duffel";
 
 // Duffel sends events via POST
-// We need to parse the body and update our database
 export async function POST(request: Request) {
     console.log("🔔 [Webhook] Received Duffel Event");
 
@@ -13,9 +11,6 @@ export async function POST(request: Request) {
         const data = body.data;
 
         console.log(`🔔 [Webhook] Event Type: ${eventType}`, data?.id);
-
-        // Security check (Basic): In production, you should verify the webhook signature header 'x-duffel-signature'
-        // For now, we trust the body structure for MVP.
 
         const supabase = await createClient();
 
@@ -28,20 +23,22 @@ export async function POST(request: Request) {
             if (metadata.source === "safar-ai") {
                 console.log(`✅ [Webhook] Processing Order Created: ${order.id}`);
 
-                // Insert into bookings table
-                // Note: We might have already inserted it on the success page,
-                // so we use upsert (insert or update) to avoid duplicates.
+                // Upsert into 'orders' table
                 const { error } = await supabase
-                    .from("bookings")
+                    .from("orders")
                     .upsert({
                         user_id: metadata.user_id,
                         duffel_order_id: order.id,
-                        type: metadata.type || 'flight', // 'flight' or 'stay'
+                        type: metadata.type || 'flight',
                         status: 'confirmed',
                         total_amount: order.total_amount,
                         currency: order.total_currency,
-                        reference: order.booking_reference || order.reference,
-                        details: order, // Store full JSON for future reference
+                        passengers: order.passengers, // Store full passenger list
+                        metadata: {
+                            ...metadata,
+                            reference: order.booking_reference || order.reference,
+                            source: 'webhook'
+                        },
                         created_at: order.created_at
                     }, { onConflict: 'duffel_order_id' });
 
@@ -52,21 +49,23 @@ export async function POST(request: Request) {
             }
         }
 
-        // Handle Order Changed (e.g. Flight Change or Cancellation)
+        // Handle Order Changed or Cancelled
         else if (eventType === "order.changed" || eventType === "order.cancelled") {
             const order = data;
             console.log(`⚠️ [Webhook] Processing Order Update: ${order.id} -> ${eventType}`);
 
+            // We can't update 'details' (doesn't exist) or merge metadata easily.
+            // Just update status for now.
+            const status = eventType === "order.cancelled" ? 'cancelled' : 'changed';
+
             const { error } = await supabase
-                .from("bookings")
-                .update({
-                    status: eventType === "order.cancelled" ? 'cancelled' : 'changed',
-                    details: order // Update with new details
-                })
+                .from("orders")
+                .update({ status: status })
                 .eq('duffel_order_id', order.id);
 
             if (error) {
                 console.error("❌ [Webhook] Supabase Update Error:", error);
+                return NextResponse.json({ error: "Database error" }, { status: 500 });
             }
         }
 
