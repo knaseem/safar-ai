@@ -1,7 +1,15 @@
 import { MetadataRoute } from "next";
+import { blogPosts } from "@/lib/blog-data";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = "https://safar-ai.co";
+    const baseUrl = "https://www.safar-ai.co";
+
+    const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: new Date(post.date),
+        changeFrequency: "monthly",
+        priority: 0.6,
+    }));
 
     return [
         {
@@ -13,7 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         {
             url: `${baseUrl}/blog`,
             lastModified: new Date(),
-            changeFrequency: "weekly",
+            changeFrequency: "daily",
             priority: 0.8,
         },
         {
@@ -52,5 +60,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: "yearly",
             priority: 0.3,
         },
+        ...blogEntries,
     ];
 }

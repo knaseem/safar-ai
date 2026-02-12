@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: "/",
             disallow: ["/admin/", "/dashboard/", "/profile/", "/checkout/", "/api/"],
         },
-        sitemap: "https://safar-ai.co/sitemap.xml",
+        sitemap: "https://www.safar-ai.co/sitemap.xml",
     };
 }
