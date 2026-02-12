@@ -16,7 +16,7 @@ export const blogPosts: BlogPost[] = [
         title: "Oman Road Trip: The Norway of Arabia",
         excerpt: "Fjords, deserts, and ancient forts. Why Oman is the ultimate self-drive destination for 2026.",
         category: "Destinations",
-        image: "https://images.unsplash.com/photo-1518599808960-966953945ca6?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?q=80&w=2070&auto=format&fit=crop",
         readTime: "10 min",
         date: "2025-01-25",
         featured: true

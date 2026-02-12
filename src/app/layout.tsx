@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://safar-ai.co"),
+  metadataBase: new URL("https://www.safar-ai.co"),
   title: {
     default: "SafarAI - Your AI Travel Concierge",
     template: "%s | SafarAI"
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: "/",
+    canonical: "./",
   },
   openGraph: {
     title: "SafarAI - Your AI Travel Concierge",
