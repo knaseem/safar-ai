@@ -12,27 +12,26 @@ let cachedCount: number | null = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export async function fetchLiveTraffic(): Promise<{ total: number; active: number }> {
+export async function fetchLiveTraffic(): Promise<{ total: number; active: number; topCountries: { country: string; count: number }[] }> {
     const now = Date.now();
 
     // Return cached data if valid
     if (cachedCount !== null && (now - lastFetchTime) < CACHE_DURATION) {
         return {
             total: cachedCount,
-            active: Math.floor(cachedCount * 0.08) // Approx 8% are "active routes" vs just airborne
+            active: Math.floor(cachedCount * 0.08),
+            topCountries: cachedTopCountries
         };
     }
 
     try {
         // Fetch all states (global)
-        // This is a heavy request, returns ~8MB JSON.
-        // We use a shorter timeout to fail fast if network is slow.
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const response = await fetch('https://opensky-network.org/api/states/all', {
             signal: controller.signal,
-            next: { revalidate: 300 } // Next.js server-side caching
+            next: { revalidate: 300 }
         });
 
         clearTimeout(timeoutId);
@@ -42,34 +41,54 @@ export async function fetchLiveTraffic(): Promise<{ total: number; active: numbe
         }
 
         const data = await response.json();
+        const states = data.states || [];
+        const count = states.length;
 
-        // precise count of aircraft with current state vectors
-        // data.states is an array of arrays.
-        const count = data.states ? data.states.length : 0;
+        // Aggregate Countries (Index 2 is origin_country)
+        const countryMap: Record<string, number> = {};
+        states.forEach((state: any[]) => {
+            const country = state[2];
+            if (country) {
+                countryMap[country] = (countryMap[country] || 0) + 1;
+            }
+        });
+
+        const topCountries = Object.entries(countryMap)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5)
+            .map(([country, count]) => ({ country, count }));
 
         // Update cache
         cachedCount = count;
+        cachedTopCountries = topCountries;
         lastFetchTime = now;
 
         return {
             total: count,
-            active: Math.floor(count * 0.08)
+            active: Math.floor(count * 0.08),
+            topCountries
         };
 
     } catch (error) {
         console.warn('⚠️ [OpenSky] Failed to fetch live traffic:', error);
 
-        // Fallback to a realistic "simulation" based on time of day (more flights during day)
-        // This ensures the UI never looks broken.
+        // Simulation Fallback
         const hour = new Date().getUTCHours();
-        // Peak hours (12 PM - 6 PM UTC) -> ~12,000 to ~16,000 flights
-        // Off-peak -> ~8,000 flights
         const isPeak = hour > 10 && hour < 20;
         const simulatedCount = isPeak ? 14500 + Math.floor(Math.random() * 2000) : 8500 + Math.floor(Math.random() * 1500);
 
         return {
-            total: cachedCount || simulatedCount, // Return old cache if exists, else simulation
-            active: Math.floor((cachedCount || simulatedCount) * 0.08)
+            total: cachedCount || simulatedCount,
+            active: Math.floor((cachedCount || simulatedCount) * 0.08),
+            topCountries: cachedTopCountries.length > 0 ? cachedTopCountries : [
+                { country: "United States", count: Math.floor(simulatedCount * 0.3) },
+                { country: "China", count: Math.floor(simulatedCount * 0.15) },
+                { country: "United Kingdom", count: Math.floor(simulatedCount * 0.08) },
+                { country: "Germany", count: Math.floor(simulatedCount * 0.06) },
+                { country: "Canada", count: Math.floor(simulatedCount * 0.05) }
+            ]
         };
     }
 }
+
+let cachedTopCountries: { country: string; count: number }[] = [];
