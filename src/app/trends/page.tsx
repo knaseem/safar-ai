@@ -218,9 +218,11 @@ export default function TrendsPage() {
                             <div className="flex gap-2">
                                 {[
                                     { code: 'DXB', name: 'Dubai' },
-                                    { code: 'DOH', name: 'Doha' },
-                                    { code: 'JED', name: 'Mecca' },
-                                    { code: 'ZNZ', name: 'Zanzibar' }
+                                    { code: 'LHR', name: 'London' },
+                                    { code: 'JFK', name: 'New York' },
+                                    { code: 'CDG', name: 'Paris' },
+                                    { code: 'HND', name: 'Tokyo' },
+                                    { code: 'JED', name: 'Mecca' }
                                 ].map(city => (
                                     <button
                                         key={city.code}
