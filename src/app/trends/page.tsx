@@ -104,14 +104,16 @@ export default function TrendsPage() {
                     </div>
 
                     {/* Global Pulse Card */}
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-3xl p-6 flex flex-col justify-center relative overflow-hidden group">
-                        {/* Live Indicator Pulse */}
-                        <div className="absolute top-4 right-4 flex items-center gap-2">
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">LIVE</span>
+                    <div className="bg-neutral-900/50 border border-white/10 rounded-3xl p-6 flex flex-col justify-center relative group">
+                        {/* Live Indicator Pulse - Scoped overflow */}
+                        <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+                            <div className="absolute top-4 right-4 flex items-center gap-2">
+                                <span className="relative flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                                <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">LIVE</span>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-3 mb-6 relative z-10">
@@ -273,7 +275,7 @@ export default function TrendsPage() {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-neutral-900/50 border border-white/10 rounded-3xl p-8 max-h-[500px] overflow-hidden flex flex-col"
+                        className="bg-neutral-900/50 border border-white/10 rounded-3xl p-8 max-h-[500px] flex flex-col"
                     >
                         <div className="flex items-center gap-3 mb-6 shrink-0">
                             <div className="bg-purple-500/20 p-2 rounded-lg">
