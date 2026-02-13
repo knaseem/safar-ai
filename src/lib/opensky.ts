@@ -55,7 +55,7 @@ export async function fetchLiveTraffic(): Promise<{ total: number; active: numbe
 
         const topCountries = Object.entries(countryMap)
             .sort(([, a], [, b]) => b - a)
-            .slice(0, 5)
+            .slice(0, 10)
             .map(([country, count]) => ({ country, count }));
 
         // Update cache
@@ -85,7 +85,12 @@ export async function fetchLiveTraffic(): Promise<{ total: number; active: numbe
                 { country: "China", count: Math.floor(simulatedCount * 0.15) },
                 { country: "United Kingdom", count: Math.floor(simulatedCount * 0.08) },
                 { country: "Germany", count: Math.floor(simulatedCount * 0.06) },
-                { country: "Canada", count: Math.floor(simulatedCount * 0.05) }
+                { country: "Canada", count: Math.floor(simulatedCount * 0.05) },
+                { country: "France", count: Math.floor(simulatedCount * 0.04) },
+                { country: "Australia", count: Math.floor(simulatedCount * 0.03) },
+                { country: "Brazil", count: Math.floor(simulatedCount * 0.03) },
+                { country: "India", count: Math.floor(simulatedCount * 0.03) },
+                { country: "Japan", count: Math.floor(simulatedCount * 0.02) }
             ]
         };
     }

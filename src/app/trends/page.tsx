@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { getTrendingDestinations, getSeasonalityData, TrendingDestination, SeasonalityData } from "@/lib/trends-data";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function TrendsPage() {
     const router = useRouter();
@@ -159,27 +160,29 @@ export default function TrendsPage() {
                                 {/* Top Countries Leaderboard */}
                                 <div className="space-y-3 pt-4 border-t border-white/10">
                                     <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">Busiest Skies (Live)</h4>
-                                    {liveTraffic?.topCountries ? (
-                                        liveTraffic.topCountries.map((item, i) => (
-                                            <div key={item.country} className="flex items-center justify-between text-xs group">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-4 text-white/20 font-mono">{i + 1}</span>
-                                                    <span className="text-white/80 group-hover:text-emerald-400 transition-colors truncate max-w-[120px]">
-                                                        {item.country || "Intl. Airspace"}
+                                    <div className="max-h-[200px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 space-y-2">
+                                        {liveTraffic?.topCountries ? (
+                                            liveTraffic.topCountries.map((item, i) => (
+                                                <div key={item.country} className="flex items-center justify-between text-xs group">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="w-4 text-white/20 font-mono">{i + 1}</span>
+                                                        <span className="text-white/80 group-hover:text-emerald-400 transition-colors truncate max-w-[120px]">
+                                                            {item.country || "Intl. Airspace"}
+                                                        </span>
+                                                    </div>
+                                                    <span className="font-mono text-white/40 group-hover:text-white transition-colors">
+                                                        {item.count.toLocaleString()}
                                                     </span>
                                                 </div>
-                                                <span className="font-mono text-white/40 group-hover:text-white transition-colors">
-                                                    {item.count.toLocaleString()}
-                                                </span>
+                                            ))
+                                        ) : (
+                                            <div className="flex flex-col gap-2">
+                                                {[1, 2, 3].map(i => (
+                                                    <div key={i} className="h-4 bg-white/5 rounded animate-pulse" />
+                                                ))}
                                             </div>
-                                        ))
-                                    ) : (
-                                        <div className="flex flex-col gap-2">
-                                            {[1, 2, 3].map(i => (
-                                                <div key={i} className="h-4 bg-white/5 rounded animate-pulse" />
-                                            ))}
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -215,23 +218,62 @@ export default function TrendsPage() {
                             </div>
 
                             {/* City Selector */}
-                            <div className="flex gap-2">
-                                {[
-                                    { code: 'DXB', name: 'Dubai' },
-                                    { code: 'LHR', name: 'London' },
-                                    { code: 'JFK', name: 'New York' },
-                                    { code: 'CDG', name: 'Paris' },
-                                    { code: 'HND', name: 'Tokyo' },
-                                    { code: 'JED', name: 'Mecca' }
-                                ].map(city => (
-                                    <button
-                                        key={city.code}
-                                        onClick={() => handleCityChange(city.code, city.name)}
-                                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${selectedCityCode === city.code ? 'bg-white text-black' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
-                                    >
-                                        {city.code}
-                                    </button>
-                                ))}
+                            <div className="w-[180px]">
+                                <Select value={selectedCityCode} onValueChange={(val: string) => {
+                                    const city = [
+                                        { code: 'DXB', name: 'Dubai' },
+                                        { code: 'LHR', name: 'London' },
+                                        { code: 'JFK', name: 'New York' },
+                                        { code: 'CDG', name: 'Paris' },
+                                        { code: 'HND', name: 'Tokyo' },
+                                        { code: 'SIN', name: 'Singapore' },
+                                        { code: 'HKG', name: 'Hong Kong' },
+                                        { code: 'BKK', name: 'Bangkok' },
+                                        { code: 'IST', name: 'Istanbul' },
+                                        { code: 'LAX', name: 'Los Angeles' },
+                                        { code: 'SYD', name: 'Sydney' },
+                                        { code: 'BOM', name: 'Mumbai' },
+                                        { code: 'CPT', name: 'Cape Town' },
+                                        { code: 'GIG', name: 'Rio de Janeiro' },
+                                        { code: 'JED', name: 'Mecca' }
+                                    ].find(c => c.code === val);
+                                    if (city) handleCityChange(city.code, city.name);
+                                }}>
+                                    <SelectTrigger className="w-full bg-white/5 border-white/10 text-white hover:bg-white/10 transition-colors">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold">{selectedCityCode}</span>
+                                            <span className="text-white/40 text-xs truncate max-w-[80px]">{selectedCityName}</span>
+                                        </div>
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[300px] overflow-y-auto border-white/10 bg-neutral-900 text-white">
+                                        {[
+                                            { code: 'DXB', name: 'Dubai' },
+                                            { code: 'LHR', name: 'London' },
+                                            { code: 'JFK', name: 'New York' },
+                                            { code: 'CDG', name: 'Paris' },
+                                            { code: 'HND', name: 'Tokyo' },
+                                            { code: 'SIN', name: 'Singapore' },
+                                            { code: 'HKG', name: 'Hong Kong' },
+                                            { code: 'BKK', name: 'Bangkok' },
+                                            { code: 'IST', name: 'Istanbul' },
+                                            { code: 'DEL', name: 'New Delhi' },
+                                            { code: 'BOM', name: 'Mumbai' },
+                                            { code: 'BLR', name: 'Bangalore' },
+                                            { code: 'MAA', name: 'Chennai' },
+                                            { code: 'HYD', name: 'Hyderabad' },
+                                            { code: 'LAX', name: 'Los Angeles' },
+                                            { code: 'SYD', name: 'Sydney' },
+                                            { code: 'CPT', name: 'Cape Town' },
+                                            { code: 'GIG', name: 'Rio de Janeiro' },
+                                            { code: 'JED', name: 'Mecca' }
+                                        ].map(city => (
+                                            <SelectItem key={city.code} value={city.code} className="hover:bg-white/10 focus:bg-white/10 cursor-pointer">
+                                                <span className="font-bold w-8 inline-block">{city.code}</span>
+                                                <span className="text-white/60 text-xs ml-2">{city.name}</span>
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
