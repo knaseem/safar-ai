@@ -32,6 +32,8 @@ function CheckoutContent() {
 
     const offerId = searchParams.get("offer_id")
     const offerType = searchParams.get("type") || "flight" // flight or stay
+    const insuranceType = searchParams.get("insurance")
+
     const [status, setStatus] = useState("Preparing your secure checkout...")
     const [error, setError] = useState<string | null>(null)
 
@@ -54,6 +56,7 @@ function CheckoutContent() {
                 const destination = searchParams.get('destination')
                 const date = searchParams.get('date')
                 const adults = parseInt(searchParams.get('adults') || '1')
+                const insurance = searchParams.get('insurance') // 'premium' or null
 
                 // 2. Call API to create session
                 const res = await fetch('/api/checkout/session', {
@@ -68,7 +71,8 @@ function CheckoutContent() {
                         origin,
                         destination,
                         date,
-                        adults
+                        adults,
+                        insurance // Pass to backend
                     })
                 })
 

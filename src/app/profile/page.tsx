@@ -249,10 +249,11 @@ export default function ProfilePage() {
                                         </Button>
                                     </div>
                                 ) : (
-                                    bookingList.map((booking) => (
+                                    bookingList.map((booking, i) => (
                                         <UnifiedBookingCard
                                             key={`${booking.source}-${booking.id}`}
                                             booking={booking}
+                                            index={i}
                                             trips={savedTrips.map(t => ({ id: t.id, name: t.trip_name }))}
                                             onUpdate={(updated) => {
                                                 setUnifiedBookings(prev => prev.map(b => b.id === booking.id ? { ...b, ...updated } : b))

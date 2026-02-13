@@ -63,6 +63,10 @@ export async function POST(request: Request) {
                     booking_reference: order.booking_reference,
                     created_at: order.created_at,
                     offer_details: offerDetails,
+                    // Save conditions for policy badges on booking cards
+                    conditions: (order as any).conditions || null,
+                    // Save slice IDs for the change-flight flow
+                    slice_ids: (order as any).slices?.map((s: any) => s.id) || [],
                 },
             })
             .select()

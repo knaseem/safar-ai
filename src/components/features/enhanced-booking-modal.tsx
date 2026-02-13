@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
     X, Plane, Building2, Car, CheckCircle, Sparkles,
     ChevronRight, ChevronLeft, Shield, User, Mail, Phone,
-    BedDouble, Star, Briefcase, Loader2, AlertCircle
+    BedDouble, Star, Briefcase, Loader2, AlertCircle,
+    FileText, Receipt, Download, Filter, Calendar, Ticket, DollarSign, TrendingUp,
+    Search, ChevronDown, Upload, Eye, Armchair, Globe
 } from 'lucide-react'
+import { SeatMap } from "./seat-map"
+import { VisaChecker } from "./visa-checker"
 import { Button } from '@/components/ui/button'
 import { toast } from "sonner"
 import { DateRangePicker } from '@/components/ui/date-range-picker'
@@ -77,6 +81,12 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     const [offerId, setOfferId] = useState<string | null>(null)
     const [destIata, setDestIata] = useState<string | null>(null)
     const [isLivePricing, setIsLivePricing] = useState(false)
+
+    // Modals
+    const [isSeatMapOpen, setIsSeatMapOpen] = useState(false)
+    const [isVisaCheckerOpen, setIsVisaCheckerOpen] = useState(false)
+    // We can use seatPreference to store the selected seat for now, or add a new state
+    const [selectedSeat, setSelectedSeat] = useState<string | null>(null)
 
     // Calculate pricing
     const nights = checkIn && checkOut
@@ -307,6 +317,70 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
     return (
         <>
             <AnimatePresence>
+                {isSeatMapOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setIsSeatMapOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative"
+                        >
+                            <button
+                                onClick={() => setIsSeatMapOpen(false)}
+                                className="absolute -top-4 -right-4 z-10 p-2 bg-white/10 rounded-full hover:bg-white/20 text-white"
+                            >
+                                <X className="size-4" />
+                            </button>
+                            <SeatMap
+                                isOpen={isSeatMapOpen}
+                                onClose={() => setIsSeatMapOpen(false)}
+                                cabinClass={flightClass === 'first' ? 'business' : flightClass as "economy" | "business"}
+                                onSelect={(seat) => {
+                                    setSelectedSeat(`${seat.row}${seat.column}`)
+                                    setIsSeatMapOpen(false)
+                                }}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {isVisaCheckerOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setIsVisaCheckerOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-neutral-900 rounded-3xl border border-white/10 shadow-2xl relative"
+                        >
+                            <button
+                                onClick={() => setIsVisaCheckerOpen(false)}
+                                className="absolute top-4 right-4 z-10 p-2 bg-white/10 rounded-full hover:bg-white/20 text-white"
+                            >
+                                <X className="size-4" />
+                            </button>
+                            <VisaChecker />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -345,7 +419,16 @@ export function EnhancedBookingModal({ tripData, isHalal = false, isOpen, search
                                     <span className="text-xs text-emerald-400 uppercase tracking-wider font-medium">Step 1 of 2</span>
                                 </div>
                                 <h2 className="text-2xl font-bold text-white mb-1">Book Your Trip</h2>
-                                <p className="text-white/50 text-sm mb-6">{tripData.trip_name}</p>
+                                <div className="flex items-center gap-4 mb-6">
+                                    <p className="text-white/50 text-sm">{tripData.trip_name}</p>
+                                    <button
+                                        onClick={() => setIsVisaCheckerOpen(true)}
+                                        className="text-xs flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+                                    >
+                                        <Globe className="size-3" />
+                                        Check Visa
+                                    </button>
+                                </div>
 
                                 {searchError && (
                                     <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-sm flex items-start gap-2">

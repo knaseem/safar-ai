@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CloudSun, DollarSign, Clock, Plane, ShieldCheck, Wifi, Battery } from "lucide-react"
+import { CloudSun, DollarSign, Clock, Plane, ShieldCheck, Wifi, Battery, Radar, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TripCountdown } from "./trip-countdown"
+import { FlightTracker } from "./flight-tracker"
 
 export function TravelHUD() {
     const [currentTime, setCurrentTime] = useState<Date | null>(null)
@@ -12,6 +14,7 @@ export function TravelHUD() {
     const [booking, setBooking] = useState<any>(null)
     const [weatherData, setWeatherData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [isTrackerOpen, setIsTrackerOpen] = useState(false)
 
     // Default to NYC (Home) and Tokyo (Target) until loaded
     const [destination, setDestination] = useState({ name: "Tokyo", timezoneOffset: 9, lat: 35.6762, lng: 139.6503 })
@@ -112,25 +115,38 @@ export function TravelHUD() {
             {/* HUD Container - Vertical Command Pillar */}
             <div className="flex flex-col items-center gap-0 p-1.5 bg-neutral-900/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[8px_0_32px_rgb(0,0,0,0.4)] pointer-events-auto hover:scale-[1.02] transition-transform duration-300">
 
-                {/* Trip Countdown - Square/Pill Shape */}
-                <div className="flex flex-col items-center gap-1 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 group w-full">
-                    <div className="relative">
-                        <Plane className="size-5 text-emerald-400 -rotate-45 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
-                        <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {/* Trip Countdown - Enhanced */}
+                {booking ? (
+                    <div className="w-full flex flex-col gap-2">
+                        <TripCountdown
+                            tripName={booking.trip_name || "Upcoming Trip"}
+                            destination={destination.name}
+                            departureDate={booking.check_in}
+                        />
+                        <button
+                            onClick={() => setIsTrackerOpen(true)}
+                            className="text-[10px] flex items-center justify-center gap-1.5 py-1 text-emerald-400/60 hover:text-emerald-400 transition-colors uppercase font-bold tracking-wider"
+                        >
+                            <Radar className="size-3" />
+                            Track Flight
+                        </button>
                     </div>
-                    <div className="flex flex-col items-center leading-none mt-1">
-                        <span className="text-[8px] uppercase font-bold text-emerald-500/60 tracking-widest mb-0.5">
-                            {booking ? "Next Trip" : "Plan Now"}
-                        </span>
-                        <span className="text-xs font-bold text-emerald-400 tracking-wide">
-                            {booking ? (() => {
-                                const diff = new Date(booking.check_in).getTime() - new Date().getTime()
-                                const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
-                                return `${days} DAYS`
-                            })() : "-- DAYS"}
-                        </span>
+                ) : (
+                    <div className="flex flex-col items-center gap-1 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 group w-full">
+                        <div className="relative">
+                            <Plane className="size-5 text-emerald-400 -rotate-45 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-transform" />
+                            <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        </div>
+                        <div className="flex flex-col items-center leading-none mt-1">
+                            <span className="text-[8px] uppercase font-bold text-emerald-500/60 tracking-widest mb-0.5">
+                                Plan Now
+                            </span>
+                            <span className="text-xs font-bold text-emerald-400 tracking-wide">
+                                -- DAYS
+                            </span>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {/* Horizontal Separator */}
                 <div className="h-px w-8 bg-white/5 my-2" />
@@ -224,6 +240,37 @@ export function TravelHUD() {
                     </div>
                 </div>
             </div>
+            <AnimatePresence>
+                {isTrackerOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+                        onClick={() => setIsTrackerOpen(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0.95 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-4xl"
+                        >
+                            <button
+                                onClick={() => setIsTrackerOpen(false)}
+                                className="absolute -top-10 right-0 text-white/50 hover:text-white"
+                            >
+                                <X className="size-6" />
+                            </button>
+                            <FlightTracker
+                                flightNumber={booking?.details?.flight_number || "EK202"}
+                                isOpen={isTrackerOpen}
+                                onClose={() => setIsTrackerOpen(false)}
+                            />
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     )
 }

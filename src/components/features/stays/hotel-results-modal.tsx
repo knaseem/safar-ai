@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Star, MapPin, Wifi, BedDouble, Users, ArrowRight, Loader2, ArrowUpDown, TrendingDown } from "lucide-react"
+import { X, Star, MapPin, Wifi, BedDouble, Users, ArrowRight, Loader2, ArrowUpDown, TrendingDown, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -203,9 +203,11 @@ export function HotelResultsModal({ isOpen, onClose, results, searchParams, onSe
                                                         <TrendingDown className="size-3" /> Best Price
                                                     </div>
                                                 )}
-                                                {sortBy === 'rating' && index === 0 && (
-                                                    <div className="absolute top-2 left-2 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                                                        <Star className="size-3 fill-current" /> Top Rated
+
+                                                {/* Sustainable Badge (Deterministic Mock) */}
+                                                {(hotel.id?.charCodeAt(0) || 0) % 3 === 0 && (
+                                                    <div className="absolute bottom-2 right-2 bg-emerald-950/90 backdrop-blur-md border border-emerald-500/30 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1.5 shadow-lg">
+                                                        <Leaf className="size-3 fill-emerald-400" /> Eco-Certified
                                                     </div>
                                                 )}
                                             </div>

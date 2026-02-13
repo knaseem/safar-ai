@@ -70,6 +70,14 @@ export interface UnifiedBooking {
         currency?: string
         pnr?: string
         location?: string
+        // Duffel-specific fields for self-service management
+        origin?: string
+        destination?: string
+        duffelOrderId?: string
+        conditions?: {
+            refund_before_departure?: string | null
+            change_before_departure?: string | null
+        }
     }
     actions: {
         canCancel: boolean

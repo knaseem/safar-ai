@@ -11,7 +11,10 @@ export function getDuffel() {
         const accessToken = process.env.DUFFEL_ACCESS_TOKEN;
 
         if (!accessToken) {
-            console.warn('DUFFEL_ACCESS_TOKEN missing. Booking features will use mock data.');
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error("CRITICAL: DUFFEL_ACCESS_TOKEN is missing in Production environment. Booking features disabled.");
+            }
+            console.warn('DUFFEL_ACCESS_TOKEN missing. Booking features will use mock data (DEV MODE ONLY).');
             return null;
         }
 
@@ -142,13 +145,9 @@ export async function createLinkSession(params: {
             && searchCriteria.departure_date;
 
         if (!isValidCriteria) {
-            console.warn("[Duffel Warning] Invalid Search Params (Likely not IATA codes)! Applying Hardcoded Safety Net (LHR->JFK).", searchCriteria);
-            searchCriteria = {
-                origin: 'LHR',
-                destination: 'JFK',
-                departure_date: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0], // 5 days from now
-                passengers: [{ type: 'adult' }]
-            } as any;
+            // STRICT PRODUCTION BEHAVIOR: Throw error for invalid searches
+            console.error("[Duffel Error] Invalid Search Params (Must be IATA codes).", searchCriteria);
+            throw new Error("Invalid search criteria. Origin and Destination must be 3-letter IATA codes.");
         }
 
         const sessionPayload = {
@@ -254,26 +253,41 @@ export async function searchStays(params: {
         const checkIn = new Date(params.checkInDate).toISOString().split('T')[0];
         const checkOut = new Date(params.checkOutDate).toISOString().split('T')[0];
 
-        // Handle location: if it looks like lat,long use coordinates, otherwise mock or radius
-        let location: any = {
-            radius: 5, // Default 5km radius
-            geographic_coordinates: {
-                latitude: 51.5072, // Default London
-                longitude: 0.1276
-            }
-        };
+        // Handle location: Robust Geocoding
+        let location: any = null;
 
+        // 1. Try Lat/Long direct input
         if (params.location.includes(',')) {
             const [lat, lng] = params.location.split(',').map(Number);
             if (!isNaN(lat) && !isNaN(lng)) {
                 location = {
                     radius: 10,
-                    geographic_coordinates: {
-                        latitude: lat,
-                        longitude: lng
-                    }
+                    geographic_coordinates: { latitude: lat, longitude: lng }
                 };
             }
+        }
+
+        // 2. Try City Name Geocoding (via Airport DB)
+        if (!location) {
+            const { getCityCoordinates } = await import('./airports-db');
+            const cityCoords = getCityCoordinates(params.location);
+
+            if (cityCoords) {
+                console.log(`📍 [Geocoding] Resolved "${params.location}" to ${cityCoords.lat}, ${cityCoords.lng}`);
+                location = {
+                    radius: 15, // Wider radius for city center
+                    geographic_coordinates: { latitude: cityCoords.lat, longitude: cityCoords.lng }
+                };
+            }
+        }
+
+        // 3. Fallback (London) - Only for when all else fails (Safe Default)
+        if (!location) {
+            console.warn(`⚠️ [Geocoding] Could not resolve location "${params.location}". Defaulting to London.`);
+            location = {
+                radius: 5,
+                geographic_coordinates: { latitude: 51.5072, longitude: 0.1276 }
+            };
         }
 
         const response = await (duffel as any).stays.search({

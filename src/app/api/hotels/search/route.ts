@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchStays, fetchStayRates } from '@/lib/duffel';
+import { generalRatelimit, isRateLimitEnabled, getRateLimitIdentifier } from '@/lib/ratelimit';
 
 export async function GET(request: NextRequest) {
+    // Rate limiting
+    if (isRateLimitEnabled()) {
+        const identifier = getRateLimitIdentifier(request)
+        const { success, remaining } = await generalRatelimit.limit(identifier)
+        if (!success) {
+            return NextResponse.json(
+                { error: 'Too many search requests. Please wait a moment.' },
+                { status: 429, headers: { 'X-RateLimit-Remaining': remaining.toString() } }
+            )
+        }
+    }
+
     const { searchParams } = new URL(request.url);
 
     const cityCode = searchParams.get('cityCode');

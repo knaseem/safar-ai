@@ -55,6 +55,11 @@ export async function GET(request: Request) {
                     price: order.total_amount?.toString(),
                     currency: order.currency,
                     pnr: order.metadata?.booking_reference,
+                    // Duffel-specific fields for self-service
+                    origin: details.origin,
+                    destination: details.destination,
+                    duffelOrderId: order.duffel_order_id,
+                    conditions: order.metadata?.conditions || undefined,
                 },
                 actions: {
                     canCancel: order.status === 'confirmed',

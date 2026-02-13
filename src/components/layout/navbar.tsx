@@ -5,8 +5,9 @@ import Link from "next/link"
 import { useScroll, useMotionValueEvent, motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Plane, User, LogOut, Map, ChevronDown, Volume2, VolumeX } from "lucide-react"
+import { Plane, User, LogOut, Map, ChevronDown, Volume2, VolumeX, Scan, Receipt } from "lucide-react"
 import { VibeCheck } from "@/components/features/vibe-check"
+import { ARLens } from "@/components/features/ar-lens"
 import { AuthModal } from "@/components/features/auth-modal"
 import { useAuth } from "@/lib/auth-context"
 import { useSound } from "@/components/features/ambient-sound-provider"
@@ -28,6 +29,7 @@ export function Navbar() {
     const { scrollY } = useScroll()
     const [scrolled, setScrolled] = React.useState(false)
     const [isVibeCheckOpen, setIsVibeCheckOpen] = React.useState(false)
+    const [isARLensOpen, setIsARLensOpen] = React.useState(false)
     const [isAuthModalOpen, setIsAuthModalOpen] = React.useState(false)
     const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false)
     const { user, loading, signOut } = useAuth()
@@ -82,6 +84,7 @@ export function Navbar() {
                         <NavLink href="/#membership">Membership</NavLink>
                         <NavLink href="/trends">Trends</NavLink>
                         <NavLink href="/budget">Planning</NavLink>
+                        <NavLink href="/receipts">Receipts</NavLink>
                         <NavLink href="/blog">Blog</NavLink>
                     </nav>
 
@@ -126,6 +129,14 @@ export function Navbar() {
                                                 >
                                                     <Map className="size-4" />
                                                     <span className="text-sm font-medium">My Profile</span>
+                                                </Link>
+                                                <Link
+                                                    href="/receipts"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+                                                >
+                                                    <Receipt className="size-4" />
+                                                    <span className="text-sm font-medium">Receipts</span>
                                                 </Link>
                                                 {/* Mobile Navigation Links */}
                                                 <div className="md:hidden mt-2 pt-2 border-t border-white/10">
@@ -175,6 +186,15 @@ export function Navbar() {
                             {isMuted ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
                         </button>
 
+                        {/* AR Lens Toggle */}
+                        <button
+                            onClick={() => setIsARLensOpen(true)}
+                            className="p-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors"
+                            title="Open AR Lens"
+                        >
+                            <Scan className="size-5" />
+                        </button>
+
                         <Button variant="premium" size="sm" onClick={() => setIsVibeCheckOpen(true)} className="!bg-white !text-black font-bold hover:!bg-gray-100">
                             Find My Travel Vibe
                         </Button>
@@ -184,6 +204,7 @@ export function Navbar() {
 
             <VibeCheck isOpen={isVibeCheckOpen} onClose={() => setIsVibeCheckOpen(false)} />
             <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+            <ARLens isOpen={isARLensOpen} onClose={() => setIsARLensOpen(false)} />
         </>
     )
 }

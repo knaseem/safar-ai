@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Plane, ArrowRight, Clock, Calendar } from "lucide-react"
+import { X, Plane, ArrowRight, Clock, Calendar, Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -145,6 +145,11 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                 // Format Duration (Simple)
                                 const durationClean = duration?.replace("PT", "").toLowerCase() || "Direct";
 
+                                // Mock Emissions Logic (Simple heuristic based on duration length/stops)
+                                const isDirect = offer.slices[0].segments.length === 1;
+                                const co2 = isDirect ? 142 : 188; // roughly kg per person for short/med haul
+                                const isEco = isDirect;
+
                                 return (
                                     <div
                                         key={offer.id}
@@ -238,6 +243,14 @@ export function FlightResultsModal({ isOpen, onClose, results, searchParams }: F
                                                     <span className="text-[10px] text-white/30">Non-Refundable</span>
                                                 )}
                                             </div>
+
+                                            {/* Eco Badge */}
+                                            {isEco && (
+                                                <div className="flex items-center gap-1.5 mb-2 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
+                                                    <Leaf className="size-3 text-emerald-500 fill-current" />
+                                                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Low Emissions</span>
+                                                </div>
+                                            )}
 
                                             <div className="text-2xl font-bold text-white">
                                                 {offer.total_currency} {Math.round(parseFloat(offer.total_amount))}
