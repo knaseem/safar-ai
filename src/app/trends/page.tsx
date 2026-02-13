@@ -98,7 +98,7 @@ export default function TrendsPage() {
                         <div className="relative z-10">
                             <h2 className="text-3xl md:text-5xl font-bold mb-4">The World is Moving.</h2>
                             <p className="text-white/60 max-w-xl text-lg">
-                                Real-time travel intelligence powered by Duffel.
+                                Real-time travel intelligence powered by OpenSky, Duffel, and Amadeus.
                                 Analyze seasonality, discover rising stars, and book at the perfect moment.
                             </p>
                         </div>
