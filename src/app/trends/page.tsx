@@ -16,6 +16,7 @@ export default function TrendsPage() {
     const [selectedCityName, setSelectedCityName] = useState<string>("Dubai");
     const [seasonality, setSeasonality] = useState<SeasonalityData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [liveTraffic, setLiveTraffic] = useState<{ total: number; active: number } | null>(null);
 
     // Initial Data Load
     useEffect(() => {
@@ -24,8 +25,12 @@ export default function TrendsPage() {
             const cities = await getTrendingDestinations();
             setDestinations(cities);
 
-            // Should match the hardcoded buttons for visual consistency or use the API list
-            // For this hybrid approach, we'll try to find the selected city in our data
+            // Live Traffic (OpenSky)
+            import('@/lib/opensky').then(mod => {
+                mod.fetchLiveTraffic().then(data => setLiveTraffic(data));
+            });
+
+            // Seasons
             const defaultData = await getSeasonalityData("DXB");
             setSeasonality(defaultData);
             setIsLoading(false);
@@ -97,28 +102,61 @@ export default function TrendsPage() {
                         </div>
                     </div>
 
-                    <div className="bg-neutral-900/50 border border-white/10 rounded-3xl p-6 flex flex-col justify-center">
-                        <div className="flex items-center gap-3 mb-6">
+                    {/* Global Pulse Card */}
+                    <div className="bg-neutral-900/50 border border-white/10 rounded-3xl p-6 flex flex-col justify-center relative overflow-hidden group">
+                        {/* Live Indicator Pulse */}
+                        <div className="absolute top-4 right-4 flex items-center gap-2">
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">LIVE</span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mb-6 relative z-10">
                             <Globe className="size-6 text-emerald-400" />
                             <h3 className="text-lg font-bold">Global Pulse</h3>
                         </div>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-white/60">Total Flights Tracked</span>
-                                <span className="font-mono text-emerald-400">248,932</span>
+
+                        <div className="space-y-6 relative z-10">
+                            <div>
+                                <div className="flex items-center justify-between text-sm mb-2">
+                                    <span className="text-white/60">Total Flights Airborne</span>
+                                    <span className="font-mono text-2xl font-bold text-white">
+                                        {liveTraffic ? liveTraffic.total.toLocaleString() : "..."}
+                                    </span>
+                                </div>
+                                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className="h-full bg-emerald-500"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: "75%" }}
+                                        transition={{ duration: 1.5, ease: "easeOut" }}
+                                    />
+                                </div>
                             </div>
-                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 w-[75%]" />
+
+                            <div>
+                                <div className="flex items-center justify-between text-sm mb-2">
+                                    <span className="text-white/60">Active Commercial Routes</span>
+                                    <span className="font-mono text-xl font-bold text-blue-400">
+                                        {liveTraffic ? liveTraffic.active.toLocaleString() : "..."}
+                                    </span>
+                                </div>
+                                <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className="h-full bg-blue-500"
+                                        initial={{ width: 0 }}
+                                        animate={{ width: "45%" }}
+                                        transition={{ duration: 1.5, delay: 0.2, ease: "easeOut" }}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-white/60">Active Routes</span>
-                                <span className="font-mono text-emerald-400">12,401</span>
-                            </div>
-                            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 w-[60%]" />
-                            </div>
-                            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-200 mt-4 animate-pulse">
-                                Live Data Stream Active
+
+                            <div className="pt-2">
+                                <p className="text-[10px] text-white/30 text-center uppercase tracking-widest">
+                                    Data Source: OpenSky Network API
+                                </p>
                             </div>
                         </div>
                     </div>

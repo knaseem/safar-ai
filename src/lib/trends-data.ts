@@ -148,22 +148,74 @@ export const getTrendingDestinations = async (): Promise<TrendingDestination[]> 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const getSeasonalityData = async (destinationCode: string): Promise<SeasonalityData[]> => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    // Deterministic "random" based on code char codes to keep charts stable but different per city
+    // 1. Generate Baseline (Simulated) for full year
+    // Deterministic "random" based on code char codes to keep charts stable
     const seed = destinationCode.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-    return MONTHS.map((month, index) => {
-        // Peak season usually Summer (Jun-Aug) or Winter (Dec) depending on logic, let's randomize slightly
+    let chartData = MONTHS.map((month, index) => {
         const baseDemand = 60 + Math.sin((index + seed) * 0.5) * 30;
         const noise = (Math.random() * 10) - 5;
-
         return {
             month,
             demand: Math.max(20, Math.min(100, Math.round(baseDemand + noise))),
             price: Math.round(500 + (baseDemand * 8) + noise * 10),
+            isReal: false
         };
     });
+
+    try {
+        // 2. Probe Real Duffel Prices for next 3 months (Live Trend Injection)
+        // We only do 3 months to save API quota and latency
+        const today = new Date();
+        const probes = [30, 60, 90];
+
+        const realPricePromises = probes.map(async (daysOffset) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() + daysOffset);
+            const dateStr = date.toISOString().split('T')[0];
+            const monthName = date.toLocaleString('default', { month: 'short' });
+
+            try {
+                // Search LHR -> Destination (Standard Probe)
+                const data = await createFlightSearch({
+                    origin: 'LHR',
+                    destination: destinationCode,
+                    departureDate: dateStr,
+                    adults: 1
+                });
+
+                if (data && data.offers && data.offers.length > 0) {
+                    const prices = data.offers.map((o: any) => parseFloat(o.total_amount));
+                    const cheapest = Math.min(...prices);
+                    return { month: monthName, price: cheapest };
+                }
+            } catch (e) {
+                // Ignore errors for individual probes
+            }
+            return null;
+        });
+
+        const realResults = await Promise.all(realPricePromises);
+
+        // 3. Merge Real Data into Chart
+        realResults.forEach(result => {
+            if (result) {
+                const monthIndex = chartData.findIndex(d => d.month === result.month);
+                if (monthIndex !== -1) {
+                    chartData[monthIndex].price = Math.round(result.price);
+                    // Infer demand from price (High Price = High Demand usually)
+                    // Normalize price to 0-100 scale (Assuming $300 is 0, $1500 is 100)
+                    chartData[monthIndex].demand = Math.min(100, Math.max(20, (result.price - 300) / 12));
+                    (chartData[monthIndex] as any).isReal = true;
+                }
+            }
+        });
+
+    } catch (err) {
+        console.warn('Real seasonality probe failed, using baseline only.');
+    }
+
+    return chartData;
 };
 
 export const getAiInsight = (destination: string) => {
