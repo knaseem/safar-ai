@@ -85,3 +85,11 @@ export const SelectItem = ({ value, children, className }: any) => {
         </div>
     )
 }
+
+export const SelectGroup = ({ className, children }: any) => {
+    return <div className={cn("", className)}>{children}</div>
+}
+
+export const SelectLabel = ({ className, children }: any) => {
+    return <div className={cn("px-2 py-1.5 text-sm font-semibold", className)}>{children}</div>
+}

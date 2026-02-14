@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
         const products = await searchProducts(destination.destinationId, {
             startDate: startDate || undefined,
             endDate: endDate || undefined,
-            keyword: category || undefined
+            keyword: category || undefined,
+            mockDestinationName: destination.destinationName
         })
 
         return NextResponse.json({
