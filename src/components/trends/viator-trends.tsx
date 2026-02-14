@@ -71,15 +71,24 @@ export function ViatorTrends({ cityName }: ViatorTrendsProps) {
                     // searchProducts returns MOCK_VIATOR_PRODUCTS (ViatorProduct[]) or real data.
                     // We need to map ViatorProduct to our UI needs.
 
-                    const mapped = data.products.slice(0, 5).map((p: any) => ({
-                        productCode: p.productCode,
-                        title: p.title,
-                        price: { formatted: p.pricing?.summary?.fromPrice ? `$${p.pricing.summary.fromPrice}` : 'Check Price' },
-                        rating: { average: p.reviews?.combinedAverageRating || 0, count: p.reviews?.totalReviews || 0 },
-                        images: p.images?.[0]?.variants?.[0]?.url ? [{ url: p.images[0].variants[0].url }] : [],
-                        duration: p.duration?.fixedDurationInMinutes ? `${Math.round(p.duration.fixedDurationInMinutes / 60)} hours` : 'Flexible',
-                        bookingLink: p.productUrl || '#'
-                    }));
+                    const mapped = data.products.slice(0, 5).map((p: any) => {
+                        // Find largest image variant
+                        let imageUrl = '/placeholder.jpg';
+                        if (p.images?.[0]?.variants?.length) {
+                            const sorted = [...p.images[0].variants].sort((a: any, b: any) => (b.width * b.height) - (a.width * a.height));
+                            imageUrl = sorted[0].url;
+                        }
+
+                        return {
+                            productCode: p.productCode,
+                            title: p.title,
+                            price: { formatted: p.pricing?.summary?.fromPrice ? `$${p.pricing.summary.fromPrice}` : 'Check Price' },
+                            rating: { average: Number(p.reviews?.combinedAverageRating || 0).toFixed(1), count: p.reviews?.totalReviews || 0 },
+                            images: [{ url: imageUrl }],
+                            duration: p.duration?.fixedDurationInMinutes ? `${Math.round(p.duration.fixedDurationInMinutes / 60)} hours` : 'Flexible',
+                            bookingLink: p.productUrl || '#'
+                        };
+                    });
                     setActivities(mapped);
                 }
             } catch (err) {
