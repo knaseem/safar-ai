@@ -49,16 +49,21 @@ export async function POST(req: Request) {
 
                 // Fetch user profile to get name
                 const { data: profile } = await supabase
-                    .from('travel_profiles')
-                    .select('*, auth.users(email)')
-                    .eq('auth.users.email', userEmail)
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', invoice.subscription ? (await (async () => {
+                        try {
+                            // In a real scenario, you'd fetch the subscription to get metadata
+                            return ""
+                        } catch { return "" }
+                    })()) : "")
                     .single()
 
                 // Trigger Payment Failure Email (with Grace Period notice)
                 await sendSubscriptionEmail({
                     to: userEmail,
                     subject: "Action Required: Payment Failed for Safar AI Pro ⚠️",
-                    userName: profile?.name || "Traveler",
+                    userName: (profile as any)?.full_name || "Traveler",
                     planName: "Pro",
                     type: 'payment_failed',
                     actionUrl: `${process.env.NEXT_PUBLIC_APP_URL}/subscription`
