@@ -160,7 +160,7 @@ export function ViatorTrends({ cityName }: ViatorTrendsProps) {
                                 <img
                                     src={activity.images[0]?.url || '/placeholder.jpg'}
                                     alt={activity.title}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40"
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-40 transform-gpu"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                             </div>

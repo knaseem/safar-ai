@@ -126,7 +126,7 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
             count: 3200
         },
         images: [
-            { url: "https://images.unsplash.com/photo-1547234935-80c7142ee969?auto=format&fit=crop&q=80&w=800" }
+            { url: "https://images.unsplash.com/photo-1547234935-80c7142ee969?auto=format&fit=crop&q=90&w=1200" }
         ],
         duration: "6 hours",
         bookingLink: "https://www.viator.com/tours/Dubai/Desert-Safari/d828-7890CD",
@@ -146,7 +146,7 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
             count: 1500
         },
         images: [
-            { url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800" }
+            { url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=90&w=1200" }
         ],
         duration: "8 hours",
         bookingLink: "https://www.viator.com/tours/Tokyo/City-Tour/d334-1234EF",
@@ -320,7 +320,7 @@ export async function searchProducts(destinationId: number | string, options?: a
                 productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
                 pricing: { summary: { fromPrice: 89, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.8, totalReviews: Math.floor(Math.random() * 500) + 100 },
-                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=800", width: 800, height: 600 }] }],
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
                 duration: { fixedDurationInMinutes: 240 },
                 bookingQuestions: []
             },
@@ -331,7 +331,7 @@ export async function searchProducts(destinationId: number | string, options?: a
                 productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
                 pricing: { summary: { fromPrice: 65, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.7, totalReviews: Math.floor(Math.random() * 500) + 50 },
-                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=800", width: 800, height: 600 }] }],
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
                 duration: { fixedDurationInMinutes: 180 },
                 bookingQuestions: []
             },
@@ -342,7 +342,7 @@ export async function searchProducts(destinationId: number | string, options?: a
                 productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
                 pricing: { summary: { fromPrice: 120, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.9, totalReviews: Math.floor(Math.random() * 1000) + 200 },
-                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&q=80&w=800", width: 800, height: 600 }] }],
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
                 duration: { fixedDurationInMinutes: 480 },
                 bookingQuestions: []
             },
@@ -353,7 +353,7 @@ export async function searchProducts(destinationId: number | string, options?: a
                 productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
                 pricing: { summary: { fromPrice: 95, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.6, totalReviews: Math.floor(Math.random() * 300) + 80 },
-                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=80&w=800", width: 800, height: 600 }] }],
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
                 duration: { fixedDurationInMinutes: 240 },
                 bookingQuestions: []
             },
@@ -364,7 +364,7 @@ export async function searchProducts(destinationId: number | string, options?: a
                 productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
                 pricing: { summary: { fromPrice: 55, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.5, totalReviews: Math.floor(Math.random() * 400) + 120 },
-                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1518998053901-5348d3969105?auto=format&fit=crop&q=80&w=800", width: 800, height: 600 }] }],
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1518998053901-5348d3969105?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
                 duration: { fixedDurationInMinutes: 150 },
                 bookingQuestions: []
             }
