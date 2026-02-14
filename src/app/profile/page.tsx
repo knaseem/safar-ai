@@ -31,6 +31,7 @@ interface TravelProfile extends UserProfile {
         [key: string]: unknown
     }
     archetype_scores?: Record<string, number>
+    plan_tier?: string
 }
 
 interface SavedTrip {
@@ -166,8 +167,16 @@ export default function ProfilePage() {
                                     <h1 className="text-3xl font-bold text-white mb-1">
                                         {profile?.full_name || user?.email?.split('@')[0]}
                                     </h1>
-                                    <p className="text-white/40 font-mono text-sm tracking-widest uppercase">
+                                    <p className="text-white/40 font-mono text-sm tracking-widest uppercase flex items-center gap-3">
                                         Agent ID: {user?.id?.slice(0, 8)}
+                                        <span className={cn(
+                                            "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border",
+                                            profile?.plan_tier === 'pro'
+                                                ? "bg-gradient-to-r from-yellow-400 to-amber-600 text-black border-yellow-400"
+                                                : "bg-white/5 text-white/40 border-white/10"
+                                        )}>
+                                            {profile?.plan_tier || 'Free'} Subscription
+                                        </span>
                                     </p>
                                 </div>
                             </div>

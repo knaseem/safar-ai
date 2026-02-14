@@ -1,5 +1,7 @@
 "use client"
 
+import { createClient } from "@/lib/supabase/client"
+
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane, Save, Send, Map as MapIcon } from "lucide-react"
@@ -98,6 +100,29 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     const [isShareModalOpen, setIsShareModalOpen] = useState(false)
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
     const [isPresenting, setIsPresenting] = useState(false)
+    const [plan, setPlan] = useState<{ hasAudioConcierge: boolean }>({ hasAudioConcierge: false })
+    const { user } = useAuth()
+    const supabase = createClient()
+
+    useEffect(() => {
+        if (user) {
+            const fetchPlan = async () => {
+                const { data: profile } = await supabase
+                    .from('travel_profiles')
+                    .select('plan_tier')
+                    .eq('user_id', user.id)
+                    .single()
+
+                if (profile) {
+                    const tier = profile.plan_tier || 'free'
+                    setPlan({
+                        hasAudioConcierge: tier === 'pro'
+                    })
+                }
+            }
+            fetchPlan()
+        }
+    }, [user])
     const [isSaving, setIsSaving] = useState(false)
     const [isPortalOpen, setIsPortalOpen] = useState(false)
     const [portalUrl, setPortalUrl] = useState<string | null>(null)
@@ -173,7 +198,6 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
     const [isMounted, setIsMounted] = useState(false)
     const dayRefs = useRef<(HTMLDivElement | null)[]>([])
-    const { user } = useAuth()
     const { setTheme } = useSound()
     const router = useRouter()
     const locations = data.days.map(d => d.coordinates)
@@ -244,7 +268,16 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     toast.info("Trip already saved", { description: "Check your dashboard" })
                     setIsSaved(true)
                 } else if (res.status === 403) {
-                    toast.error("Trip limit reached", { description: "Delete some trips to save new ones" })
+                    const errorMsg = result.code === 'LIMIT_REACHED'
+                        ? "Trip limit reached. Upgrade to Pro for unlimited saves."
+                        : "Trip limit reached. Delete some trips to save new ones."
+                    toast.error("Limit Reached", {
+                        description: errorMsg,
+                        action: {
+                            label: "Upgrade",
+                            onClick: () => router.push('/pricing')
+                        }
+                    })
                 } else {
                     throw new Error(result.error)
                 }
@@ -366,9 +399,35 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 <div className="relative group/tooltip">
                                     <button
                                         onClick={async () => {
-                                            const blob = await pdf(<TripPdfDocument data={displayData} />).toBlob()
-                                            const url = URL.createObjectURL(blob)
-                                            window.open(url, '_blank')
+                                            try {
+                                                const trackRes = await fetch('/api/usage/track', {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({ event: 'pdf_export' })
+                                                })
+
+                                                if (!trackRes.ok) {
+                                                    const error = await trackRes.json()
+                                                    if (trackRes.status === 403) {
+                                                        toast.error("Download Limit Reached", {
+                                                            description: "Upgrade to Pro for unlimited PDF exports.",
+                                                            action: {
+                                                                label: "Upgrade",
+                                                                onClick: () => router.push('/subscription')
+                                                            }
+                                                        })
+                                                        return
+                                                    }
+                                                    throw new Error(error.error)
+                                                }
+
+                                                const blob = await pdf(<TripPdfDocument data={displayData} />).toBlob()
+                                                const url = URL.createObjectURL(blob)
+                                                window.open(url, '_blank')
+                                                toast.success("PDF Generated")
+                                            } catch (err) {
+                                                console.error("PDF generation error:", err)
+                                                toast.error("Failed to generate PDF")
+                                            }
                                         }}
                                         className="hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
                                     >
@@ -668,6 +727,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
                 tripData={displayData}
+                plan={plan}
             />
 
             {savedTripId && (

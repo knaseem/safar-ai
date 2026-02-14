@@ -81,7 +81,7 @@ export function Navbar() {
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-white/70">
                         <NavLink href="/#destinations">Destinations</NavLink>
                         <NavLink href="/#experience">The Experience</NavLink>
-                        <NavLink href="/#membership">Membership</NavLink>
+                        <NavLink href="/subscription">Subscription</NavLink>
                         <NavLink href="/trends">Trends</NavLink>
                         <NavLink href="/budget">Planning</NavLink>
                         <NavLink href="/receipts">Receipts</NavLink>
@@ -140,8 +140,8 @@ export function Navbar() {
                                                 </Link>
                                                 {/* Mobile Navigation Links */}
                                                 <div className="md:hidden mt-2 pt-2 border-t border-white/10">
-                                                    <Link href="/#membership" onClick={() => setIsUserMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-colors text-sm font-medium">
-                                                        Membership
+                                                    <Link href="/subscription" onClick={() => setIsUserMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-colors text-sm font-medium">
+                                                        Subscription
                                                     </Link>
                                                     <Link href="/budget" onClick={() => setIsUserMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-colors text-sm font-medium">
                                                         Budget

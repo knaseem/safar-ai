@@ -1,10 +1,28 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@/lib/supabase/server";
+import { chatRatelimit, isRateLimitEnabled } from "@/lib/ratelimit";
 import { NextResponse } from "next/server";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        // Rate limiting check
+        if (isRateLimitEnabled()) {
+            const identifier = user ? `user:${user.id}` : 'anonymous';
+            const { success } = await chatRatelimit.limit(identifier);
+
+            if (!success) {
+                return NextResponse.json(
+                    { error: "Concierge is busy. Please wait a moment." },
+                    { status: 429 }
+                );
+            }
+        }
+
         const { messages, tripContext } = await req.json();
 
         const systemPrompt = `

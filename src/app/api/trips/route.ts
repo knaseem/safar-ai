@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
-const MAX_FREE_TRIPS = Number(process.env.MAX_FREE_TRIPS) || 10
+import { checkTripLimit } from "@/lib/user-plan"
 
 // GET: Fetch user's saved trips
 export async function GET() {
@@ -38,15 +38,13 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        // Check trip limit
-        const { count } = await supabase
-            .from("saved_trips")
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", user.id)
+        // Check trip limit using dynamic plan-based utility
+        const { allowed, count, limit } = await checkTripLimit(user.id)
 
-        if (count && count >= MAX_FREE_TRIPS) {
+        if (!allowed) {
             return NextResponse.json({
-                error: `Trip limit reached (${MAX_FREE_TRIPS} max)`
+                error: `Trip limit reached (${limit} max). Current: ${count}`,
+                code: 'LIMIT_REACHED'
             }, { status: 403 })
         }
 

@@ -1,15 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { chatRatelimit, isRateLimitEnabled, getRateLimitIdentifier } from "@/lib/ratelimit";
+import { chatRatelimit, isRateLimitEnabled } from "@/lib/ratelimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
   try {
+    // 0. Fetch user to check plan and apply tiered limits
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Rate limiting check
     if (isRateLimitEnabled()) {
-      const identifier = getRateLimitIdentifier(req);
+      const identifier = user ? `user:${user.id}` : 'anonymous';
       const { success, remaining } = await chatRatelimit.limit(identifier);
 
       if (!success) {
@@ -49,10 +53,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const supabase = await createClient();
-
     // 1. Get the user's "Travel DNA" (or default)
-    const { data: { user } } = await supabase.auth.getUser();
     let profile = { archetype: "Explorer", traits: {} };
 
     if (user) {

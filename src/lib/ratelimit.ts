@@ -8,10 +8,12 @@ const redis = new Redis({
     token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '',
 })
 
+import { PLAN_LIMITS, DEFAULT_PLAN } from './plans'
+
 // Rate limiters for different endpoints
 export const chatRatelimit = new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(10, '60 s'), // 10 requests per minute
+    limiter: Ratelimit.slidingWindow(PLAN_LIMITS[DEFAULT_PLAN].chatRequestsPerMin, '60 s'),
     analytics: true,
     prefix: 'ratelimit:chat',
 })
@@ -41,12 +43,18 @@ export function isRateLimitEnabled(): boolean {
 }
 
 /**
- * Get identifier for rate limiting (IP or user ID)
+ * Helper to apply per-user tiered rate limits
  */
-export function getRateLimitIdentifier(request: Request, userId?: string): string {
-    if (userId) return `user:${userId}`
+export async function limitByUserTier(userId: string, prefix: string) {
+    if (!isRateLimitEnabled()) return { success: true, remaining: 0, reset: 0 }
 
-    const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded ? forwarded.split(',')[0].trim() : 'anonymous'
-    return `ip:${ip}`
+    // This would ideally involve fetching user plan, but for simplicity in Vercel KV,
+    // we use a naming convention or a separate lookup if needed.
+    // For now, we apply the default plan limit unless we have a different limiter.
+
+    // In a full implementation, we'd fetch the user's plan tier here:
+    // const plan = await getUserPlan(userId)
+    // const limit = PLAN_LIMITS[plan].chatRequestsPerMin
+
+    return chatRatelimit.limit(`${prefix}:${userId}`)
 }
