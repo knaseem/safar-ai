@@ -111,6 +111,46 @@ export const MOCK_VIATOR_ACTIVITIES: ViatorActivity[] = [
         duration: "1 hour",
         bookingLink: "https://www.viator.com/tours/Paris/Seine-Cruise/d479-3456AB",
         features: ["Instant Confirmation", "Mobile Ticket"]
+    },
+    {
+        productCode: "7890CD",
+        title: "Private Desert Safari in Dubai with BBQ Dinner",
+        description: "Dune bashing, camel riding, and a starry BBQ dinner in the Dubai desert.",
+        price: {
+            amount: 75.00,
+            currency: "USD",
+            formatted: "$75.00"
+        },
+        rating: {
+            average: 4.8,
+            count: 3200
+        },
+        images: [
+            { url: "https://images.unsplash.com/photo-1547234935-80c7142ee969?auto=format&fit=crop&q=80&w=800" }
+        ],
+        duration: "6 hours",
+        bookingLink: "https://www.viator.com/tours/Dubai/Desert-Safari/d828-7890CD",
+        features: ["Hotel Pickup", "Dinner Included"]
+    },
+    {
+        productCode: "1234EF",
+        title: "Tokyo Full-Day Sightseeing Tour - Meiji Shrine & Asakusa",
+        description: "Discover Tokyo's best shrines, temples, and shopping districts in one day.",
+        price: {
+            amount: 110.00,
+            currency: "USD",
+            formatted: "$110.00"
+        },
+        rating: {
+            average: 4.6,
+            count: 1500
+        },
+        images: [
+            { url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800" }
+        ],
+        duration: "8 hours",
+        bookingLink: "https://www.viator.com/tours/Tokyo/City-Tour/d334-1234EF",
+        features: ["English Guide", "Lunch Included"]
     }
 ]
 

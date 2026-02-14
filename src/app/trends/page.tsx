@@ -10,6 +10,7 @@ import { getTrendingDestinations, getSeasonalityData, TrendingDestination, Seaso
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ViatorTrends } from "@/components/trends/viator-trends";
 
 export default function TrendsPage() {
     const router = useRouter();
@@ -367,6 +368,9 @@ export default function TrendsPage() {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* Viator Top Experiences */}
+                <ViatorTrends cityName={selectedCityName} />
 
             </main>
         </div>
