@@ -391,7 +391,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                             {!isShared && (
                                 <div className="ml-1">
-                                    <ConciergeButton tripName={displayData.trip_name} onClick={() => setIsChatOpen(true)} />
+                                    <ConciergeButton onClick={() => setIsChatOpen(true)} />
                                 </div>
                             )}
 
@@ -727,7 +727,6 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 isOpen={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
                 tripData={displayData}
-                plan={plan}
             />
 
             {savedTripId && (

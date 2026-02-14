@@ -43,6 +43,17 @@ export function isRateLimitEnabled(): boolean {
 }
 
 /**
+ * Helper to get rate limit identifier (IP address)
+ */
+export function getRateLimitIdentifier(request: Request): string {
+    const forwarded = request.headers.get('x-forwarded-for')
+    if (forwarded) {
+        return forwarded.split(',')[0].trim()
+    }
+    return '127.0.0.1'
+}
+
+/**
  * Helper to apply per-user tiered rate limits
  */
 export async function limitByUserTier(userId: string, prefix: string) {

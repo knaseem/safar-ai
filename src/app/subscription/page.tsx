@@ -19,11 +19,62 @@ const PLAN_DESCRIPTIONS = {
 
 export default function SubscriptionPage() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
+    const [isLoading, setIsLoading] = useState<string | null>(null)
+
+    const handleUpgrade = async (planId: string) => {
+        if (planId === 'free') return // Already on free
+
+        setIsLoading(planId)
+        try {
+            const res = await fetch("/api/checkout/stripe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    planId,
+                    billingCycle,
+                }),
+            })
+
+            const data = await res.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                throw new Error(data.error || "Failed to create checkout session")
+            }
+        } catch (err: any) {
+            console.error("Checkout error:", err)
+            // In a real app, show a toast here
+        } finally {
+            setIsLoading(null)
+        }
+    }
 
     const prices = {
         free: { monthly: "$0", yearly: "$0" },
-        pro: { monthly: "$29", yearly: "$69.99" }
+        pro: { monthly: "$14.99", yearly: "$69.99" }
     }
+
+    const PLAN_DESCRIPTIONS = {
+        free: "Essential intelligence for the casual explorer.",
+        pro: "The ultimate concierge for elite travelers."
+    }
+
+    const PRO_FEATURES = [
+        "Unlimited Saved Itineraries",
+        "Unlimited PDF Exports",
+        "AI Budgeting & Expense Dashboard",
+        "Priority AI Response Speed",
+        "24/7 Priority Travel Concierge",
+        "Real-time Local Destination Data"
+    ]
+
+    const FREE_FEATURES = [
+        "up to 5 Saved Itineraries",
+        "1 PDF Export per month",
+        "Standard AI Intelligence",
+        "Basic Trip Planning",
+        "Community Support"
+    ]
 
     return (
         <main className="min-h-screen bg-black pt-24 pb-12 px-4 selection:bg-emerald-500/30">
@@ -98,6 +149,7 @@ export default function SubscriptionPage() {
                         const Icon = PLAN_ICONS[tier as keyof typeof PLAN_ICONS]
                         const isPro = tier === 'pro'
                         const price = prices[tier as keyof typeof prices][billingCycle]
+                        const features = isPro ? PRO_FEATURES : FREE_FEATURES
 
                         return (
                             <motion.div
@@ -148,33 +200,27 @@ export default function SubscriptionPage() {
                                     </div>
 
                                     <div className="space-y-4 pt-6 border-t border-white/5">
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <Check className="size-4 text-emerald-500" />
-                                            <span className="text-white/80">{limits.maxTrips === Infinity ? "Unlimited" : `${limits.maxTrips} Saved`} Itineraries</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <Check className="size-4 text-emerald-500" />
-                                            <span className="text-white/80">{limits.maxPdfExports === Infinity ? "Unlimited" : limits.maxPdfExports} PDF Export{limits.maxPdfExports !== 1 ? 's' : ''} /mo</span>
-                                        </div>
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <Check className="size-4 text-emerald-500" />
-                                            <span className="text-white/80">{tier === 'free' ? 'Standard' : 'Hyper-fast'} AI Response Speed</span>
-                                        </div>
-                                        {limits.hasPrioritySupport && (
-                                            <div className="flex items-center gap-3 text-sm">
-                                                <Check className="size-4 text-emerald-400" />
-                                                <span className="text-white font-medium">Priority AI Intelligence</span>
+                                        {features.map((feature, fIdx) => (
+                                            <div key={fIdx} className="flex items-center gap-3 text-sm">
+                                                <Check className={`size-4 ${isPro ? "text-emerald-500" : "text-white/40"}`} />
+                                                <span className={isPro ? "text-white/80" : "text-white/40"}>{feature}</span>
                                             </div>
-                                        )}
+                                        ))}
                                     </div>
 
                                     <Button
+                                        onClick={() => handleUpgrade(tier)}
+                                        disabled={isLoading === tier}
                                         className={`w-full h-12 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${isPro
                                             ? "bg-emerald-500 text-black hover:bg-emerald-400 hover:scale-[1.02] shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                                             : "bg-white/5 text-white hover:bg-white/10"
                                             }`}
                                     >
-                                        {tier === 'free' ? 'Current Plan' : billingCycle === 'yearly' ? 'Claim Founder Offer' : 'Go Pro'}
+                                        {isLoading === tier ? (
+                                            <div className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                        ) : (
+                                            tier === 'free' ? 'Current Plan' : (billingCycle === 'yearly' ? 'Claim Founder Offer' : 'Go Pro')
+                                        )}
                                     </Button>
                                 </div>
 

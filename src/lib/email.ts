@@ -34,6 +34,97 @@ interface BookingEmailParams {
     currency: string;
 }
 
+interface SubscriptionEmailParams {
+    to: string;
+    subject: string;
+    userName: string;
+    planName: string;
+    type: 'renewal_reminder' | 'payment_failed' | 'welcome_pro';
+    amount?: string;
+    currency?: string;
+    expiryDate?: string;
+    actionUrl?: string;
+}
+
+export async function sendSubscriptionEmail(params: SubscriptionEmailParams) {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('[Email] RESEND_API_KEY not configured, skipping subscription email');
+        return { success: false, error: 'Email service not configured' };
+    }
+
+    const isFailure = params.type === 'payment_failed';
+    const isWelcome = params.type === 'welcome_pro';
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${params.subject}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: ${isFailure ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #10b981, #059669)'}; padding: 30px; text-align: center; color: white; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { padding: 30px; line-height: 1.6; color: #374151; }
+        .cta-button { display: inline-block; padding: 14px 28px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 20px; }
+        .footer { background: #f9fafb; padding: 20px 30px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; }
+        .info-box { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>${isFailure ? '⚠️ Action Required' : isWelcome ? '✨ Welcome to Pro!' : '👋 Just a Reminder'}</h1>
+        </div>
+        <div class="content">
+            <p>Hi ${params.userName},</p>
+            
+            ${isFailure ? `
+                <p>We tried to process your subscription payment for your <strong>${params.planName}</strong> plan, but it looks like there was an issue with your card.</p>
+                <div class="info-box">
+                    <p style="margin:0"><strong>Grace Period Active:</strong> Don't worry, we've kept your Pro features active for the next 3 days so you don't lose access to your trips.</p>
+                </div>
+                <p>Please update your payment method to avoid any interruption in service.</p>
+            ` : isWelcome ? `
+                <p>You're officially a <strong>${params.planName}</strong> member! You now have unlimited itineraries, hyper-fast AI, and premium features at your fingertips.</p>
+            ` : `
+                <p>This is a friendly reminder that your <strong>${params.planName}</strong> subscription will renew on <strong>${params.expiryDate}</strong>.</p>
+            `}
+
+            ${params.actionUrl ? `
+                <div style="text-align: center;">
+                    <a href="${params.actionUrl}" class="cta-button">${isFailure ? 'Update Payment Method' : isWelcome ? 'Start Planning' : 'Manage Subscription'}</a>
+                </div>
+            ` : ''}
+
+            <p style="margin-top: 30px;">Best,<br>The Safar AI Team</p>
+        </div>
+        <div class="footer">
+            <p>Safar AI &copy; 2026 | London & Dubai</p>
+            <p><a href="mailto:support@safar-ai.co" style="color: #10b981;">Contact Support</a></p>
+        </div>
+    </div>
+</body>
+</html>
+    `;
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'Safar AI <billing@safar-ai.co>',
+            to: params.to,
+            subject: params.subject,
+            html: emailHtml,
+        });
+
+        if (error) return { success: false, error: error.message };
+        return { success: true, emailId: data?.id };
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+}
+
 export async function sendBookingConfirmationEmail(params: BookingEmailParams) {
     if (!process.env.RESEND_API_KEY) {
         console.warn('[Email] RESEND_API_KEY not configured, skipping email');
