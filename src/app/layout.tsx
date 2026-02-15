@@ -102,11 +102,11 @@ export default function RootLayout({
         <Analytics />
         <Toaster position="top-center" richColors />
         {/* Travelpayouts Verification */}
-        <Script
+        {/* <Script
           id="travelpayouts-verification"
           src="https://emrld.ltd/NDkxNzkw.js?t=491790"
           strategy="afterInteractive"
-        />
+        /> */}
       </body>
     </html>
   );
