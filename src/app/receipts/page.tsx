@@ -151,27 +151,37 @@ export default function ReceiptsPage() {
         })
     }
 
-    const generateSampleData = () => {
-        // defined demo IDs to check against
-        const demoIds = ["demo_1", "demo_2", "demo_3", "demo_4", "demo_5"]
+    const hasDemoData = useMemo(() => receipts.some(r => r.id.startsWith("demo_")), [receipts])
 
-        // Filter out any existing demo data from current receipts to avoid duplicates
-        const existingReceipts = receipts.filter(r => !demoIds.includes(r.id))
+    const toggleDemoData = () => {
+        if (hasDemoData) {
+            // Remove demo data
+            const cleaned = receipts.filter(r => !r.id.startsWith("demo_"))
+            setReceipts(cleaned)
 
-        const samples: ReceiptItem[] = [
-            { id: `demo_1`, type: "flight", title: "Flight to Tokyo (JAL)", amount: 1250.00, currency: "USD", date: new Date(Date.now() - 86400000 * 2).toISOString(), status: "confirmed", reference: "JAL-8821" },
-            { id: `demo_2`, type: "hotel", title: "Ritz Carlton Kyoto", amount: 850.00, currency: "USD", date: new Date(Date.now() - 86400000 * 5).toISOString(), status: "confirmed", reference: "RC-9921" },
-            { id: `demo_3`, type: "activity", title: "Private Tea Ceremony", amount: 150.00, currency: "USD", date: new Date(Date.now() - 86400000 * 4).toISOString(), status: "confirmed", reference: "EXP-112" },
-            { id: `demo_4`, type: "other", title: "Uber to Airport", amount: 45.50, currency: "USD", date: new Date(Date.now() - 86400000 * 1).toISOString(), status: "confirmed", reference: "UBER-X" },
-            { id: `demo_5`, type: "flight", title: "Flight to London (BA)", amount: 920.00, currency: "USD", date: new Date(Date.now() - 86400000 * 15).toISOString(), status: "confirmed", reference: "BA-221" },
-        ]
+            // Update localStorage (keep only manual receipts)
+            const manualOnly = cleaned.filter(r => r.id.startsWith("manual_"))
+            localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+        } else {
+            // Add demo data
+            const demoIds = ["demo_1", "demo_2", "demo_3", "demo_4", "demo_5"]
+            const existingReceipts = receipts.filter(r => !demoIds.includes(r.id))
 
-        const updated = [...existingReceipts, ...samples]
-        setReceipts(updated)
+            const samples: ReceiptItem[] = [
+                { id: `demo_1`, type: "flight", title: "Flight to Tokyo (JAL)", amount: 1250.00, currency: "USD", date: new Date(Date.now() - 86400000 * 2).toISOString(), status: "confirmed", reference: "JAL-8821" },
+                { id: `demo_2`, type: "hotel", title: "Ritz Carlton Kyoto", amount: 850.00, currency: "USD", date: new Date(Date.now() - 86400000 * 5).toISOString(), status: "confirmed", reference: "RC-9921" },
+                { id: `demo_3`, type: "activity", title: "Private Tea Ceremony", amount: 150.00, currency: "USD", date: new Date(Date.now() - 86400000 * 4).toISOString(), status: "confirmed", reference: "EXP-112" },
+                { id: `demo_4`, type: "other", title: "Uber to Airport", amount: 45.50, currency: "USD", date: new Date(Date.now() - 86400000 * 1).toISOString(), status: "confirmed", reference: "UBER-X" },
+                { id: `demo_5`, type: "flight", title: "Flight to London (BA)", amount: 920.00, currency: "USD", date: new Date(Date.now() - 86400000 * 15).toISOString(), status: "confirmed", reference: "BA-221" },
+            ]
 
-        // Persist manual/demo ones
-        const manualOnly = updated.filter(r => r.id.startsWith("manual_") || r.id.startsWith("demo_"))
-        localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+            const updated = [...existingReceipts, ...samples]
+            setReceipts(updated)
+
+            // Persist manual/demo ones
+            const manualOnly = updated.filter(r => r.id.startsWith("manual_") || r.id.startsWith("demo_"))
+            localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+        }
     }
 
     const filteredReceipts = useMemo(() => {
@@ -277,12 +287,26 @@ export default function ReceiptsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                             <Button
-                                onClick={generateSampleData}
+                                onClick={toggleDemoData}
                                 variant="outline"
-                                className="bg-transparent border-white/10 text-white/60 hover:text-white hover:bg-white/5"
+                                className={cn(
+                                    "bg-transparent border-white/10 transition-colors",
+                                    hasDemoData
+                                        ? "text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20"
+                                        : "text-white/60 hover:text-white hover:bg-white/5"
+                                )}
                             >
-                                <Sparkles className="size-4 mr-2" />
-                                Load Demo Data
+                                {hasDemoData ? (
+                                    <>
+                                        <X className="size-4 mr-2" />
+                                        Clear Demo Data
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="size-4 mr-2" />
+                                        Load Demo Data
+                                    </>
+                                )}
                             </Button>
 
                             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
