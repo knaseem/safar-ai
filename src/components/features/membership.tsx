@@ -66,8 +66,9 @@ export function Membership() {
             description: "The ultimate concierge for elite travelers.",
             features: [
                 "Unlimited Itineraries & PDFs",
+                "AI Lens & Visual Search",
+                "Real-time Travel Trends",
                 "AI Budgeting Dashboard",
-                "Hyper-fast AI Response",
                 "Priority Local Concierge",
                 "24/7 Priority Support"
             ],

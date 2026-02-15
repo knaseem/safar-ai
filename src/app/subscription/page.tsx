@@ -62,8 +62,9 @@ export default function SubscriptionPage() {
     const PRO_FEATURES = [
         "Unlimited Saved Itineraries",
         "Unlimited PDF Exports",
+        "AI Lens & Visual Exploration",
+        "Premium Travel Trends Dashboard",
         "AI Budgeting & Expense Dashboard",
-        "Priority AI Response Speed",
         "24/7 Priority Travel Concierge",
         "Real-time Local Destination Data"
     ]
