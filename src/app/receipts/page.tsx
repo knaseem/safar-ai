@@ -266,7 +266,7 @@ export default function ReceiptsPage() {
                         <div>
                             <Button
                                 variant="ghost"
-                                className="pl-0 text-white/40 hover:text-white mb-2"
+                                className="pl-0 text-white/40 hover:text-white hover:bg-transparent mb-2"
                                 onClick={() => window.location.href = '/'}
                             >
                                 <ArrowLeft className="size-4 mr-2" />
