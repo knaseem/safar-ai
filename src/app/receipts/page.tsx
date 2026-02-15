@@ -6,7 +6,7 @@ import {
     FileText, Receipt, Download, Filter, Calendar,
     Plane, Building2, Ticket, DollarSign, TrendingUp,
     Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft, Trash2,
-    Utensils, Car, ShoppingBag, Clapperboard
+    Utensils, Car, ShoppingBag, Clapperboard, MapPin, Bot, Send
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,7 @@ interface ReceiptItem {
     currency: string
     date: string
     reference?: string
+    tripId?: string
     tripName?: string
     status: "confirmed" | "pending" | "cancelled"
 }
@@ -48,6 +49,7 @@ type FilterType = "all" | "flight" | "hotel" | "activity" | "food" | "transport"
 export default function ReceiptsPage() {
     const { user } = useAuth()
     const [receipts, setReceipts] = useState<ReceiptItem[]>([])
+    const [trips, setTrips] = useState<{ id: string; name: string }[]>([])
     const [loading, setLoading] = useState(true)
     const [filter, setFilter] = useState<FilterType>("all")
     const [searchQuery, setSearchQuery] = useState("")
@@ -55,12 +57,19 @@ export default function ReceiptsPage() {
     const [isAddOpen, setIsAddOpen] = useState(false)
     const [isExporting, setIsExporting] = useState(false)
 
+    // AI Query State
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false)
+    const [aiQuery, setAiQuery] = useState("")
+    const [aiResponse, setAiResponse] = useState("")
+    const [isAILoading, setIsAILoading] = useState(false)
+
     // Manual Entry Form State
     const [newItem, setNewItem] = useState({
         title: "",
         amount: "",
         date: new Date().toISOString().split('T')[0],
-        type: "other" as ReceiptItem["type"]
+        type: "other" as ReceiptItem["type"],
+        tripId: "none"
     })
 
     useEffect(() => {
@@ -78,7 +87,19 @@ export default function ReceiptsPage() {
                 .from("booking_requests")
                 .select("*")
                 .eq("user_id", user?.id)
+                .eq("user_id", user?.id)
                 .order("created_at", { ascending: false })
+
+            // 1.5 Fetch trips for dropdown
+            const { data: userTrips } = await supabase
+                .from("saved_trips")
+                .select("id, trip_name")
+                .eq("user_id", user?.id)
+                .order("created_at", { ascending: false })
+
+            if (userTrips) {
+                setTrips(userTrips.map((t: any) => ({ id: t.id, name: t.trip_name })))
+            }
 
             let mappedReceipts: ReceiptItem[] = []
 
@@ -98,17 +119,41 @@ export default function ReceiptsPage() {
                 }))
             }
 
-            // 2. Load manual receipts from localStorage (for demo persistence)
-            // In production, this should be a Supabase table 'expenses'
-            const local = localStorage.getItem(`safar_receipts_${user?.id}`)
-            if (local) {
-                const manualReceipts = JSON.parse(local)
-                mappedReceipts = [...mappedReceipts, ...manualReceipts]
+            // 2. Fetch from expenses (manual persistence)
+            const { data: expenses } = await supabase
+                .from("expenses")
+                .select(`
+                    *,
+                    saved_trips (
+                        trip_name
+                    )
+                `)
+                .eq("user_id", user?.id)
+                .order("date", { ascending: false })
+
+            if (expenses) {
+                const mappedExpenses: ReceiptItem[] = expenses.map((e: any) => ({
+                    id: e.id,
+                    type: e.type,
+                    title: e.title,
+                    amount: e.amount,
+                    currency: e.currency,
+                    date: e.date,
+                    status: e.status,
+                    reference: e.reference || undefined,
+                    tripId: e.trip_id,
+                    tripName: e.saved_trips?.trip_name
+                }))
+                mappedReceipts = [...mappedReceipts, ...mappedExpenses]
             }
+
+            // 3. Check locally for demo data state (optional, or just load what we have)
+            // For this implementation, we'll just show DB + Bookings. 
+            // Demo data is toggled via button.
 
             setReceipts(mappedReceipts)
 
-            // Deduplicate by ID to prevent key collisions from multiple sources (Supabase/LocalStorage)
+            // Deduplicate by ID to prevent key collisions
             const uniqueReceipts = Array.from(new Map(mappedReceipts.map(item => [item.id, item])).values())
             setReceipts(uniqueReceipts)
         } catch (error) {
@@ -118,38 +163,65 @@ export default function ReceiptsPage() {
         }
     }
 
-    const handleAddReceipt = () => {
+    const handleAddReceipt = async () => {
         if (!newItem.title || !newItem.amount) {
             alert("Please fill in both description and amount.")
             return
         }
 
-        const newReceipt: ReceiptItem = {
-            id: `manual_${Date.now()}`,
-            type: newItem.type,
-            title: newItem.title,
-            amount: parseFloat(newItem.amount),
-            currency: "USD",
-            date: newItem.date,
-            status: "confirmed",
-            reference: `MAN-${Math.floor(Math.random() * 10000)}`
+        try {
+            const supabase = createClient()
+            const { data, error } = await supabase
+                .from("expenses")
+                .insert({
+                    user_id: user?.id,
+                    title: newItem.title,
+                    amount: parseFloat(newItem.amount),
+                    date: newItem.date,
+                    type: newItem.type,
+                    trip_id: newItem.tripId === "none" ? null : newItem.tripId,
+                    currency: "USD",
+                    status: "confirmed",
+                    reference: `MAN-${Math.floor(Math.random() * 10000)}`
+                })
+                .select(`
+                    *,
+                    saved_trips (
+                        trip_name
+                    )
+                `)
+                .single()
+
+            if (error) throw error
+
+            if (data) {
+                const newReceipt: ReceiptItem = {
+                    id: data.id,
+                    type: data.type as any,
+                    title: data.title,
+                    amount: data.amount,
+                    currency: data.currency,
+                    date: data.date,
+                    status: data.status as any,
+                    reference: data.reference,
+                    tripId: data.trip_id,
+                    tripName: data.saved_trips?.trip_name
+                }
+                setReceipts([newReceipt, ...receipts])
+            }
+
+            setIsAddOpen(false)
+            setNewItem({
+                title: "",
+                amount: "",
+                date: new Date().toISOString().split('T')[0],
+                type: "other",
+                tripId: "none"
+            })
+        } catch (error) {
+            console.error("Error adding receipt:", error)
+            alert("Failed to save receipt. Please try again.")
         }
-
-        // Save to local state and localStorage
-        const updated = [newReceipt, ...receipts]
-        setReceipts(updated)
-
-        // Filter out only manual ones to save
-        const manualOnly = updated.filter(r => r.id.startsWith("manual_"))
-        localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
-
-        setIsAddOpen(false)
-        setNewItem({
-            title: "",
-            amount: "",
-            date: new Date().toISOString().split('T')[0],
-            type: "other"
-        })
     }
 
     const hasDemoData = useMemo(() => receipts.some(r => r.id.startsWith("demo_")), [receipts])
@@ -159,10 +231,6 @@ export default function ReceiptsPage() {
             // Remove demo data
             const cleaned = receipts.filter(r => !r.id.startsWith("demo_"))
             setReceipts(cleaned)
-
-            // Update localStorage (keep only manual receipts)
-            const manualOnly = cleaned.filter(r => r.id.startsWith("manual_"))
-            localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
         } else {
             // Add demo data
             const demoIds = ["demo_1", "demo_2", "demo_3", "demo_4", "demo_5", "demo_6", "demo_7", "demo_8"]
@@ -182,19 +250,59 @@ export default function ReceiptsPage() {
             const updated = [...existingReceipts, ...samples]
             setReceipts(updated)
 
-            // Persist manual/demo ones
-            const manualOnly = updated.filter(r => r.id.startsWith("manual_") || r.id.startsWith("demo_"))
-            localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+            // Don't persist demo data to DB or LocalStorage for now, just in-memory
         }
     }
 
-    const deleteReceipt = (id: string) => {
+    const deleteReceipt = async (id: string) => {
+        // Optimistically update UI
         const updated = receipts.filter(r => r.id !== id)
         setReceipts(updated)
 
-        // Update localStorage
-        const manualOnly = updated.filter(r => r.id.startsWith("manual_") || r.id.startsWith("demo_"))
-        localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+        if (id.startsWith("demo_")) return
+
+        // Delete from DB if not a demo item
+        try {
+            const supabase = createClient()
+            const { error } = await supabase
+                .from("expenses")
+                .delete()
+                .eq("id", id)
+                .eq("user_id", user?.id)
+
+            if (error) {
+                console.error("Error deleting receipt:", error)
+                // Optionally revert state here if needed
+            }
+        } catch (error) {
+            console.error("Error deleting receipt:", error)
+        }
+    }
+
+    const handleAskAI = async () => {
+        if (!aiQuery.trim()) return
+
+        setIsAILoading(true)
+        setAiResponse("")
+
+        try {
+            const res = await fetch("/api/chat/expenses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: aiQuery }),
+            })
+
+            const data = await res.json()
+
+            if (data.error) throw new Error(data.error)
+
+            setAiResponse(data.text)
+        } catch (error) {
+            console.error("AI Query Error:", error)
+            setAiResponse("Sorry, I couldn't process your request right now. Please try again.")
+        } finally {
+            setIsAILoading(false)
+        }
     }
 
     const filteredReceipts = useMemo(() => {
@@ -328,6 +436,61 @@ export default function ReceiptsPage() {
                                 )}
                             </Button>
 
+                            <Dialog open={isAIModalOpen} onOpenChange={setIsAIModalOpen}>
+                                <DialogTrigger asChild>
+                                    <Button variant="outline" className="bg-white/5 border-emerald-500/30 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-2">
+                                        <Bot className="size-4" />
+                                        Ask AI
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="bg-slate-900 border-white/10 text-white sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle className="flex items-center gap-2">
+                                            <Sparkles className="size-4 text-emerald-400" />
+                                            Ask SafarAI Finance
+                                        </DialogTitle>
+                                        <DialogDescription className="text-white/40">
+                                            Ask questions about your spending, trips, or specific transactions.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4 py-4">
+                                        <div className="h-60 bg-white/5 rounded-xl p-4 overflow-y-auto border border-white/10 text-sm">
+                                            {aiResponse ? (
+                                                <div className="prose prose-invert prose-sm">
+                                                    <p className="whitespace-pre-wrap leading-relaxed">{aiResponse}</p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full text-white/20">
+                                                    <Bot className="size-8 mb-2 opacity-50" />
+                                                    <p className="text-center">"How much did I spend in Japan?"<br />"Show me my top food expenses"</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Ask a question..."
+                                                className="bg-white/5 border-white/10"
+                                                value={aiQuery}
+                                                onChange={(e) => setAiQuery(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handleAskAI()}
+                                            />
+                                            <Button
+                                                onClick={handleAskAI}
+                                                disabled={isAILoading || !aiQuery.trim()}
+                                                size="icon"
+                                                className="bg-emerald-500 hover:bg-emerald-600 shrink-0"
+                                            >
+                                                {isAILoading ? (
+                                                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                ) : (
+                                                    <Send className="size-4" />
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+
                             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
                                 <DialogTrigger asChild>
                                     <Button className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
@@ -391,6 +554,24 @@ export default function ReceiptsPage() {
                                                     <SelectItem value="shopping">Shopping</SelectItem>
                                                     <SelectItem value="entertainment">Entertainment</SelectItem>
                                                     <SelectItem value="other">Other</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label>Link to Trip (Optional)</Label>
+                                            <Select
+                                                value={newItem.tripId}
+                                                onValueChange={(v) => setNewItem({ ...newItem, tripId: v })}
+                                            >
+                                                <SelectTrigger className="bg-white/5 border-white/10">
+                                                    <SelectValue placeholder="Select a trip" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-slate-900 border-white/10 text-white">
+                                                    <SelectItem value="none">No Trip Link</SelectItem>
+                                                    {trips.map(trip => (
+                                                        <SelectItem key={trip.id} value={trip.id}>{trip.name}</SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
@@ -614,7 +795,15 @@ export default function ReceiptsPage() {
                                     {/* Details */}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-white truncate">{receipt.title}</p>
-                                        <div className="flex items-center gap-2 mt-0.5">
+
+                                        {receipt.tripName && (
+                                            <div className="flex items-center gap-1 mt-1 text-[10px] text-emerald-400/80 bg-emerald-500/5 px-1.5 py-0.5 rounded-full w-fit border border-emerald-500/10">
+                                                <MapPin className="size-2.5" />
+                                                {receipt.tripName}
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center gap-2 mt-1">
                                             <span className="text-[10px] text-white/30">
                                                 {new Date(receipt.date).toLocaleDateString("en-US", {
                                                     month: "short", day: "numeric", year: "numeric"
@@ -685,9 +874,10 @@ function StatCard({ icon: Icon, label, value, color }: {
 
 function exportReceipts(receipts: ReceiptItem[]) {
     // 1. Create CSV Content
-    const headers = ["Date", "Type", "Description", "Reference", "Amount", "Currency", "Status"]
+    const headers = ["Date", "Trip", "Type", "Description", "Reference", "Amount", "Currency", "Status"]
     const rows = receipts.map(r => [
         new Date(r.date).toISOString().split("T")[0],
+        r.tripName ? `"${r.tripName.replace(/"/g, '""')}"` : "",
         r.type,
         `"${r.title.replace(/"/g, '""')}"`, // Escape quotes
         r.reference || "",
