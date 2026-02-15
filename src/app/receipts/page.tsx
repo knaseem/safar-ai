@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
     FileText, Receipt, Download, Filter, Calendar,
     Plane, Building2, Ticket, DollarSign, TrendingUp,
-    Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft
+    Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft, Trash2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -184,6 +184,15 @@ export default function ReceiptsPage() {
         }
     }
 
+    const deleteReceipt = (id: string) => {
+        const updated = receipts.filter(r => r.id !== id)
+        setReceipts(updated)
+
+        // Update localStorage
+        const manualOnly = updated.filter(r => r.id.startsWith("manual_") || r.id.startsWith("demo_"))
+        localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
+    }
+
     const filteredReceipts = useMemo(() => {
         let result = receipts
         if (filter !== "all") result = result.filter(r => r.type === filter)
@@ -197,6 +206,8 @@ export default function ReceiptsPage() {
         })
         return result
     }, [receipts, filter, searchQuery, sortBy])
+
+
 
     const totalSpend = useMemo(() =>
         filteredReceipts
@@ -542,8 +553,8 @@ export default function ReceiptsPage() {
                                 ? "Try changing the filter"
                                 : "Start by adding a receipt manually or generate sample data to see how it looks."}
                         </p>
-                        <Button onClick={generateSampleData} variant="outline" className="border-white/10 text-white/60">
-                            Generate Sample Data
+                        <Button onClick={toggleDemoData} variant="outline" className="bg-transparent border-white/10 text-white/60 hover:text-white hover:bg-white/5">
+                            {hasDemoData ? "Clear Sample Data" : "Generate Sample Data"}
                         </Button>
                     </motion.div>
                 ) : (
@@ -595,14 +606,24 @@ export default function ReceiptsPage() {
                                     </span>
 
                                     {/* Amount */}
-                                    <div className="text-right shrink-0">
-                                        <p className={cn(
-                                            "text-lg font-bold font-mono",
-                                            receipt.status === "cancelled" ? "text-white/20 line-through" : "text-white"
-                                        )}>
-                                            ${receipt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </p>
-                                        <p className="text-[9px] text-white/20">{receipt.currency}</p>
+                                    <div className="text-right shrink-0 flex items-center gap-4">
+                                        <div>
+                                            <p className={cn(
+                                                "text-lg font-bold font-mono",
+                                                receipt.status === "cancelled" ? "text-white/20 line-through" : "text-white"
+                                            )}>
+                                                ${receipt.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                            </p>
+                                            <p className="text-[9px] text-white/20">{receipt.currency}</p>
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => deleteReceipt(receipt.id)}
+                                            className="h-8 w-8 text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </Button>
                                     </div>
                                 </motion.div>
                             )
