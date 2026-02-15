@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       - If you can't find the answer in the data, say so clearly.
       - Format currency as USD ($).
       - Keep the tone professional, helpful, and concise.
+      - IMPORTANT: Dates are stored as YYYY-MM-DD. Treat them as the user's local date. DO NOT apply timezone conversions that would shift the date (e.g. 2026-02-14 is February 14th, not 15th).
     `;
 
         // 3. Call Gemini
