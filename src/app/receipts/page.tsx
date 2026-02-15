@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
     FileText, Receipt, Download, Filter, Calendar,
     Plane, Building2, Ticket, DollarSign, TrendingUp,
-    Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft, Trash2
+    Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft, Trash2,
+    Utensils, Car, ShoppingBag, Clapperboard
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -32,7 +33,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 interface ReceiptItem {
     id: string
-    type: "flight" | "hotel" | "activity" | "other"
+    type: "flight" | "hotel" | "activity" | "food" | "transport" | "shopping" | "entertainment" | "other"
     title: string
     amount: number
     currency: string
@@ -42,7 +43,7 @@ interface ReceiptItem {
     status: "confirmed" | "pending" | "cancelled"
 }
 
-type FilterType = "all" | "flight" | "hotel" | "activity" | "other"
+type FilterType = "all" | "flight" | "hotel" | "activity" | "food" | "transport" | "shopping" | "entertainment" | "other"
 
 export default function ReceiptsPage() {
     const { user } = useAuth()
@@ -164,15 +165,18 @@ export default function ReceiptsPage() {
             localStorage.setItem(`safar_receipts_${user?.id}`, JSON.stringify(manualOnly))
         } else {
             // Add demo data
-            const demoIds = ["demo_1", "demo_2", "demo_3", "demo_4", "demo_5"]
+            const demoIds = ["demo_1", "demo_2", "demo_3", "demo_4", "demo_5", "demo_6", "demo_7", "demo_8"]
             const existingReceipts = receipts.filter(r => !demoIds.includes(r.id))
 
             const samples: ReceiptItem[] = [
                 { id: `demo_1`, type: "flight", title: "Flight to Tokyo (JAL)", amount: 1250.00, currency: "USD", date: new Date(Date.now() - 86400000 * 2).toISOString(), status: "confirmed", reference: "JAL-8821" },
                 { id: `demo_2`, type: "hotel", title: "Ritz Carlton Kyoto", amount: 850.00, currency: "USD", date: new Date(Date.now() - 86400000 * 5).toISOString(), status: "confirmed", reference: "RC-9921" },
                 { id: `demo_3`, type: "activity", title: "Private Tea Ceremony", amount: 150.00, currency: "USD", date: new Date(Date.now() - 86400000 * 4).toISOString(), status: "confirmed", reference: "EXP-112" },
-                { id: `demo_4`, type: "other", title: "Uber to Airport", amount: 45.50, currency: "USD", date: new Date(Date.now() - 86400000 * 1).toISOString(), status: "confirmed", reference: "UBER-X" },
-                { id: `demo_5`, type: "flight", title: "Flight to London (BA)", amount: 920.00, currency: "USD", date: new Date(Date.now() - 86400000 * 15).toISOString(), status: "confirmed", reference: "BA-221" },
+                { id: `demo_4`, type: "food", title: "Sushi Dinner at Jiro", amount: 320.00, currency: "USD", date: new Date(Date.now() - 86400000 * 3).toISOString(), status: "confirmed", reference: "FOOD-1" },
+                { id: `demo_5`, type: "transport", title: "Shinkansen to Kyoto", amount: 110.00, currency: "USD", date: new Date(Date.now() - 86400000 * 6).toISOString(), status: "confirmed", reference: "JR-PASS" },
+                { id: `demo_6`, type: "shopping", title: "Ginza Shopping Spree", amount: 450.00, currency: "USD", date: new Date(Date.now() - 86400000 * 1).toISOString(), status: "confirmed", reference: "SHOP-1" },
+                { id: `demo_7`, type: "entertainment", title: "Kabuki Theater", amount: 90.00, currency: "USD", date: new Date(Date.now() - 86400000 * 2).toISOString(), status: "confirmed", reference: "ENT-1" },
+                { id: `demo_8`, type: "other", title: "Sim Card & Wifi", amount: 45.50, currency: "USD", date: new Date(Date.now() - 86400000 * 7).toISOString(), status: "confirmed", reference: "WIFI" },
             ]
 
             const updated = [...existingReceipts, ...samples]
@@ -217,7 +221,7 @@ export default function ReceiptsPage() {
     )
 
     const categoryBreakdown = useMemo(() => {
-        const breakdown = { flight: 0, hotel: 0, activity: 0, other: 0 }
+        const breakdown = { flight: 0, hotel: 0, activity: 0, food: 0, transport: 0, shopping: 0, entertainment: 0, other: 0 }
         receipts.filter(r => r.status !== "cancelled").forEach(r => {
             breakdown[r.type] = (breakdown[r.type] || 0) + r.amount
         })
@@ -253,6 +257,10 @@ export default function ReceiptsPage() {
         flight: { icon: Plane, color: "text-blue-400", bg: "bg-blue-500/10", label: "Flight" },
         hotel: { icon: Building2, color: "text-emerald-400", bg: "bg-emerald-500/10", label: "Hotel" },
         activity: { icon: Ticket, color: "text-purple-400", bg: "bg-purple-500/10", label: "Activity" },
+        food: { icon: Utensils, color: "text-orange-400", bg: "bg-orange-500/10", label: "Food" },
+        transport: { icon: Car, color: "text-indigo-400", bg: "bg-indigo-500/10", label: "Transport" },
+        shopping: { icon: ShoppingBag, color: "text-pink-400", bg: "bg-pink-500/10", label: "Shopping" },
+        entertainment: { icon: Clapperboard, color: "text-yellow-400", bg: "bg-yellow-500/10", label: "Entertainment" },
         other: { icon: Receipt, color: "text-amber-400", bg: "bg-amber-500/10", label: "Other" },
     }
 
@@ -378,6 +386,10 @@ export default function ReceiptsPage() {
                                                     <SelectItem value="flight">Flight</SelectItem>
                                                     <SelectItem value="hotel">Hotel</SelectItem>
                                                     <SelectItem value="activity">Activity</SelectItem>
+                                                    <SelectItem value="food">Food & Dining</SelectItem>
+                                                    <SelectItem value="transport">Transportation</SelectItem>
+                                                    <SelectItem value="shopping">Shopping</SelectItem>
+                                                    <SelectItem value="entertainment">Entertainment</SelectItem>
                                                     <SelectItem value="other">Other</SelectItem>
                                                 </SelectContent>
                                             </Select>
@@ -482,7 +494,31 @@ export default function ReceiptsPage() {
                         icon={Ticket}
                         label="Activities"
                         value={`$${categoryBreakdown.activity.toLocaleString()}`}
-                        color="text-amber-400"
+                        color="text-purple-400"
+                    />
+                    <StatCard
+                        icon={Utensils}
+                        label="Food"
+                        value={`$${categoryBreakdown.food.toLocaleString()}`}
+                        color="text-orange-400"
+                    />
+                    <StatCard
+                        icon={Car}
+                        label="Transport"
+                        value={`$${categoryBreakdown.transport.toLocaleString()}`}
+                        color="text-indigo-400"
+                    />
+                    <StatCard
+                        icon={ShoppingBag}
+                        label="Shopping"
+                        value={`$${categoryBreakdown.shopping.toLocaleString()}`}
+                        color="text-pink-400"
+                    />
+                    <StatCard
+                        icon={Clapperboard}
+                        label="Entertainment"
+                        value={`$${categoryBreakdown.entertainment.toLocaleString()}`}
+                        color="text-yellow-400"
                     />
                 </motion.div>
 
@@ -506,8 +542,8 @@ export default function ReceiptsPage() {
                     </div>
 
                     {/* Category Filter */}
-                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 overflow-x-auto">
-                        {(["all", "flight", "hotel", "activity", "other"] as FilterType[]).map((f) => (
+                    <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1 overflow-x-auto scrollbar-hide">
+                        {(["all", "flight", "hotel", "activity", "food", "transport", "shopping", "entertainment", "other"] as FilterType[]).map((f) => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
