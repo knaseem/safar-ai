@@ -17,8 +17,8 @@ const POPULAR_AIRPORTS = [
     { iataCode: 'IST', name: 'Istanbul Airport', cityName: 'Istanbul' },
 ]
 
-export function TravelpayoutsWidget({ className = '' }: { className?: string }) {
-    const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>('flights')
+export function TravelpayoutsWidget({ className = '', defaultTab = 'flights' }: { className?: string, defaultTab?: 'flights' | 'hotels' }) {
+    const [activeTab, setActiveTab] = useState<'flights' | 'hotels'>(defaultTab)
 
     // FLIGHTS STATE
     const [origin, setOrigin] = useState("") // IATA Code

@@ -8,10 +8,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, Sparkles, Moon, Anchor } from "lucide-react"
 import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
-import { StaysSearchForm } from "./stays/stays-search-form"
-import { HotelResultsModal } from "./stays/hotel-results-modal"
-import { FlightsSearchForm } from "./flights/flights-search-form"
-import { FlightResultsModal } from "./flights/flight-results-modal"
+import { TravelpayoutsWidget } from "./travelpayouts-widget"
 
 // Rotating placeholder suggestions
 const placeholderSuggestions = [
@@ -283,67 +280,7 @@ export function Hero({ initialPrompt }: HeroProps) {
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-    // Stays State
-    const [showHotelResults, setShowHotelResults] = useState(false)
-    const [hotelResults, setHotelResults] = useState<any[]>([])
-    const [searchedParams, setSearchedParams] = useState<any>(null)
-
-    // Flights State
-    const [showFlightResults, setShowFlightResults] = useState(false)
-    const [flightResults, setFlightResults] = useState<any>(null)
-    const [searchedFlightParams, setSearchedFlightParams] = useState<any>(null)
-
     const router = useRouter()
-
-    const handleStaysSearch = async (params: any) => {
-        setLoading(true)
-        setSearchedParams(params)
-
-        try {
-            const res = await fetch('/api/stays/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params)
-            })
-            const data = await res.json()
-
-            if (data.results) {
-                setHotelResults(data.results)
-                setShowHotelResults(true)
-            } else {
-                toast.error("No results found")
-            }
-        } catch (e) {
-            toast.error("Failed to search stays")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleFlightsSearch = async (params: any) => {
-        setLoading(true)
-        setSearchedFlightParams(params)
-
-        try {
-            const res = await fetch('/api/flights/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params)
-            })
-            const data = await res.json()
-
-            if (data.offers) {
-                setFlightResults(data)
-                setShowFlightResults(true)
-            } else {
-                toast.error("No flights found. Try broader dates.")
-            }
-        } catch (e) {
-            toast.error("Failed to search flights")
-        } finally {
-            setLoading(false)
-        }
-    }
 
     // Handle initial prompt from parent
     useEffect(() => {
@@ -740,43 +677,23 @@ export function Hero({ initialPrompt }: HeroProps) {
                     )}
 
                     {mode === 'stays' && (
-                        <div className="w-full flex flex-col items-center mt-4">
-                            <StaysSearchForm
-                                loading={loading}
-                                onSearch={handleStaysSearch}
-                            />
+                        <div className="w-full flex flex-col items-center mt-4 max-w-[1100px] z-30">
+                            <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] w-full">
+                                <TravelpayoutsWidget defaultTab="hotels" />
+                            </div>
                         </div>
                     )}
 
                     {mode === 'flights' && (
-                        <div className="w-full flex flex-col items-center mt-4">
-                            <FlightsSearchForm
-                                loading={loading}
-                                onSearch={handleFlightsSearch}
-                            />
+                        <div className="w-full flex flex-col items-center mt-4 max-w-[1100px] z-30">
+                            <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] w-full">
+                                <TravelpayoutsWidget defaultTab="flights" />
+                            </div>
                         </div>
                     )}
                 </motion.div>
             </div>
 
-            {/* Stays Results Modal */}
-            <HotelResultsModal
-                isOpen={showHotelResults}
-                onClose={() => setShowHotelResults(false)}
-                results={hotelResults}
-                searchParams={searchedParams}
-                onSelectHotel={(id) => {
-                    // Handled inside component
-                }}
-            />
-
-            {/* Flights Results Modal */}
-            <FlightResultsModal
-                isOpen={showFlightResults}
-                onClose={() => setShowFlightResults(false)}
-                results={flightResults}
-                searchParams={searchedFlightParams}
-            />
         </section>
     )
 }
