@@ -565,7 +565,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                             AI Planner
                         </button>
                         <button
-                            onClick={() => setMode('flights')}
+                            onClick={() => router.push('/search')}
                             className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'flights' ? 'bg-sky-500/30 text-sky-50 border-sky-400/50 shadow-[0_0_20px_rgba(14,165,233,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
                             Flights
@@ -577,7 +577,7 @@ export function Hero({ initialPrompt }: HeroProps) {
                             Private Jets
                         </button>
                         <button
-                            onClick={() => setMode('stays')}
+                            onClick={() => router.push('/search')}
                             className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'stays' ? 'bg-emerald-500/30 text-emerald-50 border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
                         >
                             Hotels

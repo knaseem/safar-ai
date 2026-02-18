@@ -102,15 +102,16 @@ export default function RootLayout({
         <Analytics />
         <Toaster position="top-center" richColors />
         {/* Travelpayouts Verification */}
-        {/* Travelpayouts Verification */}
+        {/* Travelpayouts Main White Label Code */}
         <Script
-          id="travelpayouts-verification"
+          id="travelpayouts-main"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `(function() {
                var script = document.createElement("script");
                script.async = true;
-               script.src = 'https://emrld.ltd/NTAwMTM5.js?t=500139';
+               script.type = "module";
+               script.src = "https://tpwidg.com/wl_web/main.js?wl_id=12466";
                document.head.appendChild(script);
              })();`
           }}
