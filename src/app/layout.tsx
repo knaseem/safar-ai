@@ -101,21 +101,7 @@ export default function RootLayout({
         </AuthProvider>
         <Analytics />
         <Toaster position="top-center" richColors />
-        {/* Travelpayouts Verification */}
-        {/* Travelpayouts Main White Label Code */}
-        <Script
-          id="travelpayouts-main"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `(function() {
-               var script = document.createElement("script");
-               script.async = true;
-               script.type = "module";
-               script.src = "https://tpwidg.com/wl_web/main.js?wl_id=12466";
-               document.head.appendChild(script);
-             })();`
-          }}
-        />
+
       </body>
     </html>
   );
