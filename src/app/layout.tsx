@@ -102,11 +102,19 @@ export default function RootLayout({
         <Analytics />
         <Toaster position="top-center" richColors />
         {/* Travelpayouts Verification */}
-        {/* <Script
+        {/* Travelpayouts Verification */}
+        <Script
           id="travelpayouts-verification"
-          src="https://emrld.ltd/NDkxNzkw.js?t=491790"
           strategy="afterInteractive"
-        /> */}
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+               var script = document.createElement("script");
+               script.async = true;
+               script.src = 'https://emrld.ltd/NTAwMTM5.js?t=500139';
+               document.head.appendChild(script);
+             })();`
+          }}
+        />
       </body>
     </html>
   );
