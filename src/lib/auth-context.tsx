@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react"
 import { User, Session } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/client"
+import { toast } from "sonner"
 
 interface AuthContextType {
     user: User | null
@@ -37,6 +38,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setSession(session)
             setUser(session?.user ?? null)
             setLoading(false)
+
+            // Show one-time welcome toast on first sign-in
+            if (_event === "SIGNED_IN" && session?.user) {
+                const welcomeKey = `safar_welcome_shown_${session.user.id}`
+                if (!localStorage.getItem(welcomeKey)) {
+                    localStorage.setItem(welcomeKey, "true")
+                    setTimeout(() => {
+                        toast("🎉 Welcome to SafarAI!", {
+                            description: "Unlock Trends, AI Lens & unlimited itineraries with Pro.",
+                            action: {
+                                label: "Explore Pro →",
+                                onClick: () => window.location.href = "/subscription"
+                            },
+                            duration: 8000,
+                        })
+                    }, 1500)
+                }
+            }
         })
 
         return () => subscription.unsubscribe()

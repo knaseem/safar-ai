@@ -1,20 +1,26 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-import { chatRatelimit, isRateLimitEnabled } from "@/lib/ratelimit";
+import { limitByUserTier, isRateLimitEnabled } from "@/lib/ratelimit";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    // 0. Fetch user to check plan and apply tiered limits
+    // 0. Require authentication
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Rate limiting check
+    if (!user) {
+      return NextResponse.json(
+        { error: "Please sign in to use the AI Planner." },
+        { status: 401 }
+      );
+    }
+
+    // Rate limiting check (per-tier: free=10/min, pro=100/min)
     if (isRateLimitEnabled()) {
-      const identifier = user ? `user:${user.id}` : 'anonymous';
-      const { success, remaining } = await chatRatelimit.limit(identifier);
+      const { success, remaining } = await limitByUserTier(user.id, 'chat');
 
       if (!success) {
         return NextResponse.json(

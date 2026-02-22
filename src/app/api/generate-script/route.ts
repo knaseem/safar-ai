@@ -1,10 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import { NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "")
 
 export async function POST(req: Request) {
     try {
+        const supabase = await createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
         const { dayData, tripName } = await req.json()
 
         if (!process.env.GOOGLE_API_KEY) {

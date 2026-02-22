@@ -59,13 +59,18 @@ export function getRateLimitIdentifier(request: Request): string {
 export async function limitByUserTier(userId: string, prefix: string) {
     if (!isRateLimitEnabled()) return { success: true, remaining: 0, reset: 0 }
 
-    // This would ideally involve fetching user plan, but for simplicity in Vercel KV,
-    // we use a naming convention or a separate lookup if needed.
-    // For now, we apply the default plan limit unless we have a different limiter.
+    // Dynamically import to avoid circular deps on cold start
+    const { getUserPlan } = await import('./user-plan')
+    const plan = await getUserPlan(userId)
+    const limit = PLAN_LIMITS[plan].chatRequestsPerMin
 
-    // In a full implementation, we'd fetch the user's plan tier here:
-    // const plan = await getUserPlan(userId)
-    // const limit = PLAN_LIMITS[plan].chatRequestsPerMin
+    // Create a per-tier rate limiter
+    const tierLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, '60 s'),
+        analytics: true,
+        prefix: `ratelimit:${prefix}:${plan}`,
+    })
 
-    return chatRatelimit.limit(`${prefix}:${userId}`)
+    return tierLimiter.limit(`${prefix}:${userId}`)
 }

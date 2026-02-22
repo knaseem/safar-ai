@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/lib/auth-context";
+import { SubscriptionProvider } from "@/lib/subscription-context";
 import { TravelHUD } from "@/components/features/travel-hud";
 import { AmbientSoundProvider } from "@/components/features/ambient-sound-provider";
 import { FloatingChatBubble } from "@/components/features/floating-chat-bubble";
@@ -93,11 +94,13 @@ export default function RootLayout({
       >
         <JsonLd />
         <AuthProvider>
-          <AmbientSoundProvider>
-            <TravelHUD />
-            {children}
-            <FloatingChatBubble />
-          </AmbientSoundProvider>
+          <SubscriptionProvider>
+            <AmbientSoundProvider>
+              <TravelHUD />
+              {children}
+              <FloatingChatBubble />
+            </AmbientSoundProvider>
+          </SubscriptionProvider>
         </AuthProvider>
         <Analytics />
         <Toaster position="top-center" richColors />

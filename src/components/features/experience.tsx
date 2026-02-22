@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sparkles, Globe, CreditCard, CheckCircle } from "lucide-react"
+import { Sparkles, Globe, CreditCard, CheckCircle, Compass, Anchor } from "lucide-react"
 
 const features = [
     {
@@ -19,7 +19,7 @@ const features = [
     {
         icon: CreditCard,
         title: "3. We Book",
-        description: "Flights, hotels, and dinners reserved instantly. One click, done.",
+        description: "Tours, experiences, and adventures booked instantly. One click, done.",
         color: "text-purple-400"
     }
 ]
@@ -78,12 +78,24 @@ export function Experience() {
                 </div>
 
                 {/* Trust Badges */}
-                <div className="mt-32 pt-16 border-t border-white/10 flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-                    {['Expedia', 'Marriott', 'Emirates', 'Uber'].map((brand) => (
-                        <span key={brand} className="text-xl font-serif text-white/60 font-bold tracking-widest uppercase">
-                            {brand}
-                        </span>
-                    ))}
+                <div className="mt-32 pt-16 border-t border-white/10">
+                    <p className="text-center text-sm uppercase tracking-widest text-white/30 mb-8">Powered By</p>
+                    <div className="flex flex-wrap justify-center gap-16">
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className="flex items-center gap-2 text-white/60 group-hover:text-orange-400 transition-colors">
+                                <Compass className="size-5" />
+                                <span className="text-xl font-bold tracking-widest uppercase">Viator</span>
+                            </div>
+                            <span className="text-xs text-white/30">World-class tours & experiences</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className="flex items-center gap-2 text-white/60 group-hover:text-blue-400 transition-colors">
+                                <Anchor className="size-5" />
+                                <span className="text-xl font-bold tracking-widest uppercase">Searadar</span>
+                            </div>
+                            <span className="text-xs text-white/30">Premium yacht & boat charters</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

@@ -10,11 +10,17 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { toast } from "sonner"
 import { AnimatePresence } from "framer-motion"
-
+import { useSubscription } from "@/lib/subscription-context"
+import { UpgradeOverlay } from "@/components/features/upgrade-overlay"
 
 import { Trip, Budget, TripWithBudget } from "@/lib/types"
 
 export default function BudgetPage() {
+    const { isPro, loading: subLoading } = useSubscription()
+
+    if (!subLoading && !isPro) {
+        return <UpgradeOverlay feature="AI Budget Optimizer" description="Manage spending across all your expeditions with AI-powered financial intelligence and real-time expense tracking." />
+    }
     const [tripsWithBudgets, setTripsWithBudgets] = useState<TripWithBudget[]>([])
     const [loading, setLoading] = useState(true)
     const [expandedTripId, setExpandedTripId] = useState<string | null>(null)

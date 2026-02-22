@@ -11,6 +11,8 @@ import { ARLens } from "@/components/features/ar-lens"
 import { AuthModal } from "@/components/features/auth-modal"
 import { useAuth } from "@/lib/auth-context"
 import { useSound } from "@/components/features/ambient-sound-provider"
+import { useSubscription } from "@/lib/subscription-context"
+import { toast } from "sonner"
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
     return (
@@ -34,6 +36,7 @@ export function Navbar() {
     const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false)
     const { user, loading, signOut } = useAuth()
     const { isMuted, toggleMute } = useSound()
+    const { isPro } = useSubscription()
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         setScrolled(latest > 50)
@@ -188,7 +191,16 @@ export function Navbar() {
 
                         {/* AR Lens Toggle */}
                         <button
-                            onClick={() => setIsARLensOpen(true)}
+                            onClick={() => {
+                                if (!isPro) {
+                                    toast("Pro Feature", {
+                                        description: "AI Lens is available on the Pro plan.",
+                                        action: { label: "Upgrade", onClick: () => window.location.href = "/subscription" }
+                                    })
+                                    return
+                                }
+                                setIsARLensOpen(true)
+                            }}
                             className="p-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/50 transition-colors"
                             title="Open AR Lens"
                         >

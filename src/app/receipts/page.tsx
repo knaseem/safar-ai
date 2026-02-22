@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
+import { AuthModal } from "@/components/features/auth-modal"
 import { createClient } from "@/lib/supabase/client"
 import {
     Dialog,
@@ -372,14 +373,34 @@ export default function ReceiptsPage() {
         other: { icon: Receipt, color: "text-amber-400", bg: "bg-amber-500/10", label: "Other" },
     }
 
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+
     if (!user) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center px-4">
-                <div className="text-center">
-                    <Receipt className="size-12 text-white/20 mx-auto mb-4" />
-                    <h2 className="text-lg font-bold text-white mb-2">Sign in to view receipts</h2>
-                    <p className="text-sm text-white/40">Your travel receipts and invoices appear here</p>
+            <div className="min-h-screen bg-neutral-900 flex items-center justify-center px-4">
+                <div className="text-center max-w-md">
+                    <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/20 flex items-center justify-center mb-8">
+                        <Receipt className="size-8 text-emerald-400" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-white mb-3">Receipts Vault</h2>
+                    <p className="text-white/40 mb-2 text-sm uppercase tracking-widest font-medium">Sign In Required</p>
+                    <p className="text-white/50 text-base mb-8">
+                        Track, visualize, and export your travel expenses all in one place.
+                    </p>
+                    <Button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-bold text-sm hover:opacity-90 transition-opacity shadow-lg shadow-emerald-500/20"
+                    >
+                        <Sparkles className="size-4 mr-2" />
+                        Sign In to Continue
+                    </Button>
+                    <div className="mt-6">
+                        <a href="/" className="text-white/30 text-sm hover:text-white/50 transition-colors">
+                            ← Back to Home
+                        </a>
+                    </div>
                 </div>
+                <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
             </div>
         )
     }

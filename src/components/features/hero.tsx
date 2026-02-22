@@ -8,10 +8,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ArrowRight, Sparkles, Moon, Anchor } from "lucide-react"
 import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
-import { StaysSearchForm } from "./stays/stays-search-form"
-import { HotelResultsModal } from "./stays/hotel-results-modal"
-import { FlightsSearchForm } from "./flights/flights-search-form"
-import { FlightResultsModal } from "./flights/flight-results-modal"
+import { useAuth } from "@/lib/auth-context"
+import { AuthModal } from "./auth-modal"
+
 
 // Rotating placeholder suggestions
 const placeholderSuggestions = [
@@ -134,6 +133,26 @@ const HERO_IMAGES = [
         url: "https://images.unsplash.com/photo-1474181487882-5abf3f0ba6c2?q=80&w=2670&auto=format&fit=crop", // Restored generic Shanghai skyline that works
         location: "Shanghai, China",
         credit: "Edward He"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1504198458649-3128b932f49e?q=80&w=2574&auto=format&fit=crop", // Hot Air Balloons
+        location: "Cappadocia, Turkey",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2668&auto=format&fit=crop", // Safari
+        location: "Maasai Mara, Kenya",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1544148103-0773bf10d330?q=80&w=2670&auto=format&fit=crop", // Scuba/Snorkel
+        location: "Great Barrier Reef, Australia",
+        credit: "Unsplash"
+    },
+    {
+        url: "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=2574&auto=format&fit=crop", // Fine Dining
+        location: "Amalfi Coast, Italy",
+        credit: "Unsplash"
     }
 ]
 
@@ -276,74 +295,18 @@ const JETS_HERO_IMAGES = [
 
 export function Hero({ initialPrompt }: HeroProps) {
     const [isHalal, setIsHalal] = useState(false)
-    const [mode, setMode] = useState<'ai' | 'stays' | 'flights' | 'experiences' | 'yachts' | 'private-jets'>('ai')
+    const [mode, setMode] = useState<'ai' | 'experiences' | 'yachts' | 'private-jets'>('ai')
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [tripData, setTripData] = useState<TripData | null>(null)
     const [placeholderIndex, setPlaceholderIndex] = useState(0)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
-    // Stays State
-    const [showHotelResults, setShowHotelResults] = useState(false)
-    const [hotelResults, setHotelResults] = useState<any[]>([])
-    const [searchedParams, setSearchedParams] = useState<any>(null)
-
-    // Flights State
-    const [showFlightResults, setShowFlightResults] = useState(false)
-    const [flightResults, setFlightResults] = useState<any>(null)
-    const [searchedFlightParams, setSearchedFlightParams] = useState<any>(null)
-
+    const { user } = useAuth()
     const router = useRouter()
 
-    const handleStaysSearch = async (params: any) => {
-        setLoading(true)
-        setSearchedParams(params)
 
-        try {
-            const res = await fetch('/api/stays/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params)
-            })
-            const data = await res.json()
-
-            if (data.results) {
-                setHotelResults(data.results)
-                setShowHotelResults(true)
-            } else {
-                toast.error("No results found")
-            }
-        } catch (e) {
-            toast.error("Failed to search stays")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleFlightsSearch = async (params: any) => {
-        setLoading(true)
-        setSearchedFlightParams(params)
-
-        try {
-            const res = await fetch('/api/flights/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(params)
-            })
-            const data = await res.json()
-
-            if (data.offers) {
-                setFlightResults(data)
-                setShowFlightResults(true)
-            } else {
-                toast.error("No flights found. Try broader dates.")
-            }
-        } catch (e) {
-            toast.error("Failed to search flights")
-        } finally {
-            setLoading(false)
-        }
-    }
 
     // Handle initial prompt from parent
     useEffect(() => {
@@ -396,6 +359,10 @@ export function Hero({ initialPrompt }: HeroProps) {
 
     const handlePlanTrip = async () => {
         if (!input.trim()) return
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
 
         setLoading(true)
         const toastId = toast.loading("Consulting the Neural Net...")
@@ -434,10 +401,18 @@ export function Hero({ initialPrompt }: HeroProps) {
 
     const handleExperiencesSearch = () => {
         if (!input.trim()) return
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
         router.push(`/activities?query=${encodeURIComponent(input)}`)
     }
 
     const handleYachtSearch = () => {
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
         // Searadar Affiliate Link
         // Marker: 698501, TRS: 491790, Campaign: 258
         const marker = process.env.NEXT_PUBLIC_AFFILIATE_ID_SEARADAR_MARKER || "698501"
@@ -454,10 +429,12 @@ export function Hero({ initialPrompt }: HeroProps) {
     }
 
     const handleJetSearch = () => {
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
         // Villiers Private Jet Affiliate Link
-        // Placeholder ID: 57252 (or user provided). Standard entry is usually just home with ID.
-        // We will default to a generic ID until user updates it.
-        const affiliateId = process.env.NEXT_PUBLIC_AFFILIATE_ID_VILLIERS || "57252" // Placeholder / Default
+        const affiliateId = process.env.NEXT_PUBLIC_AFFILIATE_ID_VILLIERS || "57252"
         const finalUrl = `https://www.villiersjets.com/?id=${affiliateId}`
         window.open(finalUrl, '_blank')
     }
@@ -480,304 +457,261 @@ export function Hero({ initialPrompt }: HeroProps) {
     }
 
     return (
-        <section className="relative h-screen min-h-[800px] flex items-center justify-center">
-            {/* Cinematic Background Slider */}
-            <div className="absolute inset-0 z-0 bg-black overflow-hidden">
-                <AnimatePresence mode="popLayout">
+        <>
+            <section className="relative h-screen min-h-[800px] flex items-center justify-center">
+                {/* Cinematic Background Slider */}
+                <div className="absolute inset-0 z-0 bg-black overflow-hidden">
+                    <AnimatePresence mode="popLayout">
+                        <motion.div
+                            key={currentImageIndex}
+                            initial={{ opacity: 0, scale: 1.1 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 1.5, ease: "easeInOut" }} // Crossfade
+                            className="absolute inset-0"
+                        >
+                            {/* Ken Burns Scale Effect */}
+                            <motion.img
+                                src={(activeImages[currentImageIndex] || activeImages[0]).url}
+                                alt={(activeImages[currentImageIndex] || activeImages[0]).location}
+                                initial={{ scale: 0.95 }}
+                                animate={{ scale: 1.00 }}
+                                transition={{ duration: 12, ease: "linear" }}
+                                className="w-full h-full object-cover"
+                                onError={() => {
+                                    // Skip to next image on error
+                                    setCurrentImageIndex((prev) => (prev + 1) % activeImages.length)
+                                }}
+                            />
+                            {/* Location Credit Overlay - Centered */}
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50 text-center">
+                                <span className="text-xs uppercase tracking-[0.2em] font-light border-b border-white/20 pb-1 mb-1">Location</span>
+                                <span className="text-sm font-medium text-white/90">{activeImages[currentImageIndex]?.location || "Unknown"}</span>
+                                <span className="text-[10px] text-white/30">Photo by {activeImages[currentImageIndex]?.credit || "SafarAI"}</span>
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Global Overlay for legibility */}
+                    <div className="absolute inset-0 bg-black/40 z-10" />
+                    <div className={`absolute inset-0 bg-gradient-to-t transition-colors duration-1000 z-10 ${isHalal ? "from-emerald-950/80 via-transparent to-black/20" : "from-black via-transparent to-black/20"
+                        }`} />
+                </div>
+
+                {/* Content */}
+                <div className="relative z-20 container mx-auto px-6 text-center">
                     <motion.div
-                        key={currentImageIndex}
-                        initial={{ opacity: 0, scale: 1.1 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5, ease: "easeInOut" }} // Crossfade
-                        className="absolute inset-0"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="flex flex-col items-center gap-6 w-full max-w-4xl px-4 mx-auto"
                     >
-                        {/* Ken Burns Scale Effect */}
-                        <motion.img
-                            src={(activeImages[currentImageIndex] || activeImages[0]).url}
-                            alt={(activeImages[currentImageIndex] || activeImages[0]).location}
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1.00 }}
-                            transition={{ duration: 12, ease: "linear" }}
-                            className="w-full h-full object-cover"
-                            onError={() => {
-                                // Skip to next image on error
-                                setCurrentImageIndex((prev) => (prev + 1) % activeImages.length)
-                            }}
-                        />
-                        {/* Location Credit Overlay - Centered */}
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50 text-center">
-                            <span className="text-xs uppercase tracking-[0.2em] font-light border-b border-white/20 pb-1 mb-1">Location</span>
-                            <span className="text-sm font-medium text-white/90">{activeImages[currentImageIndex]?.location || "Unknown"}</span>
-                            <span className="text-[10px] text-white/30">Photo by {activeImages[currentImageIndex]?.credit || "SafarAI"}</span>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-medium text-white tracking-wider uppercase mb-4">
+                            <Sparkles className="size-3 text-yellow-400" />
+                            The Future of Travel is Autonomous
                         </div>
+
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white text-center">
+                            Experience the World, <span className={`text-transparent bg-clip-text bg-gradient-to-r italic font-serif transition-all duration-700 ${isHalal
+                                ? "from-emerald-300 to-teal-500"
+                                : "from-sky-300 to-blue-500"
+                                }`}>Effortlessly.</span>
+                        </h1>
+
+                        {/* Halal Toggle - Global */}
+                        <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-2">
+                            <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
+                            <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
+                                Halal Trip Mode
+                            </span>
+                            <Switch
+                                checked={isHalal}
+                                onCheckedChange={setIsHalal}
+                                className="data-[state=checked]:bg-emerald-500"
+                            />
+                        </div>
+
+                        {/* Mode Tabs - Glassmorphism */}
+                        <div className="flex p-1.5 bg-black/20 backdrop-blur-xl rounded-full border border-white/10 mb-8 overflow-x-auto max-w-full shadow-2xl">
+                            <button
+                                onClick={() => {
+                                    setMode('ai')
+                                    setIsHalal(false)
+                                }}
+                                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'ai' ? 'bg-white/20 text-white border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                            >
+                                AI Planner
+                            </button>
+                            <button
+                                onClick={() => setMode('experiences')}
+                                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'experiences' ? 'bg-orange-500/30 text-orange-50 border-orange-400/50 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                            >
+                                Experiences
+                            </button>
+                            <button
+                                onClick={() => setMode('yachts')}
+                                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'yachts' ? 'bg-blue-600/30 text-blue-50 border-blue-400/50 shadow-[0_0_20px_rgba(37,99,235,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                            >
+                                Yachts
+                            </button>
+                            <button
+                                onClick={() => setMode('private-jets')}
+                                className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'private-jets' ? 'bg-indigo-600/30 text-indigo-50 border-indigo-400/50 shadow-[0_0_20px_rgba(79,70,229,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
+                            >
+                                Private Jets
+                            </button>
+                        </div>
+
+                        {mode === 'ai' && (
+                            <>
+                                <p className="text-lg text-white/70 max-w-2xl text-center">
+                                    SafarAI is your personal autonomous concierge. Just say where you want to go.
+                                </p>
+
+                                <div className="w-full max-w-2xl mt-4 flex flex-col items-center gap-4">
+
+
+                                    <div className="relative group w-full">
+                                        <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
+                                            }`}></div>
+                                        <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                            <Sparkles className={`size-5 ${loading ? "animate-spin text-emerald-400" : "text-white/50"}`} />
+                                            <input
+                                                type="text"
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
+                                                disabled={loading}
+                                                placeholder={(isHalal ? halalPlaceholderSuggestions : placeholderSuggestions)[placeholderIndex % (isHalal ? halalPlaceholderSuggestions : placeholderSuggestions).length]}
+                                                className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                                suppressHydrationWarning
+                                            />
+                                            <Button
+                                                id="trigger-search-btn"
+                                                size="lg"
+                                                variant="premium"
+                                                onClick={handlePlanTrip}
+                                                disabled={loading}
+                                                className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""}`}
+                                            >
+                                                <span className="mr-2">{loading ? "Thinking..." : "Go"}</span>
+                                                <ArrowRight className="size-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
+                                </div>
+                            </>
+                        )}
+
+                        {mode === 'experiences' && (
+                            <>
+                                <p className="text-lg text-white/70 max-w-2xl text-center">
+                                    Discover unforgettable tours, attractions, and local experiences.
+                                </p>
+
+                                <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                    <div className="relative group w-full">
+                                        <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-orange-500 to-red-500"></div>
+                                        <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                            <input
+                                                type="text"
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handleExperiencesSearch()}
+                                                placeholder={experienceSuggestions[placeholderIndex % experienceSuggestions.length]}
+                                                className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                            />
+                                            <Button
+                                                size="lg"
+                                                onClick={handleExperiencesSearch}
+                                                className="h-12 px-8 rounded-lg bg-orange-500 hover:bg-orange-600 text-white border-none"
+                                            >
+                                                <span className="mr-2">Explore</span>
+                                                <ArrowRight className="size-4" />
+                                            </Button>
+                                        </div>
+                                        <p className="mt-3 text-xs text-white/40 text-center">Try: "{experienceSuggestions[placeholderIndex % experienceSuggestions.length]}"</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {mode === 'yachts' && (
+                            <>
+                                <p className="text-lg text-white/70 max-w-2xl text-center">
+                                    Rent luxury yachts and catamarans worldwide. Powered by Searadar.
+                                </p>
+
+                                <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                    <div className="relative group w-full">
+                                        <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
+                                        <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                            <Anchor className="size-5 text-blue-400" />
+                                            <input
+                                                type="text"
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handleYachtSearch()}
+                                                placeholder={yachtSuggestions[placeholderIndex % yachtSuggestions.length]}
+                                                className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                            />
+                                            <Button
+                                                size="lg"
+                                                onClick={handleYachtSearch}
+                                                className="h-12 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none"
+                                            >
+                                                <span className="mr-2">Search Yachts</span>
+                                                <ArrowRight className="size-4" />
+                                            </Button>
+                                        </div>
+                                        <p className="mt-3 text-xs text-white/40 text-center">Try: "{yachtSuggestions[placeholderIndex % yachtSuggestions.length]}"</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        {mode === 'private-jets' && (
+                            <>
+                                <p className="text-lg text-white/70 max-w-2xl text-center">
+                                    Access 10,000+ private jets globally. Powered by Villiers.
+                                </p>
+
+                                <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
+                                    <div className="relative group w-full">
+                                        <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+                                        <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
+                                            <div className="size-5 flex items-center justify-center text-indigo-400">✈️</div>
+                                            <input
+                                                type="text"
+                                                value={input} // Villiers often doesn't pre-fill easily, but we keep input for UX
+                                                onChange={(e) => setInput(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && handleJetSearch()}
+                                                placeholder={privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}
+                                                className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
+                                            />
+                                            <Button
+                                                size="lg"
+                                                onClick={handleJetSearch}
+                                                className="h-12 px-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+                                            >
+                                                <span className="mr-2">Find Jets</span>
+                                                <ArrowRight className="size-4" />
+                                            </Button>
+                                        </div>
+                                        <p className="mt-3 text-xs text-white/40 text-center">Try: "{privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}"</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+
+
                     </motion.div>
-                </AnimatePresence>
+                </div>
+            </section>
 
-                {/* Global Overlay for legibility */}
-                <div className="absolute inset-0 bg-black/40 z-10" />
-                <div className={`absolute inset-0 bg-gradient-to-t transition-colors duration-1000 z-10 ${isHalal ? "from-emerald-950/80 via-transparent to-black/20" : "from-black via-transparent to-black/20"
-                    }`} />
-            </div>
-
-            {/* Content */}
-            <div className="relative z-20 container mx-auto px-6 text-center">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="flex flex-col items-center gap-6 w-full max-w-4xl px-4 mx-auto"
-                >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm text-xs font-medium text-white tracking-wider uppercase mb-4">
-                        <Sparkles className="size-3 text-yellow-400" />
-                        The Future of Travel is Autonomous
-                    </div>
-
-                    <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white text-center">
-                        Experience the World, <span className={`text-transparent bg-clip-text bg-gradient-to-r italic font-serif transition-all duration-700 ${isHalal
-                            ? "from-emerald-300 to-teal-500"
-                            : "from-sky-300 to-blue-500"
-                            }`}>Effortlessly.</span>
-                    </h1>
-
-                    {/* Halal Toggle - Global */}
-                    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 mb-2">
-                        <Moon className={`size-4 ${isHalal ? "text-emerald-400 fill-emerald-400" : "text-white/50"}`} />
-                        <span className={`text-sm font-medium transition-colors ${isHalal ? "text-emerald-100" : "text-white/70"}`}>
-                            Halal Trip Mode
-                        </span>
-                        <Switch
-                            checked={isHalal}
-                            onCheckedChange={setIsHalal}
-                            className="data-[state=checked]:bg-emerald-500"
-                        />
-                    </div>
-
-                    {/* Mode Tabs - Glassmorphism */}
-                    <div className="flex p-1.5 bg-black/20 backdrop-blur-xl rounded-full border border-white/10 mb-8 overflow-x-auto max-w-full shadow-2xl">
-                        <button
-                            onClick={() => {
-                                setMode('ai')
-                                setIsHalal(false)
-                            }}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'ai' ? 'bg-white/20 text-white border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            AI Planner
-                        </button>
-                        <button
-                            onClick={() => router.push('/search')}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'flights' ? 'bg-sky-500/30 text-sky-50 border-sky-400/50 shadow-[0_0_20px_rgba(14,165,233,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            Flights
-                        </button>
-                        <button
-                            onClick={() => setMode('private-jets')}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'private-jets' ? 'bg-indigo-600/30 text-indigo-50 border-indigo-400/50 shadow-[0_0_20px_rgba(79,70,229,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            Private Jets
-                        </button>
-                        <button
-                            onClick={() => router.push('/search')}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'stays' ? 'bg-emerald-500/30 text-emerald-50 border-emerald-400/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            Hotels
-                        </button>
-                        <button
-                            onClick={() => setMode('yachts')}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'yachts' ? 'bg-blue-600/30 text-blue-50 border-blue-400/50 shadow-[0_0_20px_rgba(37,99,235,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            Yachts
-                        </button>
-                        <button
-                            onClick={() => setMode('experiences')}
-                            className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 whitespace-nowrap border ${mode === 'experiences' ? 'bg-orange-500/30 text-orange-50 border-orange-400/50 shadow-[0_0_20px_rgba(249,115,22,0.3)]' : 'border-transparent text-white/70 hover:text-white hover:bg-white/10'}`}
-                        >
-                            Experiences
-                        </button>
-                    </div>
-
-                    {mode === 'ai' && (
-                        <>
-                            <p className="text-lg text-white/70 max-w-2xl text-center">
-                                SafarAI is your personal autonomous concierge. Just say where you want to go.
-                            </p>
-
-                            <div className="w-full max-w-2xl mt-4 flex flex-col items-center gap-4">
-
-
-                                <div className="relative group w-full">
-                                    <div className={`absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r ${isHalal ? "from-emerald-500 to-teal-500" : "from-blue-500 to-purple-500"
-                                        }`}></div>
-                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                        <Sparkles className={`size-5 ${loading ? "animate-spin text-emerald-400" : "text-white/50"}`} />
-                                        <input
-                                            type="text"
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handlePlanTrip()}
-                                            disabled={loading}
-                                            placeholder={(isHalal ? halalPlaceholderSuggestions : placeholderSuggestions)[placeholderIndex % (isHalal ? halalPlaceholderSuggestions : placeholderSuggestions).length]}
-                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
-                                            suppressHydrationWarning
-                                        />
-                                        <Button
-                                            id="trigger-search-btn"
-                                            size="lg"
-                                            variant="premium"
-                                            onClick={handlePlanTrip}
-                                            disabled={loading}
-                                            className={`h-12 px-8 rounded-lg ${isHalal ? "bg-emerald-600 hover:bg-emerald-700 text-white border-none" : ""}`}
-                                        >
-                                            <span className="mr-2">{loading ? "Thinking..." : "Go"}</span>
-                                            <ArrowRight className="size-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <p className="mt-3 text-xs text-white/40 text-center">Try: "{isHalal ? "Family trip to Malaysia, alcohol-free hotels" : "10 days in Japan in April, business class"}"</p>
-                            </div>
-                        </>
-                    )}
-
-                    {mode === 'experiences' && (
-                        <>
-                            <p className="text-lg text-white/70 max-w-2xl text-center">
-                                Discover unforgettable tours, attractions, and local experiences.
-                            </p>
-
-                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
-                                <div className="relative group w-full">
-                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-orange-500 to-red-500"></div>
-                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                        <input
-                                            type="text"
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handleExperiencesSearch()}
-                                            placeholder={experienceSuggestions[placeholderIndex % experienceSuggestions.length]}
-                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
-                                        />
-                                        <Button
-                                            size="lg"
-                                            onClick={handleExperiencesSearch}
-                                            className="h-12 px-8 rounded-lg bg-orange-500 hover:bg-orange-600 text-white border-none"
-                                        >
-                                            <span className="mr-2">Explore</span>
-                                            <ArrowRight className="size-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{experienceSuggestions[placeholderIndex % experienceSuggestions.length]}"</p>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {mode === 'yachts' && (
-                        <>
-                            <p className="text-lg text-white/70 max-w-2xl text-center">
-                                Rent luxury yachts and catamarans worldwide. Powered by Searadar.
-                            </p>
-
-                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
-                                <div className="relative group w-full">
-                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-blue-500 to-cyan-500"></div>
-                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                        <Anchor className="size-5 text-blue-400" />
-                                        <input
-                                            type="text"
-                                            value={input}
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handleYachtSearch()}
-                                            placeholder={yachtSuggestions[placeholderIndex % yachtSuggestions.length]}
-                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
-                                        />
-                                        <Button
-                                            size="lg"
-                                            onClick={handleYachtSearch}
-                                            className="h-12 px-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white border-none"
-                                        >
-                                            <span className="mr-2">Search Yachts</span>
-                                            <ArrowRight className="size-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{yachtSuggestions[placeholderIndex % yachtSuggestions.length]}"</p>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {mode === 'private-jets' && (
-                        <>
-                            <p className="text-lg text-white/70 max-w-2xl text-center">
-                                Access 10,000+ private jets globally. Powered by Villiers.
-                            </p>
-
-                            <div className="w-full max-w-xl mt-4 flex flex-col items-center gap-4">
-                                <div className="relative group w-full">
-                                    <div className="absolute -inset-1 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
-                                    <div className="relative flex items-center gap-4 p-2 pl-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl">
-                                        <div className="size-5 flex items-center justify-center text-indigo-400">✈️</div>
-                                        <input
-                                            type="text"
-                                            value={input} // Villiers often doesn't pre-fill easily, but we keep input for UX
-                                            onChange={(e) => setInput(e.target.value)}
-                                            onKeyDown={(e) => e.key === "Enter" && handleJetSearch()}
-                                            placeholder={privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}
-                                            className="flex-1 bg-transparent border-0 outline-none text-white placeholder:text-white/50 text-lg py-3"
-                                        />
-                                        <Button
-                                            size="lg"
-                                            onClick={handleJetSearch}
-                                            className="h-12 px-8 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white border-none"
-                                        >
-                                            <span className="mr-2">Find Jets</span>
-                                            <ArrowRight className="size-4" />
-                                        </Button>
-                                    </div>
-                                    <p className="mt-3 text-xs text-white/40 text-center">Try: "{privateJetSuggestions[placeholderIndex % privateJetSuggestions.length]}"</p>
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {mode === 'stays' && (
-                        <div className="w-full flex flex-col items-center mt-4">
-                            <StaysSearchForm
-                                loading={loading}
-                                onSearch={handleStaysSearch}
-                            />
-                        </div>
-                    )}
-
-                    {mode === 'flights' && (
-                        <div className="w-full flex flex-col items-center mt-4">
-                            <FlightsSearchForm
-                                loading={loading}
-                                onSearch={handleFlightsSearch}
-                            />
-                        </div>
-                    )}
-                </motion.div>
-            </div>
-
-            {/* Stays Results Modal */}
-            <HotelResultsModal
-                isOpen={showHotelResults}
-                onClose={() => setShowHotelResults(false)}
-                results={hotelResults}
-                searchParams={searchedParams}
-                onSelectHotel={(id) => {
-                    // Handled inside component
-                }}
-            />
-
-            {/* Flights Results Modal */}
-            <FlightResultsModal
-                isOpen={showFlightResults}
-                onClose={() => setShowFlightResults(false)}
-                results={flightResults}
-                searchParams={searchedFlightParams}
-            />
-
-        </section>
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+        </>
     )
 }

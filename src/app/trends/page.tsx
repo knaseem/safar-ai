@@ -11,9 +11,16 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { InfoTooltip } from "@/components/ui/info-tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ViatorTrends } from "@/components/trends/viator-trends";
+import { useSubscription } from "@/lib/subscription-context";
+import { UpgradeOverlay } from "@/components/features/upgrade-overlay";
 
 export default function TrendsPage() {
     const router = useRouter();
+    const { isPro, loading: subLoading } = useSubscription();
+
+    if (!subLoading && !isPro) {
+        return <UpgradeOverlay feature="Travel Trends Dashboard" description="Unlock real-time market insights, seasonality curves, and trending destinations powered by live aviation data." />;
+    }
     const [destinations, setDestinations] = useState<TrendingDestination[]>([]);
     const [selectedCityCode, setSelectedCityCode] = useState<string>("DXB");
     const [selectedCityName, setSelectedCityName] = useState<string>("Dubai");

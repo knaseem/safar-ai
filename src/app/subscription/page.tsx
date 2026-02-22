@@ -1,11 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/layout/navbar"
 import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, Sparkles, Zap, Globe, Plane, Rocket } from "lucide-react"
 import { PLAN_LIMITS } from "@/lib/plans"
+import { useAuth } from "@/lib/auth-context"
+import { useSubscription } from "@/lib/subscription-context"
+import { AuthModal } from "@/components/features/auth-modal"
+import { toast } from "sonner"
 
 const PLAN_ICONS = {
     free: Plane,
@@ -17,12 +22,40 @@ const PLAN_DESCRIPTIONS = {
     pro: "Full concierge power with unlimited access."
 }
 
-export default function SubscriptionPage() {
+function SubscriptionPageContent() {
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly')
     const [isLoading, setIsLoading] = useState<string | null>(null)
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+    const { user } = useAuth()
+    const { plan: currentPlan, refresh } = useSubscription()
+    const searchParams = useSearchParams()
+
+    // Poll for plan update after successful Stripe checkout
+    useEffect(() => {
+        if (searchParams.get('success') !== 'true') return
+        if (currentPlan === 'pro') {
+            toast.success("Welcome to Pro!", { description: "Your plan has been upgraded." })
+            return
+        }
+
+        const interval = setInterval(async () => {
+            await refresh()
+        }, 2000)
+        const timeout = setTimeout(() => clearInterval(interval), 15000)
+
+        return () => {
+            clearInterval(interval)
+            clearTimeout(timeout)
+        }
+    }, [searchParams, currentPlan, refresh])
 
     const handleUpgrade = async (planId: string) => {
-        if (planId === 'free') return // Already on free
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
+
+        if (planId === 'free') return
 
         setIsLoading(planId)
         try {
@@ -43,7 +76,7 @@ export default function SubscriptionPage() {
             }
         } catch (err: any) {
             console.error("Checkout error:", err)
-            // In a real app, show a toast here
+            toast.error("Checkout failed", { description: err.message || "Please try again" })
         } finally {
             setIsLoading(null)
         }
@@ -62,6 +95,7 @@ export default function SubscriptionPage() {
     const PRO_FEATURES = [
         "Unlimited Saved Itineraries",
         "Unlimited PDF Exports",
+        "Book Experiences, Yachts & Private Jets",
         "AI Lens & Visual Exploration",
         "Premium Travel Trends Dashboard",
         "AI Budgeting & Expense Dashboard",
@@ -72,8 +106,9 @@ export default function SubscriptionPage() {
     const FREE_FEATURES = [
         "up to 5 Saved Itineraries",
         "1 PDF Export per month",
+        "Book Experiences, Yachts & Private Jets",
         "Standard AI Intelligence",
-        "Basic Trip Planning",
+        "AI-Powered Trip Planning",
         "Community Support"
     ]
 
@@ -219,8 +254,12 @@ export default function SubscriptionPage() {
                                     >
                                         {isLoading === tier ? (
                                             <div className="size-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                        ) : currentPlan === tier ? (
+                                            'Current Plan'
+                                        ) : isPro ? (
+                                            billingCycle === 'yearly' ? 'Claim Founder Offer' : 'Go Pro'
                                         ) : (
-                                            tier === 'free' ? 'Current Plan' : (billingCycle === 'yearly' ? 'Claim Founder Offer' : 'Go Pro')
+                                            'Downgrade'
                                         )}
                                     </Button>
                                 </div>
@@ -242,6 +281,16 @@ export default function SubscriptionPage() {
                     </p>
                 </div>
             </div>
+
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </main>
+    )
+}
+
+export default function SubscriptionPage() {
+    return (
+        <Suspense>
+            <SubscriptionPageContent />
+        </Suspense>
     )
 }
