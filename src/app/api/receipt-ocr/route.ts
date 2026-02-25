@@ -14,13 +14,13 @@ export async function POST(req: Request) {
         // Initialize Gemini model
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" })
 
-        // Strip the data:image/...;base64, prefix if present
-        const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "")
+        // Strip the data:image/...;base64, or data:application/pdf;base64, prefix if present
+        const base64Data = imageBase64.replace(/^data:(.*?);base64,/, "")
         const mimeType = imageBase64.match(/data:(.*?);base64/)?.[1] || "image/jpeg"
 
         const prompt = `
 You are a highly accurate financial OCR and data extraction system.
-Analyze the provided receipt image and extract the following details. 
+Analyze the provided receipt document (image or PDF) and extract the following details. 
 
 Return strictly valid JSON with NO markdown formatting, NO backticks, and NO extra text, using exactly this structure:
 {

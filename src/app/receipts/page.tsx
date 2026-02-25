@@ -581,7 +581,7 @@ export default function ReceiptsPage() {
                                             <div>
                                                 <input
                                                     type="file"
-                                                    accept="image/*"
+                                                    accept="image/*,application/pdf"
                                                     className="hidden"
                                                     ref={fileInputRef}
                                                     onChange={handleReceiptUpload}
