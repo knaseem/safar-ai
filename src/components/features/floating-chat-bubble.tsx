@@ -20,6 +20,9 @@ type PlanningState = {
     dates: string | null
     travelers: string | null
     vibe: string | null
+    flightClass: string | null
+    pace: string | null
+    accommodation: string | null
     estimatedBudget: string | null
     readyToGenerate: boolean
 }
@@ -47,6 +50,9 @@ export function FloatingChatBubble() {
         dates: null,
         travelers: null,
         vibe: null,
+        flightClass: null,
+        pace: null,
+        accommodation: null,
         estimatedBudget: null,
         readyToGenerate: false
     })
@@ -134,7 +140,10 @@ export function FloatingChatBubble() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    prompt: `A ${planningState.vibe || 'great'} trip to ${planningState.destination} for ${planningState.travelers || 'me'} in ${planningState.dates || 'the future'}`,
+                    prompt: `A ${planningState.vibe || 'great'} trip to ${planningState.destination} for ${planningState.travelers || 'me'} in ${planningState.dates || 'the future'}. ` +
+                        `Pace: ${planningState.pace || 'Moderate'}. ` +
+                        `Accommodation: ${planningState.accommodation || 'Standard'}. ` +
+                        `Flight Class: ${planningState.flightClass || 'Economy'}.`,
                     isHalal: isHalalMode
                 })
             })
@@ -419,6 +428,21 @@ export function FloatingChatBubble() {
                                         {planningState.vibe && (
                                             <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
                                                 <span>✨</span> {planningState.vibe}
+                                            </div>
+                                        )}
+                                        {planningState.flightClass && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>✈️</span> {planningState.flightClass}
+                                            </div>
+                                        )}
+                                        {planningState.accommodation && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>🏨</span> {planningState.accommodation}
+                                            </div>
+                                        )}
+                                        {planningState.pace && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>🏃</span> {planningState.pace}
                                             </div>
                                         )}
                                         {planningState.estimatedBudget && (
