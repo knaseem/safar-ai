@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
         }
 
         // Admin Email Check
-        const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
+        const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.replaceAll(" ", "").split(",") || [];
 
         if (!user.email || !adminEmails.includes(user.email)) {
             // Redirect unauthorized users to home
