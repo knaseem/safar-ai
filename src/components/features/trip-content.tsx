@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { TripItinerary } from "@/components/features/trip-itinerary"
-import { motion } from "framer-motion"
+import { TripChatPanel } from "@/components/features/trip-chat-panel"
+import { PrayerOverlay } from "@/components/features/prayer-overlay"
+import { motion, AnimatePresence } from "framer-motion"
 import { Wallet, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -16,9 +18,12 @@ interface TripContentProps {
     linkedBookings?: UnifiedBooking[]
 }
 
-export function TripContent({ tripId, tripData, isHalal, linkedBookings }: TripContentProps) {
+export function TripContent({ tripId, tripData: initialTripData, isHalal, linkedBookings }: TripContentProps) {
     const [budgetData, setBudgetData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [chatOpen, setChatOpen] = useState(false)
+    const [prayerOpen, setPrayerOpen] = useState(false)
+    const [liveTripData, setLiveTripData] = useState(initialTripData)
 
     useEffect(() => {
         const fetchBudget = async () => {
@@ -35,6 +40,9 @@ export function TripContent({ tripId, tripData, isHalal, linkedBookings }: TripC
         fetchBudget()
     }, [tripId])
 
+    // Get coordinates from first day for prayer overlay
+    const firstDayCoords = liveTripData?.days?.[0]?.coordinates
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-20">
@@ -49,6 +57,7 @@ export function TripContent({ tripId, tripData, isHalal, linkedBookings }: TripC
 
     return (
         <div className="space-y-8">
+            {/* Budget Bar */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -88,19 +97,57 @@ export function TripContent({ tripId, tripData, isHalal, linkedBookings }: TripC
                 </div>
             </motion.div>
 
+            {/* Prayer Toggle Button */}
+            {firstDayCoords && (
+                <motion.button
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => setPrayerOpen(!prayerOpen)}
+                    className={`fixed top-24 right-6 z-40 px-4 py-2.5 rounded-xl border transition-all shadow-lg ${prayerOpen
+                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
+                            : "bg-black/80 backdrop-blur-xl border-white/10 text-white/60 hover:text-white/80 hover:border-white/20"
+                        }`}
+                >
+                    <span className="flex items-center gap-2 text-sm font-medium">
+                        🕌 Prayer Times
+                    </span>
+                </motion.button>
+            )}
+
+            {/* Prayer Overlay */}
+            <AnimatePresence>
+                {prayerOpen && firstDayCoords && (
+                    <PrayerOverlay
+                        coordinates={firstDayCoords}
+                        onClose={() => setPrayerOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Itinerary */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
             >
                 <TripItinerary
-                    data={tripData}
+                    data={liveTripData}
                     isHalal={isHalal}
                     isShared={false}
                     tripId={tripId}
                     linkedBookings={linkedBookings}
                 />
             </motion.div>
+
+            {/* Multi-Turn Chat Panel */}
+            <TripChatPanel
+                tripId={tripId}
+                tripData={liveTripData}
+                onTripUpdate={(updated) => setLiveTripData(updated)}
+                isOpen={chatOpen}
+                onToggle={() => setChatOpen(!chatOpen)}
+            />
         </div>
     )
 }
+
