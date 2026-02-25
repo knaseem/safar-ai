@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sparkles, Globe, CreditCard, CheckCircle, Compass, Anchor } from "lucide-react"
+import { Sparkles, Globe, CreditCard, CheckCircle, Compass, Anchor, Ticket, Building2 } from "lucide-react"
 
 const features = [
     {
@@ -94,6 +94,20 @@ export function Experience() {
                                 <span className="text-xl font-bold tracking-widest uppercase">Searadar</span>
                             </div>
                             <span className="text-xs text-white/30">Premium yacht & boat charters</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className="flex items-center gap-2 text-white/60 group-hover:text-red-400 transition-colors">
+                                <Ticket className="size-5" />
+                                <span className="text-xl font-bold tracking-widest uppercase">GetYourGuide</span>
+                            </div>
+                            <span className="text-xs text-white/30">Unforgettable travel experiences</span>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 group">
+                            <div className="flex items-center gap-2 text-white/60 group-hover:text-violet-400 transition-colors">
+                                <Building2 className="size-5" />
+                                <span className="text-xl font-bold tracking-widest uppercase">Vio.com</span>
+                            </div>
+                            <span className="text-xs text-white/30">Exceptional hotel deals</span>
                         </div>
                     </div>
                 </div>
