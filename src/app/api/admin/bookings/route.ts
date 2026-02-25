@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
-const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || []
+const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.replaceAll(" ", "").split(",") || []
 
 async function verifyAdmin() {
     const supabase = await createClient()

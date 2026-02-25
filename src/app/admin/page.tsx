@@ -289,48 +289,114 @@ export default function AdminDashboard() {
                 </Card>
             </div>
 
-            {/* Live Activity Feed */}
-            <Card className="bg-neutral-900 border-white/10 mb-8">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                        <Activity className="size-4 text-purple-500" /> Live Activity Feed
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {bookings.slice(0, 3).map((booking) => (
-                            <div key={booking.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+            {/* Admin Management & Feeds */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Live Activity Feed */}
+                <Card className="bg-neutral-900 border-white/10">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                            <Activity className="size-4 text-purple-500" /> Live Activity Feed
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {bookings.slice(0, 3).map((booking) => (
+                                <div key={booking.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-500">
+                                            <Sparkles className="size-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-white font-medium">New Booking Request</p>
+                                            <p className="text-xs text-white/40">
+                                                {booking.contact_first_name} requested a trip to {booking.destination}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-white/30 font-mono">
+                                        {format(new Date(booking.created_at), 'MMM d, h:mm a')}
+                                    </span>
+                                </div>
+                            ))}
+                            <div className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-500">
-                                        <Sparkles className="size-4" />
+                                    <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
+                                        <Users className="size-4" />
                                     </div>
                                     <div>
-                                        <p className="text-sm text-white font-medium">New Booking Request</p>
-                                        <p className="text-xs text-white/40">
-                                            {booking.contact_first_name} requested a trip to {booking.destination}
-                                        </p>
+                                        <p className="text-sm text-white font-medium">New User Registration</p>
+                                        <p className="text-xs text-white/40">Verified via Email</p>
                                     </div>
                                 </div>
-                                <span className="text-xs text-white/30 font-mono">
-                                    {format(new Date(booking.created_at), 'MMM d, h:mm a')}
-                                </span>
+                                <span className="text-xs text-white/30 font-mono">Just now</span>
                             </div>
-                        ))}
-                        <div className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
-                                    <Users className="size-4" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-white font-medium">New User Registration</p>
-                                    <p className="text-xs text-white/40">Verified via Email</p>
-                                </div>
-                            </div>
-                            <span className="text-xs text-white/30 font-mono">Just now</span>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                {/* VIP / Friends & Family Access */}
+                <Card className="bg-neutral-900 border-white/10">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                            <Sparkles className="size-4 text-amber-500" /> Grant Pro Access
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            <p className="text-sm text-white/60">
+                                Bypass the Stripe paywall and instantly upgrade a registered user to the Pro tier for free.
+                            </p>
+                            <form
+                                onSubmit={async (e) => {
+                                    e.preventDefault()
+                                    const form = e.target as HTMLFormElement
+                                    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+
+                                    const btn = form.querySelector('button')
+                                    if (btn) btn.disabled = true;
+
+                                    try {
+                                        const res = await fetch('/api/admin/grant-access', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ email })
+                                        })
+
+                                        const data = await res.json()
+                                        if (!res.ok) throw new Error(data.error)
+
+                                        toast.success(data.message)
+                                        form.reset()
+                                    } catch (err: any) {
+                                        toast.error(err.message || 'Failed to grant access')
+                                    } finally {
+                                        if (btn) btn.disabled = false;
+                                    }
+                                }}
+                                className="flex gap-2"
+                            >
+                                <input
+                                    name="email"
+                                    type="email"
+                                    required
+                                    placeholder="friend@example.com"
+                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                                />
+                                <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-medium">
+                                    Upgrade
+                                </Button>
+                            </form>
+
+                            <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Admin Configuration</h4>
+                                <p className="text-xs text-white/60 leading-relaxed">
+                                    To add another admin to this dashboard, their email must be added to the <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">NEXT_PUBLIC_ADMIN_EMAILS</code> environment variable. Update this in your local <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">.env.local</code> file AND in your Vercel project settings, then redeploy.
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Kanban Board */}
             <div className="flex-1 overflow-x-auto -mx-8 px-8 mt-4">
