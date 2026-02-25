@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
     FileText, Receipt, Download, Filter, Calendar,
     Plane, Building2, Ticket, DollarSign, TrendingUp,
     Search, ChevronDown, Upload, X, Eye, Plus, Sparkles, ArrowLeft, Trash2,
-    Utensils, Car, ShoppingBag, Clapperboard, MapPin, Bot, Send
+    Utensils, Car, ShoppingBag, Clapperboard, MapPin, Bot, Send, Camera, Loader2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -64,6 +64,10 @@ export default function ReceiptsPage() {
     const [aiResponse, setAiResponse] = useState("")
     const [isAILoading, setIsAILoading] = useState(false)
 
+    // OCR State
+    const [isScanning, setIsScanning] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
     // Manual Entry Form State
     const [newItem, setNewItem] = useState({
         title: "",
@@ -72,6 +76,52 @@ export default function ReceiptsPage() {
         type: "activity" as ReceiptItem["type"],
         tripId: "none"
     })
+
+    const handleReceiptUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+
+        setIsScanning(true)
+
+        try {
+            // Convert file to Base64
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
+            reader.onload = async () => {
+                const base64 = reader.result as string
+                try {
+                    const response = await fetch('/api/receipt-ocr', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ imageBase64: base64 })
+                    })
+
+                    if (!response.ok) throw new Error("OCR Failed")
+
+                    const data = await response.json()
+
+                    // Auto-fill the form
+                    setNewItem(prev => ({
+                        ...prev,
+                        title: data.merchant_name || prev.title,
+                        amount: data.total_amount || prev.amount,
+                        date: data.date || prev.date,
+                        type: (data.category as any) || prev.type
+                    }))
+
+                } catch (err) {
+                    console.error("OCR API error:", err)
+                    alert("Could not process receipt. Please enter details manually.")
+                } finally {
+                    setIsScanning(false)
+                    if (fileInputRef.current) fileInputRef.current.value = ""
+                }
+            }
+        } catch (error) {
+            console.error("File read error:", error)
+            setIsScanning(false)
+        }
+    }
 
     useEffect(() => {
         if (!user) return
@@ -521,10 +571,37 @@ export default function ReceiptsPage() {
                                 </DialogTrigger>
                                 <DialogContent className="bg-slate-900 border-white/10 text-white sm:max-w-md">
                                     <DialogHeader>
-                                        <DialogTitle>Add Expense</DialogTitle>
-                                        <DialogDescription className="text-white/40">
-                                            Manually add a travel expense to your vault.
-                                        </DialogDescription>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <DialogTitle>Add Expense</DialogTitle>
+                                                <DialogDescription className="text-white/40">
+                                                    Manually add a travel expense to your vault.
+                                                </DialogDescription>
+                                            </div>
+                                            <div>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    ref={fileInputRef}
+                                                    onChange={handleReceiptUpload}
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/20"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={isScanning}
+                                                >
+                                                    {isScanning ? (
+                                                        <Loader2 className="size-4 mr-2 animate-spin" />
+                                                    ) : (
+                                                        <Camera className="size-4 mr-2" />
+                                                    )}
+                                                    {isScanning ? "Scanning..." : "Scan Receipt"}
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </DialogHeader>
                                     <div className="space-y-4 py-4">
                                         <div className="space-y-2">
