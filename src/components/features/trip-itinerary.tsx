@@ -265,7 +265,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
             if (!res.ok) {
                 if (res.status === 409) {
-                    toast.info("Trip already saved", { description: "Check your dashboard" })
+                    toast.info("Trip already saved", { description: "Check your profile" })
                     setIsSaved(true)
                 } else if (res.status === 403) {
                     const errorMsg = result.code === 'LIMIT_REACHED'
@@ -282,7 +282,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     throw new Error(result.error)
                 }
             } else {
-                toast.success("Trip saved!", { description: "View it in your dashboard" })
+                toast.success("Trip saved!", { description: "View it in your profile" })
                 setIsSaved(true)
                 if (result.trip?.id) setSavedTripId(result.trip.id)
             }
