@@ -69,7 +69,7 @@ export default function ReceiptsPage() {
         title: "",
         amount: "",
         date: new Date().toISOString().split('T')[0],
-        type: "other" as ReceiptItem["type"],
+        type: "activity" as ReceiptItem["type"],
         tripId: "none"
     })
 
@@ -216,7 +216,7 @@ export default function ReceiptsPage() {
                 title: "",
                 amount: "",
                 date: new Date().toISOString().split('T')[0],
-                type: "other",
+                type: "activity",
                 tripId: "none"
             })
         } catch (error) {
