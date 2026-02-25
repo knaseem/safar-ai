@@ -128,6 +128,7 @@ export default function ProfilePage() {
             .from('saved_trips')
             .delete()
             .eq('id', id)
+            .eq('user_id', user?.id)
 
         if (error) {
             toast.error("Failed to delete itinerary")

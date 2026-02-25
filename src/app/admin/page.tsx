@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Calendar, Users, CheckCircle, Clock, XCircle, Sparkles } from "lucide-react"
 import { toast } from "sonner"
@@ -111,42 +111,36 @@ export default function AdminDashboard() {
     }, [])
 
     const fetchData = async () => {
-        const supabase = createClient()
+        try {
+            const res = await fetch('/api/admin/bookings')
+            if (!res.ok) throw new Error('Failed to fetch admin data')
+            const data = await res.json()
 
-        // Fetch Bookings
-        const { data: bookingsData } = await supabase
-            .from('booking_requests')
-            .select('*')
-            .order('created_at', { ascending: false })
-
-        // Fetch Profiles for Analytics
-        const { data: profilesData } = await supabase
-            .from('travel_profiles')
-            .select('archetype')
-
-        if (bookingsData) {
-            setBookings(bookingsData as AdminBooking[])
-            processAnalytics(bookingsData, profilesData || [])
+            if (data.bookings) {
+                setBookings(data.bookings as AdminBooking[])
+                processAnalytics(data.bookings, data.profiles || [])
+            }
+        } catch (err) {
+            console.error('Admin fetch error:', err)
         }
         setLoading(false)
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
-        const supabase = createClient()
-        const { error } = await supabase
-            .from('booking_requests')
-            .update({ status: newStatus })
-            .eq('id', id)
+        try {
+            const res = await fetch('/api/admin/bookings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: newStatus })
+            })
+            if (!res.ok) throw new Error('Failed to update')
 
-        if (error) {
-            toast.error("Failed to update status")
-        } else {
             toast.success(`Booking ${newStatus} successfully`)
-            // Update local state
             setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus as any } : b))
             setSelectedBooking(null)
-            // Refresh stats
             fetchData()
+        } catch (err) {
+            toast.error("Failed to update status")
         }
     }
 
@@ -417,17 +411,19 @@ function BookingDetailModal({ booking, onClose, onUpdateStatus }: { booking: Adm
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const supabase = createClient()
             if (!booking.user_id) {
                 setLoadingProfile(false)
                 return
             }
-            const { data } = await supabase
-                .from('travel_profiles')
-                .select('*')
-                .eq('user_id', booking.user_id)
-                .single()
-            setProfile(data)
+            try {
+                const res = await fetch(`/api/admin/profiles?userId=${booking.user_id}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setProfile(data.profile)
+                }
+            } catch (err) {
+                console.error('Failed to fetch user profile:', err)
+            }
             setLoadingProfile(false)
         }
         fetchProfile()

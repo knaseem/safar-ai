@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { sendSubscriptionEmail } from "@/lib/email"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         event = JSON.parse(body) as Stripe.Event
     }
 
-    const supabase = await createClient()
+    const supabase = createAdminClient()
 
     try {
         switch (event.type) {
