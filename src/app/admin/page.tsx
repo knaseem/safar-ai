@@ -1,9 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-
 import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Calendar, Users, CheckCircle, Clock, XCircle, Sparkles } from "lucide-react"
+import {
+    Loader2, Calendar, Users, CheckCircle, Clock, XCircle, Sparkles,
+    TrendingUp, Activity, PieChart as PieChartIcon, LayoutDashboard, Lock, Search,
+    ChevronRight, Mail, ExternalLink, ShieldCheck
+} from "lucide-react"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,7 +16,12 @@ import {
     AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
     PieChart, Pie, Cell
 } from 'recharts'
-import { TrendingUp, Activity, PieChart as PieChartIcon } from "lucide-react"
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs"
 
 // Define interface matching Database Schema
 interface AdminBooking {
@@ -102,18 +110,26 @@ const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export default function AdminDashboard() {
     const [bookings, setBookings] = useState<AdminBooking[]>([])
-    const [stats, setStats] = useState<any>({ revenue: [], archetypes: [] })
+    const [users, setUsers] = useState<any[]>([])
+    const [searchQuery, setSearchQuery] = useState("")
+    const [stats, setStats] = useState<any>({ revenue: [], archetypes: [], plans: { free: 0, pro: 0, vip: 0 } })
     const [loading, setLoading] = useState(true)
     const [selectedBooking, setSelectedBooking] = useState<AdminBooking | null>(null)
 
     useEffect(() => {
-        fetchData()
+        fetchAllData()
     }, [])
 
-    const fetchData = async () => {
+    const fetchAllData = async () => {
+        setLoading(true)
+        await Promise.all([fetchBookings(), fetchUsers()])
+        setLoading(false)
+    }
+
+    const fetchBookings = async () => {
         try {
             const res = await fetch('/api/admin/bookings')
-            if (!res.ok) throw new Error('Failed to fetch admin data')
+            if (!res.ok) throw new Error('Failed to fetch bookings')
             const data = await res.json()
 
             if (data.bookings) {
@@ -121,9 +137,19 @@ export default function AdminDashboard() {
                 processAnalytics(data.bookings, data.profiles || [])
             }
         } catch (err) {
-            console.error('Admin fetch error:', err)
+            console.error('Admin bookings fetch error:', err)
         }
-        setLoading(false)
+    }
+
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch('/api/admin/users')
+            if (!res.ok) throw new Error('Failed to fetch users')
+            const data = await res.json()
+            if (data.users) setUsers(data.users)
+        } catch (err) {
+            console.error('Admin users fetch error:', err)
+        }
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
@@ -138,7 +164,7 @@ export default function AdminDashboard() {
             toast.success(`Booking ${newStatus} successfully`)
             setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus as any } : b))
             setSelectedBooking(null)
-            fetchData()
+            fetchBookings()
         } catch (err) {
             toast.error("Failed to update status")
         }
@@ -152,16 +178,23 @@ export default function AdminDashboard() {
             revenueMap[format(subDays(new Date(), i), 'MMM d')] = 0
         }
 
+        const PRO_MONTHLY_PRICE = 14.99;
+        const AFFILIATE_COMMISSION_RATE = 0.10;
+
+        const subCount = profiles.filter(p => p.plan_tier === 'pro' || p.plan_tier === 'vip').length;
+        const subscriptionMRR = subCount * PRO_MONTHLY_PRICE;
+
         bookings.forEach(b => {
             const date = format(new Date(b.created_at), 'MMM d')
             if (revenueMap[date] !== undefined) {
-                revenueMap[date] += b.estimated_price
+                // Add estimated commission (10% of trip value) to the daily total
+                revenueMap[date] += (b.estimated_price * AFFILIATE_COMMISSION_RATE)
             }
         })
 
         const revenueData = Object.keys(revenueMap).map(key => ({
             name: key,
-            value: revenueMap[key]
+            value: revenueMap[key] + (subscriptionMRR / 30) // Adds daily share of subscription revenue
         }))
 
         // 2. Archetype Distribution
@@ -213,270 +246,385 @@ export default function AdminDashboard() {
                     <h1 className="text-3xl font-bold text-white mb-2">Command Center</h1>
                     <p className="text-white/40">Overview of concierge operations</p>
                 </div>
-                <div className="flex gap-4">
-                    <Card className="bg-neutral-900 border-white/10 w-auto border-dashed">
-                        <CardContent className="p-4 pr-6 flex gap-6">
-                            <div>
-                                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Free</p>
-                                <p className="text-xl font-bold text-white">{stats.plans?.free || 0}</p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-amber-500/80 uppercase font-black tracking-widest mb-1">Pro</p>
-                                <p className="text-xl font-bold text-amber-500">{stats.plans?.pro || 0}</p>
-                            </div>
-                            <div>
-                                <p className="text-[10px] text-blue-400/80 uppercase font-black tracking-widest mb-1">VIP</p>
-                                <p className="text-xl font-bold text-blue-400">{stats.plans?.vip || 0}</p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-neutral-900 border-white/10 w-40">
-                        <CardContent className="p-4">
-                            <p className="text-xs text-white/40 uppercase mb-1">Pipeline Value</p>
-                            <p className="text-xl font-bold text-emerald-400">${total.toLocaleString()}</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-neutral-900 border-white/10 w-40">
-                        <CardContent className="p-4">
-                            <p className="text-xs text-white/40 uppercase mb-1">Pending Actions</p>
-                            <p className="text-xl font-bold text-yellow-400">{pending}</p>
-                        </CardContent>
-                    </Card>
-                </div>
             </header>
 
-            {/* Analytics Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                {/* Revenue Chart */}
-                <Card className="bg-neutral-900 border-white/10 lg:col-span-2">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                            <TrendingUp className="size-4 text-emerald-500" /> Revenue Projection (7 Days)
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[200px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats.revenue}>
-                                <defs>
-                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="name" stroke="#555" fontSize={12} tickLine={false} axisLine={false} />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#fff' }}
-                                    formatter={(value: any) => [`$${value.toLocaleString()}`, 'Value']}
-                                />
-                                <Area type="monotone" dataKey="value" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+            <Tabs defaultValue="overview" className="space-y-8 flex-1 flex flex-col">
+                <TabsList className="bg-neutral-900 border border-white/10 w-fit">
+                    <TabsTrigger value="overview" className="gap-2">
+                        <TrendingUp className="size-4" /> Overview
+                    </TabsTrigger>
+                    <TabsTrigger value="operations" className="gap-2">
+                        <LayoutDashboard className="size-4" /> Operations
+                    </TabsTrigger>
+                    <TabsTrigger value="users" className="gap-2">
+                        <Users className="size-4" /> User Directory
+                    </TabsTrigger>
+                    <TabsTrigger value="access" className="gap-2">
+                        <Lock className="size-4" /> Access Control
+                    </TabsTrigger>
+                </TabsList>
 
-                {/* Archetype Distribution */}
-                <Card className="bg-neutral-900 border-white/10">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                            <PieChartIcon className="size-4 text-blue-500" /> User Travel DNA
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[200px] relative">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={stats.archetypes}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                >
-                                    {stats.archetypes.map((entry: any, index: number) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }}
-                                    itemStyle={{ color: '#fff' }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="text-center">
-                                <p className="text-2xl font-bold text-white">{stats.archetypes.reduce((a: any, b: any) => a + b.value, 0)}</p>
-                                <p className="text-[10px] text-white/40 uppercase">Users</p>
+                <TabsContent value="overview" className="space-y-8 mt-0 outline-none">
+                    {/* Stats Summary */}
+                    <div className="flex gap-4">
+                        <Card className="bg-neutral-900 border-white/10 w-auto border-dashed">
+                            <CardContent className="p-4 pr-6 flex gap-6">
+                                <div>
+                                    <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Free</p>
+                                    <p className="text-xl font-bold text-white">{stats.plans?.free || 0}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-amber-500/80 uppercase font-black tracking-widest mb-1">Pro</p>
+                                    <p className="text-xl font-bold text-amber-500">{stats.plans?.pro || 0}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[10px] text-blue-400/80 uppercase font-black tracking-widest mb-1">VIP</p>
+                                    <p className="text-xl font-bold text-blue-400">{stats.plans?.vip || 0}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-neutral-900 border-white/10 w-40">
+                            <CardContent className="p-4">
+                                <p className="text-xs text-white/40 uppercase mb-1">Pipeline Value</p>
+                                <p className="text-xl font-bold text-emerald-400">${total.toLocaleString()}</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-neutral-900 border-white/10 w-40">
+                            <CardContent className="p-4">
+                                <p className="text-xs text-white/40 uppercase mb-1">Pending Actions</p>
+                                <p className="text-xl font-bold text-yellow-400">{pending}</p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Analytics Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Revenue Chart */}
+                        <Card className="bg-neutral-900 border-white/10 lg:col-span-2">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                                    <TrendingUp className="size-4 text-emerald-500" /> Revenue Projection (Est. Commissions + Subscriptions)
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[200px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <AreaChart data={stats.revenue}>
+                                        <defs>
+                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="name" stroke="#555" fontSize={12} tickLine={false} axisLine={false} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                            formatter={(value: any) => [`$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Estimated Revenue']}
+                                        />
+                                        <Area type="monotone" dataKey="value" stroke="#10B981" fillOpacity={1} fill="url(#colorRevenue)" />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </CardContent>
+                        </Card>
+
+                        {/* Archetype Distribution */}
+                        <Card className="bg-neutral-900 border-white/10">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                                    <PieChartIcon className="size-4 text-blue-500" /> User Travel DNA
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-[200px] relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={stats.archetypes}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={80}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {stats.archetypes.map((entry: any, index: number) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: '#111', border: '1px solid #333', borderRadius: '8px' }}
+                                            itemStyle={{ color: '#fff' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    <div className="text-center">
+                                        <p className="text-2xl font-bold text-white">{stats.archetypes.reduce((a: any, b: any) => a + b.value, 0)}</p>
+                                        <p className="text-[10px] text-white/40 uppercase">Users</p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+                <TabsContent value="users" className="space-y-6 mt-0 outline-none">
+                    <div className="flex justify-between items-center bg-neutral-900/50 p-4 rounded-2xl border border-white/5">
+                        <div className="relative w-full max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-white/40" />
+                            <input
+                                type="text"
+                                placeholder="Search users by email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                            />
+                        </div>
+                        <div className="flex gap-4 text-xs">
+                            <div className="flex items-center gap-2">
+                                <div className="size-2 rounded-full bg-emerald-500" />
+                                <span className="text-white/60">{users.filter(u => u.plan_tier === 'pro' || u.plan_tier === 'vip').length} Premium</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="size-2 rounded-full bg-white/20" />
+                                <span className="text-white/60">{users.filter(u => u.plan_tier === 'free').length} Basic</span>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
 
-            {/* Admin Management & Feeds */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                {/* Live Activity Feed */}
-                <Card className="bg-neutral-900 border-white/10">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                            <Activity className="size-4 text-purple-500" /> Live Activity Feed
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {bookings.slice(0, 3).map((booking) => (
-                                <div key={booking.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-500">
-                                            <Sparkles className="size-4" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-white font-medium">New Booking Request</p>
-                                            <p className="text-xs text-white/40">
-                                                {booking.contact_first_name} requested a trip to {booking.destination}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs text-white/30 font-mono">
-                                        {format(new Date(booking.created_at), 'MMM d, h:mm a')}
-                                    </span>
-                                </div>
-                            ))}
-                            <div className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
-                                        <Users className="size-4" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-white font-medium">New User Registration</p>
-                                        <p className="text-xs text-white/40">Verified via Email</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs text-white/30 font-mono">Just now</span>
-                            </div>
+                    <div className="bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-white/5 border-b border-white/10">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold text-white/70">User</th>
+                                        <th className="px-6 py-4 font-semibold text-white/70">Plan Tier</th>
+                                        <th className="px-6 py-4 font-semibold text-white/70">Travel DNA</th>
+                                        <th className="px-6 py-4 font-semibold text-white/70">Joined</th>
+                                        <th className="px-6 py-4 font-semibold text-white/70 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {users
+                                        .filter(user => user.email?.toLowerCase().includes(searchQuery.toLowerCase()))
+                                        .map((user) => (
+                                            <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="size-8 rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center text-xs font-bold text-white/70 border border-white/10">
+                                                            {user.email?.[0]?.toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-medium text-white">{user.email}</p>
+                                                            <p className="text-[10px] text-white/30 font-mono">{user.id.slice(0, 8)}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${user.plan_tier === 'vip' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                                            user.plan_tier === 'pro' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                                                'bg-white/5 text-white/40 border border-white/10'
+                                                        }`}>
+                                                        {user.plan_tier}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="size-1.5 rounded-full bg-emerald-500/50" />
+                                                        <span className="text-white/70">{user.archetype}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-white/40 whitespace-nowrap">
+                                                    {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-8 w-8 p-0 hover:bg-white/10"
+                                                            title="View Profile"
+                                                            onClick={() => {
+                                                                toast.info(`Viewing profile for ${user.email}`)
+                                                            }}
+                                                        >
+                                                            <ChevronRight className="size-4" />
+                                                        </Button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </CardContent>
-                </Card>
+                        {users.length === 0 && (
+                            <div className="p-20 text-center">
+                                <div className="size-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                                    <Users className="size-6 text-white/20" />
+                                </div>
+                                <p className="text-white/40">No users found</p>
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
 
-                {/* VIP / Friends & Family Access */}
-                <Card className="bg-neutral-900 border-white/10">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
-                            <Sparkles className="size-4 text-amber-500" /> Grant Pro Access
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            <p className="text-sm text-white/60">
-                                Bypass the Stripe paywall and instantly upgrade a registered user to the Pro tier for free.
-                            </p>
-                            <form
-                                onSubmit={async (e) => {
-                                    e.preventDefault()
-                                    const form = e.target as HTMLFormElement
-                                    const email = (form.elements.namedItem('email') as HTMLInputElement).value
-
-                                    const btn = form.querySelector('button')
-                                    if (btn) btn.disabled = true;
-
-                                    try {
-                                        const res = await fetch('/api/admin/grant-access', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ email })
-                                        })
-
-                                        const data = await res.json()
-                                        if (!res.ok) throw new Error(data.error)
-
-                                        toast.success(data.message)
-                                        form.reset()
-                                    } catch (err: any) {
-                                        toast.error(err.message || 'Failed to grant access')
-                                    } finally {
-                                        if (btn) btn.disabled = false;
-                                    }
-                                }}
-                                className="flex gap-2"
+                <TabsContent value="operations" className="mt-0 outline-none flex-1">
+                    <div className="flex-1 overflow-x-auto -mx-8 px-8">
+                        <div className="flex gap-6 min-h-[500px] h-full pb-8 min-w-max pr-8">
+                            <KanbanColumn
+                                title="Incoming Requests"
+                                count={bookings.filter(b => b.status === 'pending').length}
+                                color="bg-yellow-500"
+                                icon={Clock}
                             >
-                                <input
-                                    name="email"
-                                    type="email"
-                                    required
-                                    placeholder="friend@example.com"
-                                    className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
-                                />
-                                <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-medium">
-                                    Upgrade
-                                </Button>
-                            </form>
+                                {bookings.filter(b => b.status === 'pending').map(booking => (
+                                    <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
+                                ))}
+                            </KanbanColumn>
 
-                            <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Security Notice</h4>
-                                <p className="text-xs text-white/60 leading-relaxed">
-                                    Granting Pro access <strong>does not</strong> give the user access to this Admin Dashboard. Only <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">knaseem22@gmail.com</code> (and emails explicitly listed in <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">NEXT_PUBLIC_ADMIN_EMAILS</code>) can view this page.
-                                </p>
-                            </div>
+                            <KanbanColumn
+                                title="In Progress"
+                                count={bookings.filter(b => b.status === 'processing').length}
+                                color="bg-blue-500"
+                                icon={Loader2}
+                            >
+                                {bookings.filter(b => b.status === 'processing').map(booking => (
+                                    <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
+                                ))}
+                            </KanbanColumn>
+
+                            <KanbanColumn
+                                title="Booked & Confirmed"
+                                count={bookings.filter(b => b.status === 'booked').length}
+                                color="bg-emerald-500"
+                                icon={CheckCircle}
+                            >
+                                {bookings.filter(b => b.status === 'booked').map(booking => (
+                                    <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
+                                ))}
+                            </KanbanColumn>
+
+                            <KanbanColumn
+                                title="Cancelled"
+                                count={bookings.filter(b => b.status === 'cancelled').length}
+                                color="bg-red-500"
+                                icon={XCircle}
+                            >
+                                {bookings.filter(b => b.status === 'cancelled').map(booking => (
+                                    <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
+                                ))}
+                            </KanbanColumn>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                    </div>
+                </TabsContent>
 
-            {/* Kanban Board */}
-            <div className="flex-1 overflow-x-auto -mx-8 px-8 mt-4">
-                <div className="flex gap-6 min-h-[500px] h-auto pb-8 min-w-max pr-8">
-                    {/* Incoming / Pending */}
-                    <KanbanColumn
-                        title="Incoming Requests"
-                        count={bookings.filter(b => b.status === 'pending').length}
-                        color="bg-yellow-500"
-                        icon={Clock}
-                    >
-                        {bookings.filter(b => b.status === 'pending').map(booking => (
-                            <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
-                        ))}
-                    </KanbanColumn>
+                <TabsContent value="access" className="space-y-8 mt-0 outline-none">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <Card className="bg-neutral-900 border-white/10">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                                    <Activity className="size-4 text-purple-500" /> Live Activity Feed
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {bookings.slice(0, 3).map((booking) => (
+                                        <div key={booking.id} className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 rounded-full bg-emerald-500/10 text-emerald-500">
+                                                    <Sparkles className="size-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-white font-medium">New Booking Request</p>
+                                                    <p className="text-xs text-white/40">
+                                                        {booking.contact_first_name} requested a trip to {booking.destination}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className="text-xs text-white/30 font-mono">
+                                                {format(new Date(booking.created_at), 'MMM d, h:mm a')}
+                                            </span>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-500">
+                                                <Users className="size-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-white font-medium">New User Registration</p>
+                                                <p className="text-xs text-white/40">Verified via Email</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs text-white/30 font-mono">Just now</span>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                    {/* Processing */}
-                    <KanbanColumn
-                        title="In Progress"
-                        count={bookings.filter(b => b.status === 'processing').length}
-                        color="bg-blue-500"
-                        icon={Loader2}
-                    >
-                        {bookings.filter(b => b.status === 'processing').map(booking => (
-                            <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
-                        ))}
-                    </KanbanColumn>
+                        <Card className="bg-neutral-900 border-white/10">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="text-sm font-medium text-white/70 flex items-center gap-2">
+                                    <Sparkles className="size-4 text-amber-500" /> Grant Pro Access
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <p className="text-sm text-white/60">
+                                        Bypass the Stripe paywall and instantly upgrade a registered user to the Pro tier for free.
+                                    </p>
+                                    <form
+                                        onSubmit={async (e) => {
+                                            e.preventDefault()
+                                            const form = e.target as HTMLFormElement
+                                            const email = (form.elements.namedItem('email') as HTMLInputElement).value
 
-                    {/* Confirmed */}
-                    <KanbanColumn
-                        title="Booked & Confirmed"
-                        count={bookings.filter(b => b.status === 'booked').length}
-                        color="bg-emerald-500"
-                        icon={CheckCircle}
-                    >
-                        {bookings.filter(b => b.status === 'booked').map(booking => (
-                            <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
-                        ))}
-                    </KanbanColumn>
+                                            const btn = form.querySelector('button')
+                                            if (btn) btn.disabled = true;
 
-                    {/* Cancelled */}
-                    <KanbanColumn
-                        title="Cancelled"
-                        count={bookings.filter(b => b.status === 'cancelled').length}
-                        color="bg-red-500"
-                        icon={XCircle}
-                    >
-                        {bookings.filter(b => b.status === 'cancelled').map(booking => (
-                            <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
-                        ))}
-                    </KanbanColumn>
-                </div>
-            </div>
+                                            try {
+                                                const res = await fetch('/api/admin/grant-access', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ email })
+                                                })
 
-            {/* Booking Details Modal */}
+                                                const data = await res.json()
+                                                if (!res.ok) throw new Error(data.error)
+
+                                                toast.success(data.message)
+                                                form.reset()
+                                            } catch (err: any) {
+                                                toast.error(err.message || 'Failed to grant access')
+                                            } finally {
+                                                if (btn) btn.disabled = false;
+                                            }
+                                        }}
+                                        className="flex gap-2"
+                                    >
+                                        <input
+                                            name="email"
+                                            type="email"
+                                            required
+                                            placeholder="friend@example.com"
+                                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50"
+                                        />
+                                        <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600 text-black font-medium">
+                                            Upgrade
+                                        </Button>
+                                    </form>
+
+                                    <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                        <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Security Notice</h4>
+                                        <p className="text-xs text-white/60 leading-relaxed">
+                                            Granting Pro access <strong>does not</strong> give the user access to this Admin Dashboard. Only <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">knaseem22@gmail.com</code> (and emails explicitly listed in <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">NEXT_PUBLIC_ADMIN_EMAILS</code>) can view this page.
+                                        </p>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </TabsContent>
+            </Tabs>
+
             <AnimatePresence>
                 {selectedBooking && (
                     <BookingDetailModal
@@ -529,7 +677,6 @@ function BookingDetailModal({ booking, onClose, onUpdateStatus }: { booking: Adm
                 className="bg-[#111] border border-white/10 rounded-3xl w-full max-w-5xl h-[80vh] flex overflow-hidden shadow-2xl"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Left: Trip Details */}
                 <div className="flex-1 p-8 overflow-y-auto border-r border-white/5">
                     <div className="flex items-center justify-between mb-6">
                         <div>
@@ -588,7 +735,6 @@ function BookingDetailModal({ booking, onClose, onUpdateStatus }: { booking: Adm
                             </div>
                         )}
 
-                        {/* Admin Actions */}
                         <div className="pt-6 border-t border-white/10">
                             <h3 className="text-sm font-medium text-white/70 uppercase tracking-wider mb-4">Concierge Actions</h3>
                             <div className="flex gap-3">
@@ -618,7 +764,6 @@ function BookingDetailModal({ booking, onClose, onUpdateStatus }: { booking: Adm
                     </div>
                 </div>
 
-                {/* Right: Travel Passport (Premium Feature) */}
                 <div className="w-[400px] bg-[#0a0a0a] p-8 border-l border-white/10 flex flex-col relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-32 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
