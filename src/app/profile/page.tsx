@@ -172,11 +172,11 @@ export default function ProfilePage() {
                                         Agent ID: {user?.id?.slice(0, 8)}
                                         <span className={cn(
                                             "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter border",
-                                            profile?.plan_tier === 'pro'
+                                            profile?.plan_tier === 'pro' || profile?.plan_tier === 'vip'
                                                 ? "bg-gradient-to-r from-yellow-400 to-amber-600 text-black border-yellow-400"
                                                 : "bg-white/5 text-white/40 border-white/10"
                                         )}>
-                                            {profile?.plan_tier || 'Free'} Subscription
+                                            {profile?.plan_tier === 'vip' ? 'VIP' : (profile?.plan_tier === 'pro' ? 'Pro' : 'Free')} Subscription
                                         </span>
                                     </p>
                                 </div>

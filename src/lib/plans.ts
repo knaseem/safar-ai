@@ -1,4 +1,4 @@
-export type PlanTier = 'free' | 'pro'
+export type PlanTier = 'free' | 'pro' | 'vip'
 
 export interface PlanLimits {
     maxTrips: number
@@ -17,6 +17,13 @@ export const PLAN_LIMITS: Record<PlanTier, PlanLimits> = {
         hasPrioritySupport: false,
     },
     pro: {
+        maxTrips: Infinity,
+        maxPdfExports: Infinity,
+        chatRequestsPerMin: 100,
+        maxChatRefinements: Infinity,
+        hasPrioritySupport: true,
+    },
+    vip: {
         maxTrips: Infinity,
         maxPdfExports: Infinity,
         chatRequestsPerMin: 100,

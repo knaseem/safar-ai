@@ -40,7 +40,7 @@ export async function GET() {
         // Fetch travel profiles for analytics
         const { data: profiles, error: profilesError } = await supabase
             .from("travel_profiles")
-            .select("archetype")
+            .select("archetype, plan_tier")
 
         if (profilesError) {
             console.error("Admin profiles fetch error:", profilesError)

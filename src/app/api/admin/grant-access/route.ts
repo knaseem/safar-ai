@@ -42,12 +42,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "User not found. They must sign up first." }, { status: 404 })
         }
 
-        // 2. Update their travel_profile to Pro
+        // 2. Update their travel_profile to VIP (Pro tier equivalent)
         const { error: updateError } = await supabase
             .from("travel_profiles")
             .update({
-                subscription_tier: "pro",
-                subscription_status: "active"
+                plan_tier: "vip"
             })
             .eq("id", targetUser.id)
 

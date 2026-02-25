@@ -116,7 +116,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 if (profile) {
                     const tier = profile.plan_tier || 'free'
                     setPlan({
-                        hasAudioConcierge: tier === 'pro'
+                        hasAudioConcierge: tier === 'pro' || tier === 'vip'
                     })
                 }
             }

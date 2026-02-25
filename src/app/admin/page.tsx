@@ -177,7 +177,16 @@ export default function AdminDashboard() {
             color: COLORS[index % COLORS.length]
         })).sort((a, b) => b.value - a.value).slice(0, 5)
 
-        setStats({ revenue: revenueData, archetypes: archetypeData })
+        // 3. Plan Tier Distribution
+        const planCounts = { free: 0, pro: 0, vip: 0 }
+        profiles.forEach(p => {
+            const tier = p.plan_tier || 'free'
+            if (tier === 'pro') planCounts.pro++
+            else if (tier === 'vip') planCounts.vip++
+            else planCounts.free++
+        })
+
+        setStats({ revenue: revenueData, archetypes: archetypeData, plans: planCounts })
     }
 
     const getStats = () => {
@@ -205,6 +214,22 @@ export default function AdminDashboard() {
                     <p className="text-white/40">Overview of concierge operations</p>
                 </div>
                 <div className="flex gap-4">
+                    <Card className="bg-neutral-900 border-white/10 w-auto border-dashed">
+                        <CardContent className="p-4 pr-6 flex gap-6">
+                            <div>
+                                <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1">Free</p>
+                                <p className="text-xl font-bold text-white">{stats.plans?.free || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-amber-500/80 uppercase font-black tracking-widest mb-1">Pro</p>
+                                <p className="text-xl font-bold text-amber-500">{stats.plans?.pro || 0}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] text-blue-400/80 uppercase font-black tracking-widest mb-1">VIP</p>
+                                <p className="text-xl font-bold text-blue-400">{stats.plans?.vip || 0}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                     <Card className="bg-neutral-900 border-white/10 w-40">
                         <CardContent className="p-4">
                             <p className="text-xs text-white/40 uppercase mb-1">Pipeline Value</p>
