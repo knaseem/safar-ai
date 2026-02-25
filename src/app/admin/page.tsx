@@ -423,12 +423,6 @@ export default function AdminDashboard() {
                         {bookings.filter(b => b.status === 'processing').map(booking => (
                             <BookingCard key={booking.id} booking={booking} onClick={() => setSelectedBooking(booking)} />
                         ))}
-                        {/* Empty State visual */}
-                        {bookings.filter(b => b.status === 'processing').length === 0 && (
-                            <div className="h-32 rounded-xl flex items-center justify-center text-white/20 text-sm italic">
-                                No active trips
-                            </div>
-                        )}
                     </KanbanColumn>
 
                     {/* Confirmed */}
