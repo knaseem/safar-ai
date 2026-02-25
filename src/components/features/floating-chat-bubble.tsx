@@ -7,30 +7,28 @@ import { X, Send, Sparkles, User, Bot, Mic, MicOff, Volume2, VolumeX, MessageCir
 import { toast } from 'sonner'
 import { useVoiceInput } from '@/hooks/use-voice-input'
 import { useTextToSpeech } from '@/hooks/use-text-to-speech'
+import { useAuth } from '@/lib/auth-context'
+import { AuthModal } from '@/components/features/auth-modal'
 
 type Message = {
     role: 'user' | 'model'
     content: string
 }
 
-const SUGGESTIONS = [
-    "Where is good to visit in March?",
+type PlanningState = {
+    destination: string | null
+    dates: string | null
+    travelers: string | null
+    vibe: string | null
+    estimatedBudget: string | null
+    readyToGenerate: boolean
+}
+
+const INITIAL_SUGGESTIONS = [
     "Plan a 5-day trip to Japan 🇯🇵",
-    "Best beaches in Southeast Asia? 🏖️",
     "Halal-friendly food tour ideas 🍜",
-    "Romantic destinations for couples ❤️",
-    "Adventure activities in New Zealand 🏔️",
-    "Budget-friendly European cities 💶",
-    "Luxury resorts in Maldives 💎",
-    "Solo travel safety tips 🛡️",
-    "Unique hidden gems in Italy 🇮🇹",
-    "Best places to see Northern Lights 🌌",
-    "How to plan a Safari in Kenya 🦁",
-    "Top attractions in Dubai 🏙️",
-    "Best time to visit Riyadh 🇸🇦",
-    "Historical sites in Cairo 🇪🇬",
-    "Weekend in Doha itinerary 🇶🇦",
-    "Cultural guide to Muscat 🇴🇲"
+    "Romantic destination for couples ❤️",
+    "Weekend in Doha itinerary 🇶🇦"
 ]
 
 export function FloatingChatBubble() {
@@ -42,19 +40,51 @@ export function FloatingChatBubble() {
     const [mounted, setMounted] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
 
+    // New Trip Builder State
+    const [smartChips, setSmartChips] = useState<string[]>(INITIAL_SUGGESTIONS)
+    const [planningState, setPlanningState] = useState<PlanningState>({
+        destination: null,
+        dates: null,
+        travelers: null,
+        vibe: null,
+        estimatedBudget: null,
+        readyToGenerate: false
+    })
+    const [isGeneratingTrip, setIsGeneratingTrip] = useState(false)
+    const [isHalalMode, setIsHalalMode] = useState(false)
+
+    // Auth state
+    const { user } = useAuth()
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+
     // Voice hooks
     const { isListening, transcript, error: voiceError, isSupported: sttSupported, startListening, stopListening, resetTranscript } = useVoiceInput()
     const { speak, stop: stopSpeaking, isSpeaking, isSupported: ttsSupported } = useTextToSpeech()
 
     useEffect(() => {
         setMounted(true)
-    }, [])
+
+        // Listen for hero search bar dispatches
+        const handleOpenChat = (e: CustomEvent) => {
+            setIsOpen(true)
+            const { initialPrompt, isHalal } = e.detail
+            if (isHalal) setIsHalalMode(true)
+
+            if (initialPrompt && messages.length === 0) {
+                // Auto-send the initial prompt without requiring another click
+                setTimeout(() => handleSend(initialPrompt), 100)
+            }
+        }
+
+        window.addEventListener("open-chat-bubble", handleOpenChat as EventListener)
+        return () => window.removeEventListener("open-chat-bubble", handleOpenChat as EventListener)
+    }, [messages.length]) // Need messages.length to conditionally auto-send
 
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
-    }, [messages])
+    }, [messages, planningState])
 
     // Handle voice transcript
     useEffect(() => {
@@ -88,19 +118,66 @@ export function FloatingChatBubble() {
         }
     }, [voiceError])
 
+    const generateTrip = async () => {
+        if (!planningState.destination) return
+        if (!user) {
+            setIsAuthModalOpen(true)
+            return
+        }
+
+        setIsGeneratingTrip(true)
+        setMessages(prev => [...prev, { role: 'user', content: "Generate My Trip ✨", type: 'action' } as any])
+        setSmartChips([])
+
+        try {
+            const res = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prompt: `A ${planningState.vibe || 'great'} trip to ${planningState.destination} for ${planningState.travelers || 'me'} in ${planningState.dates || 'the future'}`,
+                    isHalal: isHalalMode
+                })
+            })
+
+            if (!res.ok) {
+                const errorData = await res.json()
+                throw new Error(errorData.error || "Generation failed")
+            }
+
+            const data = await res.json()
+            if (data.id) {
+                window.location.href = `/trip/generated/${data.id}`
+            }
+        } catch (err: any) {
+            toast.error("Generation failed", { description: err.message || "Please try again" })
+            setSmartChips(["Try generating again"])
+        } finally {
+            setIsGeneratingTrip(false)
+        }
+    }
+
     const handleSend = async (text: string = input) => {
-        if (!text.trim() || isLoading) return
+        if (text === "Generate My Trip ✨") {
+            return generateTrip()
+        }
+
+        if (!text.trim() || isLoading || isGeneratingTrip) return
 
         const newMessages = [...messages, { role: 'user', content: text } as Message]
         setMessages(newMessages)
         setInput("")
         setIsLoading(true)
+        setSmartChips([]) // Clear chips while thinking
 
         try {
             const response = await fetch('/api/chat/general', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ messages: newMessages })
+                body: JSON.stringify({
+                    messages: newMessages,
+                    planningState,
+                    isHalalMode
+                })
             })
 
             const data = await response.json()
@@ -108,8 +185,16 @@ export function FloatingChatBubble() {
             if (!response.ok) throw new Error(data.error)
 
             setMessages(prev => [...prev, { role: 'model', content: data.reply }])
+
+            if (data.updatedState) {
+                setPlanningState(data.updatedState)
+            }
+            if (data.smartChips) {
+                setSmartChips(data.smartChips)
+            }
         } catch (error) {
             toast.error("AI is currently busy", { description: "Please try again in a moment." })
+            setSmartChips(["Try again"])
         } finally {
             setIsLoading(false)
         }
@@ -227,12 +312,15 @@ export function FloatingChatBubble() {
                                             Ask me anything about travel destinations, planning, or recommendations.
                                         </p>
 
-                                        <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
-                                            {SUGGESTIONS.map((suggestion, i) => (
+                                        <div className="grid grid-cols-2 gap-2 w-full max-w-xs mt-4">
+                                            {smartChips.map((suggestion: string, i: number) => (
                                                 <button
                                                     key={i}
                                                     onClick={() => handleSend(suggestion)}
-                                                    className="text-left px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 text-xs text-white/70 transition-all active:scale-[0.98]"
+                                                    className={`text-left px-3 py-2 rounded-xl text-xs transition-all active:scale-[0.98] ${suggestion === "Generate My Trip ✨"
+                                                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 font-semibold"
+                                                        : "bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300"
+                                                        }`}
                                                 >
                                                     {suggestion}
                                                 </button>
@@ -283,7 +371,64 @@ export function FloatingChatBubble() {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Smart Chips for mid-conversation */}
+                                {messages.length > 0 && smartChips.length > 0 && !isLoading && (
+                                    <div className="flex flex-wrap gap-2 mt-4 pl-10">
+                                        {smartChips.map((suggestion: string, i: number) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => handleSend(suggestion)}
+                                                className={`text-left px-3 py-1.5 rounded-full text-xs transition-all active:scale-[0.98] ${suggestion === "Generate My Trip ✨"
+                                                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 font-semibold border-none"
+                                                    : "bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/30 text-white/70 hover:text-emerald-300"
+                                                    }`}
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Live Itinerary Preview Card */}
+                            {(planningState.destination || planningState.dates || planningState.travelers || planningState.vibe) && (
+                                <div className="px-4 py-3 bg-neutral-900/80 border-t border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-[10px] text-emerald-400 uppercase tracking-widest font-bold">Trip Blueprint</span>
+                                        {planningState.readyToGenerate && (
+                                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">Ready</span>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {planningState.destination && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>📍</span> {planningState.destination}
+                                            </div>
+                                        )}
+                                        {planningState.dates && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>📅</span> {planningState.dates}
+                                            </div>
+                                        )}
+                                        {planningState.travelers && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>👥</span> {planningState.travelers}
+                                            </div>
+                                        )}
+                                        {planningState.vibe && (
+                                            <div className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white/80 flex items-center gap-1.5">
+                                                <span>✨</span> {planningState.vibe}
+                                            </div>
+                                        )}
+                                        {planningState.estimatedBudget && (
+                                            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1 text-xs text-emerald-300 flex items-center gap-1.5">
+                                                <span>💰</span> Est: {planningState.estimatedBudget}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Input Area */}
                             <div className="p-3 border-t border-white/10 bg-black/40">
@@ -361,6 +506,8 @@ export function FloatingChatBubble() {
                     </>
                 )}
             </AnimatePresence>
+
+            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         </>,
         document.body
     )

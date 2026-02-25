@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { TripItinerary } from "@/components/features/trip-itinerary"
-import { TripChatPanel } from "@/components/features/trip-chat-panel"
 import { PrayerOverlay } from "@/components/features/prayer-overlay"
 import { motion, AnimatePresence } from "framer-motion"
 import { Wallet, ArrowRight } from "lucide-react"
@@ -21,7 +20,6 @@ interface TripContentProps {
 export function TripContent({ tripId, tripData: initialTripData, isHalal, linkedBookings }: TripContentProps) {
     const [budgetData, setBudgetData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
-    const [chatOpen, setChatOpen] = useState(false)
     const [prayerOpen, setPrayerOpen] = useState(false)
     const [liveTripData, setLiveTripData] = useState(initialTripData)
 
@@ -97,22 +95,43 @@ export function TripContent({ tripId, tripData: initialTripData, isHalal, linked
                 </div>
             </motion.div>
 
-            {/* Prayer Toggle Button */}
-            {firstDayCoords && (
-                <motion.button
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => setPrayerOpen(!prayerOpen)}
-                    className={`fixed top-24 right-6 z-40 px-4 py-2.5 rounded-xl border transition-all shadow-lg ${prayerOpen
-                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
-                            : "bg-black/80 backdrop-blur-xl border-white/10 text-white/60 hover:text-white/80 hover:border-white/20"
-                        }`}
+            {/* Action Bar */}
+            <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="flex items-center gap-2 justify-end"
+            >
+                <button
+                    onClick={() => {
+                        window.dispatchEvent(new CustomEvent("open-chat-bubble", {
+                            detail: {
+                                initialPrompt: "I'd like to refine this itinerary",
+                                isHalal
+                            }
+                        }))
+                    }}
+                    className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:border-white/20`}
                 >
-                    <span className="flex items-center gap-2 text-sm font-medium">
-                        🕌 Prayer Times
+                    <span className="flex items-center gap-2">
+                        ✨ Refine Trip
                     </span>
-                </motion.button>
-            )}
+                </button>
+
+                {firstDayCoords && (
+                    <button
+                        onClick={() => setPrayerOpen(!prayerOpen)}
+                        className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${prayerOpen
+                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
+                            : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                            }`}
+                    >
+                        <span className="flex items-center gap-2">
+                            🕌 Prayer Times
+                        </span>
+                    </button>
+                )}
+            </motion.div>
 
             {/* Prayer Overlay */}
             <AnimatePresence>
@@ -138,16 +157,6 @@ export function TripContent({ tripId, tripData: initialTripData, isHalal, linked
                     linkedBookings={linkedBookings}
                 />
             </motion.div>
-
-            {/* Multi-Turn Chat Panel */}
-            <TripChatPanel
-                tripId={tripId}
-                tripData={liveTripData}
-                onTripUpdate={(updated) => setLiveTripData(updated)}
-                isOpen={chatOpen}
-                onToggle={() => setChatOpen(!chatOpen)}
-            />
         </div>
     )
 }
-

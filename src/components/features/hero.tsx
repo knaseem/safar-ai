@@ -359,44 +359,10 @@ export function Hero({ initialPrompt }: HeroProps) {
 
     const handlePlanTrip = async () => {
         if (!input.trim()) return
-        if (!user) {
-            setIsAuthModalOpen(true)
-            return
-        }
 
-        setLoading(true)
-        const toastId = toast.loading("Consulting the Neural Net...")
-
-        try {
-            const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: input, isHalal })
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) throw new Error(data.error || "Failed to generate")
-
-            toast.dismiss(toastId)
-            toast.success("Itinerary Ready", {
-                description: `Created: ${data.trip_name}`,
-                duration: 3000
-            })
-
-            if (data.id) {
-                router.push(`/trip/generated/${data.id}`)
-            } else {
-                setTripData(data)
-            }
-        } catch (err) {
-            toast.dismiss(toastId)
-            toast.error("Planning Failed", {
-                description: "Our AI agents are currently overwhelmed."
-            })
-        } finally {
-            setLoading(false)
-        }
+        // Dispatch a custom event to open the chat bubble and pass the initial input
+        const event = new CustomEvent("open-chat-bubble", { detail: { initialPrompt: input, isHalal } })
+        window.dispatchEvent(event)
     }
 
     const handleExperiencesSearch = () => {
