@@ -575,7 +575,7 @@ export default function ReceiptsPage() {
                                             <div>
                                                 <DialogTitle>Add Expense</DialogTitle>
                                                 <DialogDescription className="text-white/40">
-                                                    Manually add a travel expense to your vault.
+                                                    Scan a receipt with AI or enter details manually.
                                                 </DialogDescription>
                                             </div>
                                             <div>
