@@ -1,25 +1,14 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
-
-const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.replaceAll(" ", "").split(",") || []
-
-async function verifyAdmin() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
-        return null
-    }
-    return user
-}
+import { checkIsAdmin } from '@/lib/supabase/admin-check'
 
 /**
  * Admin API: Fetch all booking requests (cross-user)
  * Server-side admin email check + service role client
  */
 export async function GET() {
-    const admin = await verifyAdmin()
-    if (!admin) {
+    const isAdmin = await checkIsAdmin()
+    if (!isAdmin) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
@@ -57,8 +46,8 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-    const admin = await verifyAdmin()
-    if (!admin) {
+    const isAdmin = await checkIsAdmin()
+    if (!isAdmin) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

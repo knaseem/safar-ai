@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
-
-const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || []
-
+import { checkIsAdmin } from '@/lib/supabase/admin-check'
 /**
  * Admin API: Fetch a user's travel profile by user_id
  * Server-side admin email check + service role client
@@ -11,9 +8,8 @@ const ADMIN_EMAILS = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || []
 export async function GET(request: Request) {
     try {
         // Verify caller is admin
-        const supabaseAuth = await createClient()
-        const { data: { user } } = await supabaseAuth.auth.getUser()
-        if (!user?.email || !ADMIN_EMAILS.includes(user.email)) {
+        const isAdmin = await checkIsAdmin()
+        if (!isAdmin) {
             return NextResponse.json({ error: "Forbidden" }, { status: 403 })
         }
         const { searchParams } = new URL(request.url)
