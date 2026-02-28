@@ -217,7 +217,7 @@ export default function OfflineBundleView() {
                 )}
 
                 {/* Emergency Phrases */}
-                <section className="mt-12">
+                <section className="mt-12 print:break-before-page">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white print:text-black">
                         <BookOpen className="size-5 text-neutral-500" /> Key Phrases
                     </h2>
