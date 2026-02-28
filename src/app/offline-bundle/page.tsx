@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { Shield, Map as MapIcon, Plane, BookOpen, AlertTriangle, CheckCircle, Smartphone, Battery, Phone, Building } from "lucide-react"
+import { Shield, Map as MapIcon, Plane, BookOpen, AlertTriangle, CheckCircle, Smartphone, Battery, Phone, Building, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 export default function OfflineBundleView() {
     const [bundleData, setBundleData] = useState<any>(null)
@@ -122,27 +123,39 @@ export default function OfflineBundleView() {
                                 <p className="text-xs text-neutral-400 print:text-neutral-500">Jump to Itinerary</p>
                             </div>
                         </a>
-                        <div id="map" className="p-4 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-3 print:border-neutral-200 print:bg-neutral-50 print:break-inside-avoid">
-                            <div className="flex items-center gap-3">
-                                <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0 print:bg-emerald-100 print:text-emerald-600">
-                                    <MapIcon className="size-5" />
+                        <Link href="/offline-bundle/map" id="map" className="p-4 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-3 hover:bg-white/10 transition-colors print:border-neutral-200 print:bg-neutral-50 print:break-inside-avoid shadow-sm group">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0 print:bg-emerald-100 print:text-emerald-600">
+                                        <MapIcon className="size-5" />
+                                    </div>
+                                    <div>
+                                        <p className="font-bold text-sm text-white print:text-black">Local Area Map</p>
+                                        <p className="text-xs text-neutral-400 print:text-neutral-500">Interactive View</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-bold text-sm text-white print:text-black">Local Area Map</p>
-                                    <p className="text-xs text-neutral-400 print:text-neutral-500">Cached Offline</p>
+                                <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity print:hidden">
+                                    <ArrowRight className="size-4" />
                                 </div>
                             </div>
+
                             {bundleData.itineraryDays?.[0]?.coordinates && (
-                                <div className="mt-2 rounded-lg overflow-hidden h-64 w-full bg-neutral-900 border border-white/10 relative">
+                                <div className="mt-2 rounded-lg overflow-hidden h-64 w-full bg-neutral-900 border border-emerald-500/20 relative group-hover:border-emerald-500/50 transition-colors pointer-events-none">
+                                    <div className="absolute inset-0 bg-black/50 z-10 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                                        <span className="bg-emerald-500 text-black font-bold px-4 py-2 rounded-full text-sm shadow-xl flex items-center gap-2">
+                                            <MapIcon className="size-4" />
+                                            Open Full Map
+                                        </span>
+                                    </div>
                                     <iframe
                                         src={`https://maps.google.com/maps?q=${bundleData.itineraryDays[0].coordinates.lat},${bundleData.itineraryDays[0].coordinates.lng}&z=14&output=embed&hl=en&iwloc=near`}
-                                        className="w-full h-full border-0 absolute"
+                                        className="w-full h-full border-0 absolute pointer-events-none"
                                         loading="lazy"
                                         referrerPolicy="no-referrer-when-downgrade"
                                     />
                                 </div>
                             )}
-                        </div>
+                        </Link>
                         {bundleData.hasPassport && (
                             <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-4 border border-emerald-500/30 rounded-xl bg-emerald-500/5 p-4 print:border-emerald-200 print:bg-emerald-50 print:break-inside-avoid">
                                 <div className="flex items-center gap-3 mb-4">
