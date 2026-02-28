@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Loader2, AlertCircle, ExternalLink, Star } from 'lucide-react'
+import useSWR from 'swr'
 import { ActivityCard, ActivityDetailModal, ActivityCardSkeleton } from './activity-card'
 import { ViatorProduct } from '@/lib/viator'
 
@@ -141,56 +142,49 @@ function getMockActivities(destination: string, category: string): ViatorProduct
 }
 
 export function ActivitiesSection({ destination, dates }: ActivitiesSectionProps) {
-    const [products, setProducts] = useState<ViatorProduct[]>([])
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
     const [selectedProduct, setSelectedProduct] = useState<ViatorProduct | null>(null)
-    const [usingFallback, setUsingFallback] = useState(false)
     const [activeCategory, setActiveCategory] = useState('All')
 
     // Retrieve partner ID from env or fallback
     const partnerId = process.env.NEXT_PUBLIC_VIATOR_PARTNER_ID || 'P00285711'
 
-    useEffect(() => {
-        async function fetchActivities() {
-            if (!destination) return
+    // SWR Fetcher
+    const fetcher = async (url: string) => {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error('Failed to fetch activities')
+        return res.json()
+    }
 
-            setLoading(true)
-            setError(null)
-            setUsingFallback(false)
-            try {
-                const params = new URLSearchParams()
-                params.append('query', destination)
-                if (activeCategory !== 'All') {
-                    params.append('category', activeCategory)
-                }
+    // Construct URL based on dependencies
+    const params = new URLSearchParams()
+    if (destination) params.append('query', destination)
+    if (activeCategory !== 'All') params.append('category', activeCategory)
+    if (dates?.from) params.append('startDate', dates.from.toISOString().split('T')[0])
+    if (dates?.to) params.append('endDate', dates.to.toISOString().split('T')[0])
 
-                if (dates?.from) params.append('startDate', dates.from.toISOString().split('T')[0])
-                if (dates?.to) params.append('endDate', dates.to.toISOString().split('T')[0])
+    const apiUrl = destination ? `/api/activities/search?${params.toString()}` : null
 
-                const res = await fetch(`/api/activities/search?${params.toString()}`)
-                const data = await res.json()
+    // Use SWR for caching, deduplication, and loading states
+    const { data, error, isLoading: loading } = useSWR(apiUrl, fetcher, {
+        revalidateOnFocus: false, // Don't refetch just because user switched tabs
+        dedupingInterval: 60000, // Cache for 1 minute before refetching
+    })
 
-                if (!data.products || data.products.length === 0) {
-                    // Use fallback mock activities instead of showing error
-                    console.log('No activities from API, using fallback')
-                    setProducts(getMockActivities(destination, activeCategory))
-                    setUsingFallback(true)
-                } else {
-                    setProducts(data.products)
-                }
-            } catch (err) {
-                console.error('Failed to fetch activities:', err)
-                // Use fallback instead of showing error
-                setProducts(getMockActivities(destination, activeCategory))
-                setUsingFallback(true)
-            } finally {
-                setLoading(false)
-            }
-        }
+    // Determine what to render based on SWR state
+    let products: ViatorProduct[] = []
+    let usingFallback = false
 
-        fetchActivities()
-    }, [destination, dates, activeCategory])
+    if (data?.products?.length > 0) {
+        products = data.products
+    } else if (!loading && destination) {
+        // Fallback to mock data if API returns empty or fails, but only if we have a destination and finished loading
+        products = getMockActivities(destination, activeCategory)
+        usingFallback = true
+    } else if (error && destination) {
+        // Fallback to mock data on hard error
+        products = getMockActivities(destination, activeCategory)
+        usingFallback = true
+    }
 
     return (
         <>

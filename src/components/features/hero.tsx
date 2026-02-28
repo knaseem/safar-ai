@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 import { ArrowRight, Sparkles, Moon, Anchor } from "lucide-react"
 import { toast } from "sonner"
 import { TripItinerary, TripData } from "./trip-itinerary"
@@ -305,10 +305,7 @@ export function Hero({ initialPrompt }: HeroProps) {
 
     const { user } = useAuth()
     const router = useRouter()
-
-
-
-    // Handle initial prompt from parent
+    const shouldReduceMotion = useReducedMotion()    // Handle initial prompt from parent
     useEffect(() => {
         if (initialPrompt) {
             setInput(initialPrompt)
@@ -440,9 +437,9 @@ export function Hero({ initialPrompt }: HeroProps) {
                             <motion.img
                                 src={(activeImages[currentImageIndex] || activeImages[0]).url}
                                 alt={(activeImages[currentImageIndex] || activeImages[0]).location}
-                                initial={{ scale: 0.95 }}
+                                initial={{ scale: shouldReduceMotion ? 1 : 0.95 }}
                                 animate={{ scale: 1.00 }}
-                                transition={{ duration: 12, ease: "linear" }}
+                                transition={{ duration: shouldReduceMotion ? 0 : 12, ease: "linear" }}
                                 className="w-full h-full object-cover"
                                 onError={() => {
                                     // Skip to next image on error

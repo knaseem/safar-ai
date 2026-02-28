@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client"
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane, Save, Send, Map as MapIcon } from "lucide-react"
+import { CheckCircle, ArrowRight, Heart, Loader2, Sparkles, Share2, Copy, Play, X, CloudSun, Plane, Save, Send, Map as MapIcon, Shirt, ShieldAlert } from "lucide-react"
 import { ActivityCard as TimelineActivityCard, HotelVerificationBadge, MoonIcon } from "./trip-itinerary-items"
 import { ViatorActivityCard } from "@/components/features/activity-card"
 import { MOCK_VIATOR_ACTIVITIES } from "@/lib/viator"
@@ -14,6 +14,8 @@ import { EnhancedBookingModal } from "./enhanced-booking-modal"
 import { AuthModal } from "./auth-modal"
 import { TripPdfDocument } from "./trip-pdf"
 import { AIChatDrawer, ConciergeButton } from "./ai-chat-drawer"
+import { WardrobePlanner } from "./wardrobe-planner"
+import { OfflineSurvivalKit } from "./offline-survival-kit"
 import { SocialShareModal } from "./social-share-modal"
 import { WeatherWidget } from "./weather-widget"
 import { pdf } from "@react-pdf/renderer"
@@ -99,6 +101,8 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     const [isChatOpen, setIsChatOpen] = useState(false)
     const [isShareModalOpen, setIsShareModalOpen] = useState(false)
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+    const [isWardrobeOpen, setIsWardrobeOpen] = useState(false)
+    const [isOfflineKitOpen, setIsOfflineKitOpen] = useState(false)
     const [isPresenting, setIsPresenting] = useState(false)
     const [plan, setPlan] = useState<{ hasAudioConcierge: boolean }>({ hasAudioConcierge: false })
     const { user } = useAuth()
@@ -393,6 +397,34 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                 <div className="ml-1">
                                     <ConciergeButton onClick={() => setIsChatOpen(true)} />
                                 </div>
+                            )}
+
+                            {isMounted && !isShared && !isPresenting && (
+                                <>
+                                    <div className="relative group/tooltip">
+                                        <button
+                                            onClick={() => setIsWardrobeOpen(true)}
+                                            className="hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                        >
+                                            <Shirt className="size-4" />
+                                        </button>
+                                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10 z-50">
+                                            Wardrobe Planner
+                                        </div>
+                                    </div>
+
+                                    <div className="relative group/tooltip">
+                                        <button
+                                            onClick={() => setIsOfflineKitOpen(true)}
+                                            className="hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                        >
+                                            <ShieldAlert className="size-4" />
+                                        </button>
+                                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10 z-50">
+                                            Offline Survival Kit
+                                        </div>
+                                    </div>
+                                </>
                             )}
 
                             {isMounted && !isShared && !isPresenting && (
@@ -737,6 +769,42 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                     shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/${savedTripId}`}
                 />
             )}
+
+            <AnimatePresence>
+                {isWardrobeOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl"
+                    >
+                        <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto overflow-x-hidden scrollbar-none relative">
+                            <WardrobePlanner
+                                destination={cleanDestination}
+                                days={displayData.days.length}
+                                activities={displayData.days.map(d => `${d.morning} ${d.afternoon} ${d.evening}`)}
+                                onClose={() => setIsWardrobeOpen(false)}
+                            />
+                        </div>
+                    </motion.div>
+                )}
+
+                {isOfflineKitOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm shadow-2xl"
+                    >
+                        <OfflineSurvivalKit
+                            destination={cleanDestination}
+                            tripName={displayData.trip_name}
+                            onClose={() => setIsOfflineKitOpen(false)}
+                            itineraryDays={displayData.days}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <ConciergePortal
                 isOpen={isPortalOpen}

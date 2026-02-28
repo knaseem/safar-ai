@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkIsAdmin } from '@/lib/supabase/admin-check'
+import { apiSuccess, apiError } from "@/lib/api-handler"
+
 /**
  * Admin API: Fetch a user's travel profile by user_id
  * Server-side admin email check + service role client
@@ -9,15 +11,11 @@ export async function GET(request: Request) {
     try {
         // Verify caller is admin
         const isAdmin = await checkIsAdmin()
-        if (!isAdmin) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-        }
+        if (!isAdmin) return apiError("Forbidden", 403)
         const { searchParams } = new URL(request.url)
         const userId = searchParams.get("userId")
 
-        if (!userId) {
-            return NextResponse.json({ error: "userId required" }, { status: 400 })
-        }
+        if (!userId) return apiError("userId required", 400)
 
         const supabase = createAdminClient()
 
@@ -28,12 +26,12 @@ export async function GET(request: Request) {
             .single()
 
         if (error && error.code !== "PGRST116") {
-            return NextResponse.json({ error: error.message }, { status: 500 })
+            return apiError(error.message, 500)
         }
 
-        return NextResponse.json({ profile: profile || null })
+        return apiSuccess({ profile: profile || null })
     } catch (error: any) {
         console.error("Admin profile fetch error:", error)
-        return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
+        return apiError("Failed to fetch profile", 500)
     }
 }

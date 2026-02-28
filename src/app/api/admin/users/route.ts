@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { apiSuccess, apiError } from "@/lib/api-handler"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkIsAdmin } from '@/lib/supabase/admin-check'
 
@@ -8,9 +8,7 @@ import { checkIsAdmin } from '@/lib/supabase/admin-check'
  */
 export async function GET() {
     const isAdmin = await checkIsAdmin()
-    if (!isAdmin) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    if (!isAdmin) return apiError("Forbidden", 403)
 
     try {
         const supabase = createAdminClient()
@@ -20,7 +18,7 @@ export async function GET() {
 
         if (authError) {
             console.error("Admin user list auth error:", authError)
-            return NextResponse.json({ error: authError.message }, { status: 500 })
+            return apiError(authError.message, 500)
         }
 
         // 2. Fetch all travel profiles
@@ -47,9 +45,9 @@ export async function GET() {
             }
         })
 
-        return NextResponse.json({ users: mergedUsers })
+        return apiSuccess({ users: mergedUsers })
     } catch (error: any) {
         console.error("Admin user list generic error:", error)
-        return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+        return apiError("Failed to fetch users", 500)
     }
 }

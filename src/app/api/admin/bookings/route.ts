@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkIsAdmin } from '@/lib/supabase/admin-check'
+import { apiSuccess, apiError } from "@/lib/api-handler"
 
 /**
  * Admin API: Fetch all booking requests (cross-user)
@@ -8,9 +9,7 @@ import { checkIsAdmin } from '@/lib/supabase/admin-check'
  */
 export async function GET() {
     const isAdmin = await checkIsAdmin()
-    if (!isAdmin) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    if (!isAdmin) return apiError("Forbidden", 403)
 
     try {
         const supabase = createAdminClient()
@@ -23,7 +22,7 @@ export async function GET() {
 
         if (error) {
             console.error("Admin bookings fetch error:", error)
-            return NextResponse.json({ error: error.message }, { status: 500 })
+            return apiError(error.message, 500)
         }
 
         // Fetch travel profiles for analytics
@@ -35,29 +34,25 @@ export async function GET() {
             console.error("Admin profiles fetch error:", profilesError)
         }
 
-        return NextResponse.json({
+        return apiSuccess({
             bookings: bookings || [],
             profiles: profiles || []
         })
     } catch (error: any) {
         console.error("Admin data error:", error)
-        return NextResponse.json({ error: "Failed to fetch admin data" }, { status: 500 })
+        return apiError("Failed to fetch admin data", 500)
     }
 }
 
 export async function PATCH(req: Request) {
     const isAdmin = await checkIsAdmin()
-    if (!isAdmin) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    if (!isAdmin) return apiError("Forbidden", 403)
 
     try {
         const supabase = createAdminClient()
         const { id, status } = await req.json()
 
-        if (!id || !status) {
-            return NextResponse.json({ error: "Missing id or status" }, { status: 400 })
-        }
+        if (!id || !status) return apiError("Missing id or status", 400)
 
         const { error } = await supabase
             .from("booking_requests")
@@ -66,12 +61,12 @@ export async function PATCH(req: Request) {
 
         if (error) {
             console.error("Admin status update error:", error)
-            return NextResponse.json({ error: error.message }, { status: 500 })
+            return apiError(error.message, 500)
         }
 
-        return NextResponse.json({ success: true })
+        return apiSuccess({ success: true }, "Status updated successfully")
     } catch (error: any) {
         console.error("Admin update error:", error)
-        return NextResponse.json({ error: "Failed to update status" }, { status: 500 })
+        return apiError("Failed to update status", 500)
     }
 }

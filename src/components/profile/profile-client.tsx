@@ -12,6 +12,7 @@ import { PassportCard } from "@/components/features/passport-card"
 import { VibeCheck } from "@/components/features/vibe-check"
 import { toast } from "sonner"
 import { ImportBookingsModal } from "@/components/features/import-bookings-modal"
+import useSWR from "swr"
 import { User } from "@supabase/supabase-js"
 import { UnifiedBooking } from "@/types/booking"
 import { UnifiedBookingCard } from "@/components/features/unified-booking-card"
@@ -53,33 +54,30 @@ export default function ProfileClient({ initialUser, initialProfile, initialSave
     const router = useRouter()
     const [user, setUser] = useState<User>(initialUser)
     const [profile, setProfile] = useState<TravelProfile>(initialProfile)
-    const [unifiedBookings, setUnifiedBookings] = useState<UnifiedBooking[]>([])
     const [savedTrips, setSavedTrips] = useState<SavedTrip[]>(initialSavedTrips)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [activeTab, setActiveTab] = useState<'all' | 'trips'>('all')
     const [showPassport, setShowPassport] = useState(false)
     const [showVibeCheck, setShowVibeCheck] = useState(false)
     const [deletingTripId, setDeletingTripId] = useState<string | null>(null)
     const [showImportModal, setShowImportModal] = useState(false)
 
-    useEffect(() => {
-        async function loadBookings() {
-            try {
-                // Fetch Unified Bookings (External APIs)
-                const bookingsRes = await fetch('/api/bookings/all')
-                if (bookingsRes.ok) {
-                    const data = await bookingsRes.json()
-                    setUnifiedBookings(data.bookings || [])
-                }
-            } catch (error) {
-                console.error("Failed to fetch unified bookings:", error)
-            } finally {
-                setLoading(false)
-            }
-        }
+    // SWR fetcher for external unified bookings
+    const fetcher = async (url: string) => {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error('Failed to fetch bookings')
+        const data = await res.json()
+        return data.bookings || []
+    }
 
-        loadBookings()
-    }, [])
+    const { data: unifiedBookings, isLoading: loadingBookings, mutate: mutateBookings } = useSWR<UnifiedBooking[]>(
+        '/api/bookings/all',
+        fetcher,
+        {
+            fallbackData: [],
+            revalidateOnFocus: false
+        }
+    )
 
     const handleDeleteTrip = async (id: string, e: React.MouseEvent) => {
         e.stopPropagation()
@@ -112,7 +110,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSave
         )
     }
 
-    const bookingList = unifiedBookings
+    const bookingList = unifiedBookings || []
 
     return (
         <main className="min-h-screen bg-black pt-24 pb-12 px-4">
@@ -231,10 +229,16 @@ export default function ProfileClient({ initialUser, initialProfile, initialSave
                                             index={i}
                                             trips={savedTrips.map(t => ({ id: t.id, name: t.trip_name }))}
                                             onUpdate={(updated) => {
-                                                setUnifiedBookings(prev => prev.map(b => b.id === booking.id ? { ...b, ...updated } : b))
+                                                mutateBookings(
+                                                    (prev = []) => prev.map(b => b.id === booking.id ? { ...b, ...updated } : b),
+                                                    false // Optimistic update
+                                                )
                                             }}
                                             onDelete={() => {
-                                                setUnifiedBookings(prev => prev.filter(b => b.id !== booking.id))
+                                                mutateBookings(
+                                                    (prev = []) => prev.filter(b => b.id !== booking.id),
+                                                    false // Optimistic update
+                                                )
                                             }}
                                         />
                                     ))
@@ -361,7 +365,7 @@ export default function ProfileClient({ initialUser, initialProfile, initialSave
                             <PassportCard
                                 archetype={profile.archetype || "Explorer"}
                                 scores={profile.archetype_scores || {}}
-                                bookings={unifiedBookings.map(b => ({ id: b.id, destination: b.details.location || b.details.title, check_in: b.details.date || new Date().toISOString() }))}
+                                bookings={(unifiedBookings || []).map(b => ({ id: b.id, destination: b.details.location || b.details.title, check_in: b.details.date || new Date().toISOString() }))}
                                 onClose={() => setShowPassport(false)}
                             />
                         </motion.div>
@@ -397,8 +401,8 @@ export default function ProfileClient({ initialUser, initialProfile, initialSave
                 isOpen={showImportModal}
                 onClose={() => setShowImportModal(false)}
                 onImportSuccess={() => {
-                    // Refresh trips list after import
-                    window.location.reload()
+                    // Update cache after import
+                    mutateBookings()
                 }}
             />
         </main>

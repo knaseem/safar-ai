@@ -398,8 +398,8 @@ export default function AdminDashboardClient({ initialBookings, initialProfiles 
                     </div>
 
                     <div className="bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
+                        <div className="overflow-x-auto w-full pb-2">
+                            <table className="w-full min-w-max text-left text-sm">
                                 <thead className="bg-white/5 border-b border-white/10">
                                     <tr>
                                         <th className="px-6 py-4 font-semibold text-white/70">User</th>
