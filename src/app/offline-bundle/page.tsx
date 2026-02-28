@@ -50,6 +50,9 @@ export default function OfflineBundleView() {
 
     return (
         <div className="min-h-screen bg-neutral-950 text-neutral-200 print:bg-white print:text-black">
+            <style type="text/css">
+                {`@media print { @page { margin: 1.5cm; } }`}
+            </style>
             {/* Minimalist printable header */}
             <header className="border-b border-white/10 bg-neutral-900 px-8 py-6 print:py-4 flex justify-between items-center print:border-neutral-200 print:bg-neutral-50">
                 <div>
@@ -67,7 +70,7 @@ export default function OfflineBundleView() {
             <main className="max-w-4xl mx-auto p-8 space-y-12">
 
                 {/* Emergency Critical Info */}
-                <section className="bg-red-950/20 border border-red-900/50 rounded-2xl p-6 print:bg-red-50 print:border-red-500">
+                <section className="bg-red-950/20 border border-red-900/50 rounded-2xl p-6 print:bg-red-50 print:border-red-500 print:break-inside-avoid">
                     <h2 className="text-red-400 font-bold text-lg mb-4 flex items-center gap-2 print:text-red-800">
                         <AlertTriangle className="size-5" /> Critical Emergency Info
                     </h2>
@@ -119,7 +122,7 @@ export default function OfflineBundleView() {
                                 <p className="text-xs text-neutral-400 print:text-neutral-500">Jump to Itinerary</p>
                             </div>
                         </a>
-                        <div id="map" className="p-4 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-3 print:border-neutral-200 print:bg-neutral-50">
+                        <div id="map" className="p-4 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-3 print:border-neutral-200 print:bg-neutral-50 print:break-inside-avoid">
                             <div className="flex items-center gap-3">
                                 <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shrink-0 print:bg-emerald-100 print:text-emerald-600">
                                     <MapIcon className="size-5" />
@@ -141,7 +144,7 @@ export default function OfflineBundleView() {
                             )}
                         </div>
                         {bundleData.hasPassport && (
-                            <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-4 border border-emerald-500/30 rounded-xl bg-emerald-500/5 p-4 print:border-emerald-200 print:bg-emerald-50">
+                            <div className="col-span-1 sm:col-span-2 lg:col-span-3 mt-4 border border-emerald-500/30 rounded-xl bg-emerald-500/5 p-4 print:border-emerald-200 print:bg-emerald-50 print:break-inside-avoid">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="size-10 bg-emerald-500 text-black rounded-full flex items-center justify-center shrink-0 print:text-white">
                                         <Shield className="size-5" />
@@ -185,7 +188,7 @@ export default function OfflineBundleView() {
                         </h2>
                         <div className="space-y-4">
                             {bundleData.itineraryDays.map((day: any, idx: number) => (
-                                <div key={idx} className="p-5 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-4 print:border-neutral-200 print:bg-neutral-50">
+                                <div key={idx} className="p-5 border border-white/10 rounded-xl bg-white/5 flex flex-col gap-4 print:border-neutral-200 print:bg-neutral-50 print:break-inside-avoid print:mb-4">
                                     <div className="flex justify-between items-center border-b border-white/10 pb-3 print:border-neutral-200">
                                         <h3 className="text-lg font-bold text-white print:text-black">Day {day.day}</h3>
                                         <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">{day.theme}</span>
@@ -220,7 +223,7 @@ export default function OfflineBundleView() {
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {bundleData.emergencyPhrases.map((phrase: any, idx: number) => (
-                            <div key={idx} className="p-4 border border-white/10 rounded-xl print:border-neutral-200">
+                            <div key={idx} className="p-4 border border-white/10 rounded-xl print:border-neutral-200 print:break-inside-avoid print:mb-2">
                                 <p className="text-xs text-neutral-500 mb-1">{phrase.eng}</p>
                                 <p className="text-md font-bold text-white break-words print:text-neutral-900">{phrase.trans}</p>
                             </div>
