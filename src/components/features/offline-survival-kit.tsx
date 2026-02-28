@@ -234,7 +234,19 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
         { eng: "I need a doctor / hospital", trans: getTranslation("doctor", destination) },
         { eng: "Can you help me? It's an emergency.", trans: getTranslation("help", destination) },
         { eng: "Where is the embassy/consulate?", trans: getTranslation("embassy", destination) },
-        { eng: "I have lost my passport.", trans: getTranslation("passport", destination) }
+        { eng: "I have lost my passport.", trans: getTranslation("passport", destination) },
+        { eng: "Hello", trans: getTranslation("hello", destination) },
+        { eng: "Thank you", trans: getTranslation("thanks", destination) },
+        { eng: "Excuse me / Sorry", trans: getTranslation("excuse", destination) },
+        { eng: "Do you speak English?", trans: getTranslation("english", destination) },
+        { eng: "Where is the bathroom?", trans: getTranslation("bathroom", destination) },
+        { eng: "How much does this cost?", trans: getTranslation("cost", destination) },
+        { eng: "I would like to order", trans: getTranslation("order", destination) },
+        { eng: "Can I have the bill, please?", trans: getTranslation("bill", destination) },
+        { eng: "Where is the train station / bus stop?", trans: getTranslation("transport", destination) },
+        { eng: "I am lost", trans: getTranslation("lost", destination) },
+        { eng: "Yes / No", trans: getTranslation("yesno", destination) },
+        { eng: "Water, please", trans: getTranslation("water", destination) },
     ]
 
     return (
@@ -527,6 +539,78 @@ function getTranslation(type: string, dest: string): string {
         if (isSpain) return "He perdido mi pasaporte"
         if (isFrance) return "J'ai perdu mon passeport"
         return "I have lost my passport"
+    }
+    if (type === "hello") {
+        if (isJapan) return "こんにちは (Konnichiwa)"
+        if (isSpain) return "Hola"
+        if (isFrance) return "Bonjour"
+        return "Hello"
+    }
+    if (type === "thanks") {
+        if (isJapan) return "ありがとう (Arigatou)"
+        if (isSpain) return "Gracias"
+        if (isFrance) return "Merci"
+        return "Thank you"
+    }
+    if (type === "excuse") {
+        if (isJapan) return "すみません (Sumimasen)"
+        if (isSpain) return "Disculpe / Perdón"
+        if (isFrance) return "Excusez-moi / Pardon"
+        return "Excuse me / Sorry"
+    }
+    if (type === "english") {
+        if (isJapan) return "英語を話せますか？ (Eigo o hanasemasu ka?)"
+        if (isSpain) return "¿Habla inglés?"
+        if (isFrance) return "Parlez-vous anglais ?"
+        return "Do you speak English?"
+    }
+    if (type === "bathroom") {
+        if (isJapan) return "トイレはどこですか？ (Toire wa doko desu ka?)"
+        if (isSpain) return "¿Dónde está el baño?"
+        if (isFrance) return "Où sont les toilettes ?"
+        return "Where is the bathroom?"
+    }
+    if (type === "cost") {
+        if (isJapan) return "これはいくらですか？ (Kore wa ikura desu ka?)"
+        if (isSpain) return "¿Cuánto cuesta esto?"
+        if (isFrance) return "Combien ça coûte ?"
+        return "How much does this cost?"
+    }
+    if (type === "order") {
+        if (isJapan) return "注文をお願いします (Chūmon o onegaishimasu)"
+        if (isSpain) return "Me gustaría pedir"
+        if (isFrance) return "Je voudrais commander"
+        return "I would like to order"
+    }
+    if (type === "bill") {
+        if (isJapan) return "お会計をお願いします (Okaikei o onegaishimasu)"
+        if (isSpain) return "La cuenta, por favor"
+        if (isFrance) return "L'addition, s'il vous plaît"
+        return "Can I have the bill, please?"
+    }
+    if (type === "transport") {
+        if (isJapan) return "駅 / バス停はどこですか？ (Eki / basutei wa doko desu ka?)"
+        if (isSpain) return "¿Dónde está la estación de tren / parada de autobús?"
+        if (isFrance) return "Où est la gare / l'arrêt de bus ?"
+        return "Where is the train station / bus stop?"
+    }
+    if (type === "lost") {
+        if (isJapan) return "道に迷いました (Michi ni mayoimashita)"
+        if (isSpain) return "Estoy perdido/a"
+        if (isFrance) return "Je suis perdu(e)"
+        return "I am lost"
+    }
+    if (type === "yesno") {
+        if (isJapan) return "はい / いいえ (Hai / Iie)"
+        if (isSpain) return "Sí / No"
+        if (isFrance) return "Oui / Non"
+        return "Yes / No"
+    }
+    if (type === "water") {
+        if (isJapan) return "お水をお願いします (Omizu o onegaishimasu)"
+        if (isSpain) return "Agua, por favor"
+        if (isFrance) return "De l'eau, s'il vous plaît"
+        return "Water, please"
     }
     return "Translation unavailable"
 }
