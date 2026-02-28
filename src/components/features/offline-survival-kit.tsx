@@ -455,7 +455,7 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
 
                             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                 <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-3">Key Emergency Phrases Included</h4>
-                                <div className="space-y-3">
+                                <div className="space-y-3 max-h-48 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                     {emergencyPhrases.map((phrase, idx) => (
                                         <div key={idx} className="flex flex-col gap-0.5">
                                             <p className="text-xs text-white/60">{phrase.eng}</p>
