@@ -27,6 +27,14 @@ const mapboxStyles = `
 .mapboxgl-ctrl-bottom-right {
     opacity: 0.3 !important;
 }
+.custom-map-popup .mapboxgl-popup-content {
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+}
+.custom-map-popup .mapboxgl-popup-tip {
+    display: none !important;
+}
 `
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
@@ -44,10 +52,12 @@ interface Coordinates {
 
 interface CinemaMapProps {
     locations: Coordinates[]
+    days?: { day: number; theme: string }[]
     activeIndex?: number
+    onMarkerClick?: (index: number) => void
 }
 
-export function CinemaMap({ locations, activeIndex = 0 }: CinemaMapProps) {
+export function CinemaMap({ locations, days, activeIndex = 0, onMarkerClick }: CinemaMapProps) {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<mapboxgl.Map | null>(null)
     const [isPlaying, setIsPlaying] = useState(true) // Auto-play on load
@@ -292,32 +302,55 @@ export function CinemaMap({ locations, activeIndex = 0 }: CinemaMapProps) {
 
         // Add numbered day markers
         locations.forEach((loc, i) => {
+            const dayData = days?.[i]
             const el = document.createElement('div')
             el.innerHTML = `
-                <div class="relative group cursor-pointer">
+                <div class="relative group cursor-pointer z-50">
                     <!-- Glowing Base (Pulsing) -->
-                    <div class="absolute -inset-4 bg-orange-500/20 rounded-full blur-xl animate-pulse"></div>
+                    <div class="absolute -inset-4 bg-orange-500/20 rounded-full blur-xl animate-pulse pointer-events-none"></div>
                     
                     <!-- Hover Glow -->
-                    <div class="absolute -inset-4 bg-orange-500/40 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <div class="absolute -inset-4 bg-orange-500/40 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
                     <!-- Main Marker Ring with Gradient Border -->
                     <div class="relative w-9 h-9 rounded-full bg-gradient-to-br from-amber-300 via-orange-500 to-amber-700 p-[2px] shadow-[0_0_15px_rgba(249,115,22,0.5)] transition-transform duration-300 group-hover:scale-110">
                         <!-- Inner Content -->
                         <div class="w-full h-full rounded-full bg-black/80 flex items-center justify-center backdrop-blur-md">
-                            <span class="text-amber-400 text-sm font-bold font-mono">${i + 1}</span>
+                            <span class="text-amber-400 text-sm font-bold font-mono pointer-events-none">${i + 1}</span>
                         </div>
                     </div>
 
                     <!-- Top Shine/Jewel Effect -->
-                    <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-amber-200/50 blur-[1px] rounded-full"></div>
+                    <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-amber-200/50 blur-[1px] rounded-full pointer-events-none"></div>
                 </div>
             `
             el.style.cssText = 'cursor: pointer;'
 
-            new mapboxgl.Marker(el)
+            el.addEventListener('click', (e) => {
+                e.stopPropagation() // Prevent map from treating this as a generic click
+                if (onMarkerClick) {
+                    onMarkerClick(i)
+                }
+            })
+
+            const marker = new mapboxgl.Marker(el)
                 .setLngLat([loc.lng, loc.lat])
-                .addTo(map.current!)
+
+            if (dayData) {
+                const popup = new mapboxgl.Popup({ offset: 25, closeButton: false, closeOnClick: false, className: 'custom-map-popup' })
+                    .setHTML(`
+                        <div style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; min-width: 150px; max-width: 200px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); font-family: system-ui, sans-serif; pointer-events: none;">
+                            <div style="color: #34d399; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Day ${dayData.day}</div>
+                            <div style="color: white; font-size: 13px; font-weight: 500; line-height: 1.3;">${dayData.theme}</div>
+                        </div>
+                    `)
+                marker.setPopup(popup)
+
+                el.addEventListener('mouseenter', () => popup.addTo(map.current!))
+                el.addEventListener('mouseleave', () => popup.remove())
+            }
+
+            marker.addTo(map.current!)
         })
 
         return () => map.current?.remove()

@@ -313,6 +313,20 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
         setIsShareModalOpen(true)
     }
 
+    const handleMapMarkerClick = (index: number) => {
+        // If presentation mode is active, just update the active day
+        if (isPresenting) {
+            setActiveDayIndex(index)
+            return
+        }
+
+        // Otherwise, scroll to the corresponding day element in the itinerary list
+        const element = dayRefs.current[index]
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }
+    }
+
     return (
         <>
             <motion.div
@@ -328,7 +342,12 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                 {/* Top Section: Fixed Map */}
                 <div className={`relative shrink-0 bg-neutral-900/60 group overflow-hidden border-b border-white/10 transition-all duration-1000 ${isPresenting ? 'h-full' : 'h-[55%]'}`}>
-                    <CinemaMap locations={locations} activeIndex={activeDayIndex} />
+                    <CinemaMap
+                        locations={locations}
+                        days={displayData.days}
+                        activeIndex={activeDayIndex}
+                        onMarkerClick={handleMapMarkerClick}
+                    />
 
                     {/* Overlay Title */}
                     <div className="absolute bottom-6 left-8 right-20 pointer-events-none flex flex-wrap gap-2">
