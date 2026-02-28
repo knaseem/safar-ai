@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { CinemaMap } from "./cinema-map"
 import { EnhancedBookingModal } from "./enhanced-booking-modal"
 import { AuthModal } from "./auth-modal"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { TripPdfDocument } from "./trip-pdf"
 import { AIChatDrawer, ConciergeButton } from "./ai-chat-drawer"
 import { WardrobePlanner } from "./wardrobe-planner"
@@ -134,6 +135,16 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
     const [providerName, setProviderName] = useState("Expedia")
     const [isSaved, setIsSaved] = useState(!!tripId)
     const [savedTripId, setSavedTripId] = useState<string | null>(tripId || null)
+    const [showDiscovery, setShowDiscovery] = useState(false)
+
+    useEffect(() => {
+        if (isShared) return
+        const hasDiscovered = localStorage.getItem('safar_tools_discovered_v3')
+        if (!hasDiscovered) {
+            const timer = setTimeout(() => setShowDiscovery(true), 2500)
+            return () => clearTimeout(timer)
+        }
+    }, [isShared])
 
     // Merge trip_data.importedBookings with linkedBookings
     const allBookings = [
@@ -395,7 +406,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
 
                             {!isShared && (
                                 <div className="ml-1">
-                                    <ConciergeButton onClick={() => setIsChatOpen(true)} />
+                                    <ConciergeButton onClick={() => setIsChatOpen(true)} showPing={showDiscovery} />
                                 </div>
                             )}
 
@@ -404,9 +415,15 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                     <div className="relative group/tooltip">
                                         <button
                                             onClick={() => setIsWardrobeOpen(true)}
-                                            className="hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                            className="relative hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
                                         >
                                             <Shirt className="size-4" />
+                                            {showDiscovery && (
+                                                <span className="absolute top-0 right-0 flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                </span>
+                                            )}
                                         </button>
                                         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10 z-50">
                                             Wardrobe Planner
@@ -416,9 +433,15 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                                     <div className="relative group/tooltip">
                                         <button
                                             onClick={() => setIsOfflineKitOpen(true)}
-                                            className="hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+                                            className="relative hidden md:flex p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
                                         >
                                             <ShieldAlert className="size-4" />
+                                            {showDiscovery && (
+                                                <span className="absolute top-0 right-0 flex h-2 w-2">
+                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                </span>
+                                            )}
                                         </button>
                                         <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10 z-50">
                                             Offline Survival Kit
@@ -813,6 +836,79 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 title={portalTitle}
                 providerName={providerName}
             />
+
+            <Dialog
+                open={showDiscovery}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        localStorage.setItem('safar_tools_discovered_v3', 'true')
+                        setShowDiscovery(false)
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-md bg-neutral-950 border-white/10 text-white shadow-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl text-emerald-400">
+                            <Sparkles className="size-5" />
+                            Your AI Travel Tools
+                        </DialogTitle>
+                        <DialogDescription className="text-white/60 text-sm mt-2">
+                            We've equipped you with everything needed for a seamless trip. Access them anytime from the floating menu on the left:
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-colors">
+                            <div className="p-2 rounded-full bg-emerald-500/20 text-emerald-400 shrink-0">
+                                <Sparkles className="size-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">AI Concierge</h4>
+                                <p className="text-xs text-white/60 mt-0.5">Your 24/7 personal guide for live questions and recommendations.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-colors">
+                            <div className="p-2 rounded-full bg-blue-500/20 text-blue-400 shrink-0">
+                                <Shirt className="size-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Wardrobe Planner</h4>
+                                <p className="text-xs text-white/60 mt-0.5">Smart packing lists customized to your itinerary's weather and vibe.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-colors">
+                            <div className="p-2 rounded-full bg-red-500/20 text-red-400 shrink-0">
+                                <ShieldAlert className="size-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Offline Survival Kit</h4>
+                                <p className="text-xs text-white/60 mt-0.5">Zero-WiFi access to your maps, documents, and emergency contacts.</p>
+                            </div>
+                        </div>
+                        <div className="flex items-start gap-4 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-colors">
+                            <div className="p-2 rounded-full bg-pink-500/20 text-pink-400 shrink-0">
+                                <Heart className="size-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-semibold text-sm">Save & Share</h4>
+                                <p className="text-xs text-white/60 mt-0.5">Save trips to your profile or share them instantly via secret link.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-semibold shadow-lg shadow-emerald-500/20"
+                            onClick={() => {
+                                localStorage.setItem('safar_tools_discovered', 'true')
+                                setShowDiscovery(false)
+                            }}
+                        >
+                            Got it, let's go!
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     )
 }

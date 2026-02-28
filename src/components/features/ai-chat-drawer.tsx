@@ -247,9 +247,9 @@ function FormattedMessage({ content }: { content: string }) {
     )
 }
 
-export function ConciergeButton({ onClick }: { onClick: () => void }) {
+export function ConciergeButton({ onClick, showPing }: { onClick: () => void, showPing?: boolean }) {
     return (
-        <div className="relative group/concierge">
+        <div className="relative group/concierge group/tooltip">
             <motion.div
                 className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full blur opacity-25"
                 animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
@@ -262,7 +262,16 @@ export function ConciergeButton({ onClick }: { onClick: () => void }) {
                 whileTap={{ scale: 0.95 }}
             >
                 <Sparkles className="size-4" />
+                {showPing && (
+                    <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                )}
             </motion.button>
+            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded bg-black/80 text-[10px] text-white opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/10 z-50">
+                AI Concierge
+            </div>
         </div>
     )
 }
