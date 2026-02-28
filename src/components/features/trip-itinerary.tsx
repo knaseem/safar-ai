@@ -332,7 +332,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
             <motion.div
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`w-full max-w-6xl mx-auto bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col transition-all duration-1000 ${isPresenting ? 'h-[95vh] border-emerald-500/50' : 'h-[85vh] md:h-[90vh]'}`}
+                className={`w-full max-w-6xl mx-auto bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col transition-all duration-1000 ${isPresenting ? 'h-[95vh] border-emerald-500/50' : 'min-h-[90vh]'}`}
             >
                 {/* Atmospheric Background Layer */}
                 <AtmosphericBackground
@@ -341,7 +341,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 />
 
                 {/* Top Section: Fixed Map */}
-                <div className={`relative shrink-0 bg-neutral-900/60 group overflow-hidden border-b border-white/10 transition-all duration-1000 ${isPresenting ? 'h-full' : 'h-[55%]'}`}>
+                <div className={`relative shrink-0 bg-neutral-900/60 group overflow-hidden border-b border-white/10 transition-all duration-1000 ${isPresenting ? 'h-full' : 'h-[60vh]'}`}>
                     <CinemaMap
                         locations={locations}
                         days={displayData.days}
@@ -581,7 +581,7 @@ export function TripItinerary({ data, onReset, isHalal = false, isShared = false
                 </div>
 
                 {/* Bottom Section: Scrollable Timeline */}
-                <div className={`flex-1 overflow-y-auto relative bg-transparent scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent transition-all duration-500 ${isPresenting ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`flex-1 relative bg-transparent transition-all duration-500 ${isPresenting ? 'opacity-0 pointer-events-none hidden' : 'opacity-100'}`}>
                     <div className="flex-1 p-8 space-y-12">
 
                         {/* Imported Bookings Section */}
