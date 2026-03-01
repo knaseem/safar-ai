@@ -24,7 +24,7 @@ const ALL_DESTINATIONS = [
     },
     {
         id: 6, title: "Petra, Jordan", description: "The Rose City, carved directly into rock.",
-        image: "https://images.unsplash.com/photo-1501236570302-9061b2aaa412?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1547288647-73d8df5e8b4e?q=80&w=2070&auto=format&fit=crop",
         rating: "4.8", price: "From $6,200", tags: ["History", "Desert", "Adventure"]
     },
     {
