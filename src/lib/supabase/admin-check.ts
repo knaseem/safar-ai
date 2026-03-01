@@ -24,8 +24,8 @@ export async function checkIsAdmin(): Promise<boolean> {
         return true
     }
 
-    const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',') || []
-    if (user.email && adminEmails.includes(user.email)) {
+    const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+    if (user.email && adminEmails.includes(user.email.toLowerCase())) {
         return true
     }
 
