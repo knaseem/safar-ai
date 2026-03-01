@@ -73,12 +73,12 @@ const ALL_DESTINATIONS = [
     // Americas
     {
         id: 11, title: "Machu Picchu, Peru", description: "Lost Incan city high in the Andes.",
-        image: "https://images.unsplash.com/photo-1587595431973-160d0d94add1?q=80&w=2076&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=2076&auto=format&fit=crop",
         rating: "4.9", price: "From $6,500", tags: ["History", "Hiking", "Adventure"]
     },
     {
         id: 12, title: "Tulum, Mexico", description: "Ancient ruins meeting Caribbean beaches.",
-        image: "https://images.unsplash.com/photo-1506193095636-9a33303d34fa?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1504681869696-d9878ed521f6?q=80&w=2070&auto=format&fit=crop",
         rating: "4.6", price: "From $4,500", tags: ["Beach", "Ruins", "Relax"]
     },
     {
@@ -88,12 +88,12 @@ const ALL_DESTINATIONS = [
     },
     {
         id: 14, title: "New York City, USA", description: "The city that never sleeps.",
-        image: "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?q=80&w=2070&auto=format&fit=crop",
         rating: "4.7", price: "From $7,500", tags: ["City", "Energy", "Shopping"]
     },
     {
         id: 35, title: "Patagonia, Chile", description: "Granite peaks and glaciers.",
-        image: "https://images.unsplash.com/photo-1518182170546-0766aa6f6a56?q=80&w=2102&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1490782300182-697b80ad4293?q=80&w=2102&auto=format&fit=crop",
         rating: "4.9", price: "From $8,000", tags: ["Nature", "Hiking", "Adventure"]
     },
 
