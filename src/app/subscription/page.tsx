@@ -181,7 +181,7 @@ function SubscriptionPageContent() {
 
                 {/* Pricing Cards */}
                 <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {Object.entries(PLAN_LIMITS).map(([tier, limits], index) => {
+                    {Object.entries(PLAN_LIMITS).filter(([tier]) => tier !== 'vip').map(([tier, limits], index) => {
                         const Icon = PLAN_ICONS[tier as keyof typeof PLAN_ICONS]
                         const isPro = tier === 'pro'
                         const price = prices[tier as keyof typeof prices][billingCycle]
