@@ -622,7 +622,7 @@ export default function AdminDashboardClient({ initialBookings, initialProfiles 
                                     <div className="mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                                         <h4 className="text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-2">Security Notice</h4>
                                         <p className="text-xs text-white/60 leading-relaxed">
-                                            Granting Pro access <strong>does not</strong> give the user access to this Admin Dashboard. Only <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">knaseem22@gmail.com</code> (and emails explicitly listed in <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">NEXT_PUBLIC_ADMIN_EMAILS</code>) can view this page.
+                                            Granting Pro access <strong>does not</strong> give the user access to this Admin Dashboard. Only <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">knaseem22@gmail.com</code> (and emails explicitly listed in <code className="bg-black/50 px-1 py-0.5 rounded text-emerald-300">ADMIN_EMAILS</code>) can view this page.
                                         </p>
                                     </div>
                                 </div>

@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
         const data = await resend.emails.send({
             from: 'SafarAI Contact <support@safar-ai.co>', // Verified domain sender
-            to: (process.env.NEXT_PUBLIC_ADMIN_EMAILS || 'knaseem@safar-ai.co').split(',').map(e => e.trim()),
+            to: (process.env.ADMIN_EMAILS || 'knaseem@safar-ai.co').split(',').map(e => e.trim()),
             subject: `Contact Form: ${safeSubject || 'New Message'}`,
             // replyTo removed as requested
             text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
