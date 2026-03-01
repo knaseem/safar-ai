@@ -71,11 +71,7 @@ const ALL_DESTINATIONS = [
     },
 
     // Americas
-    {
-        id: 11, title: "Machu Picchu, Peru", description: "Lost Incan city high in the Andes.",
-        image: "/images/destinations/machu_picchu.jpg",
-        rating: "4.9", price: "From $6,500", tags: ["History", "Hiking", "Adventure"]
-    },
+
     {
         id: 12, title: "Tulum, Mexico", description: "Ancient ruins meeting Caribbean beaches.",
         image: "/images/destinations/tulum.jpg",
@@ -91,11 +87,7 @@ const ALL_DESTINATIONS = [
         image: "/images/destinations/nyc.jpg",
         rating: "4.7", price: "From $7,500", tags: ["City", "Energy", "Shopping"]
     },
-    {
-        id: 35, title: "Patagonia, Chile", description: "Granite peaks and glaciers.",
-        image: "/images/destinations/patagonia.jpg",
-        rating: "4.9", price: "From $8,000", tags: ["Nature", "Hiking", "Adventure"]
-    },
+
 
     // Africa & Middle East & Oceania
     {
@@ -113,21 +105,13 @@ const ALL_DESTINATIONS = [
         image: "/images/destinations/cape_town.jpg",
         rating: "4.8", price: "From $6,800", tags: ["Nature", "City", "Wine"]
     },
-    {
-        id: 17, title: "Serengeti, Tanzania", description: "Witness the Great Migration.",
-        image: "/images/destinations/serengeti.jpg",
-        rating: "5.0", price: "From $18,000", tags: ["Safari", "Wildlife", "Nature"]
-    },
+
     {
         id: 29, title: "Cairo, Egypt", description: "Ancient pyramids and the mighty Nile.",
         image: "/images/destinations/cairo.jpg",
         rating: "4.7", price: "From $5,200", tags: ["History", "Culture", "Desert"]
     },
-    {
-        id: 18, title: "Queenstown, New Zealand", description: "The adventure capital of the world.",
-        image: "/images/destinations/queenstown.jpg",
-        rating: "4.9", price: "From $8,200", tags: ["Adventure", "Nature", "Mountains"]
-    },
+
     {
         id: 30, title: "Sydney, Australia", description: "Iconic harbor and surf beaches.",
         image: "/images/destinations/sydney.jpg",
