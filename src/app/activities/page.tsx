@@ -8,12 +8,12 @@ import { ActivitiesSection } from '@/components/activities/activities-section'
 import { Navbar } from '@/components/layout/navbar'
 
 const POPULAR_DESTINATIONS = [
-    { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Tokyo', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=80&w=800' },
-    { name: 'New York', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Dubai', image: 'https://images.unsplash.com/photo-1512453979798-5ea904ac66de?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Rome', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Bali', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Paris', image: '/images/destinations/paris.jpg' },
+    { name: 'Tokyo', image: '/images/destinations/tokyo.jpg' },
+    { name: 'New York', image: '/images/destinations/nyc.jpg' },
+    { name: 'Dubai', image: '/images/destinations/dubai.jpg' },
+    { name: 'Amalfi Coast', image: '/images/destinations/amalfi.jpg' },
+    { name: 'Bali', image: '/images/destinations/bali.jpg' },
 ]
 
 export default function ActivitiesPage() {
@@ -75,7 +75,7 @@ function ActivitiesContent() {
                 {/* Background Image with Overlay */}
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=80&w=2000"
+                        src="/images/destinations/banff.jpg"
                         alt="Travel Background"
                         className="w-full h-full object-cover opacity-40 scale-105 animate-slow-pan"
                     />
