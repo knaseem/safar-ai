@@ -209,6 +209,23 @@ export function FloatingChatBubble() {
         }
     }
 
+    const handleReset = () => {
+        setMessages([])
+        setPlanningState({
+            destination: null,
+            dates: null,
+            travelers: null,
+            vibe: null,
+            flightClass: null,
+            pace: null,
+            accommodation: null,
+            estimatedBudget: null,
+            readyToGenerate: false
+        })
+        setSmartChips(INITIAL_SUGGESTIONS)
+        setInput("")
+    }
+
     if (!mounted) return null
 
     return createPortal(
@@ -294,9 +311,9 @@ export function FloatingChatBubble() {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button
-                                        onClick={() => setMessages([])}
+                                        onClick={handleReset}
                                         className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-colors"
-                                        title="Clear Chat"
+                                        title="Clear Session"
                                     >
                                         <Trash2 className="size-4" />
                                     </button>
