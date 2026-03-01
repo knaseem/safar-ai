@@ -6,7 +6,10 @@ export async function checkIsAdmin(): Promise<boolean> {
     // 1. Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
+    console.log("[admin-check] user:", user?.email, "authError:", authError)
+
     if (authError || !user) {
+        console.log("[admin-check] Returning false because no user or auth error")
         return false
     }
 
@@ -17,17 +20,21 @@ export async function checkIsAdmin(): Promise<boolean> {
         .eq('user_id', user.id)
         .single()
 
-    // 3. Fallback logic for transition period: 
-    // If DB is_admin isn't set up yet, fallback to the strict env var check to prevent breaking the app.
-    // Once the DB migration is run in production, this fallback can be removed.
+    console.log("[admin-check] profile is_admin:", profile?.is_admin)
+
+    // 3. Fallback logic for transition period
     if (profile?.is_admin === true) {
+        console.log("[admin-check] Returning true from profile.is_admin")
         return true
     }
 
     const adminEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+    console.log("[admin-check] adminEmails env:", adminEmails)
     if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+        console.log("[admin-check] Returning true from env var check")
         return true
     }
 
+    console.log("[admin-check] Returning false at the end")
     return false
 }

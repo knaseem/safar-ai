@@ -42,6 +42,7 @@ export async function middleware(request: NextRequest) {
         }
 
         const userEmail = user.email?.toLowerCase() || ''
+        console.log("DEBUG ADMIN MIDDLEWARE:", { ADMIN_EMAILS, userEmail, user_raw: user.email })
 
         // If ADMIN_EMAILS is configured, enforce whitelist
         if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(userEmail)) {
