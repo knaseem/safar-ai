@@ -275,9 +275,9 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
     ]
 
     return (
-        <div className="relative bg-neutral-900 border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-w-md w-full mx-auto">
+        <div className="relative bg-neutral-900 border border-white/10 rounded-2xl overflow-y-auto overflow-x-hidden shadow-2xl max-w-md w-full mx-auto max-h-[85vh] scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {/* Header */}
-            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-red-500/10 to-orange-500/5 flex items-center justify-between">
+            <div className="p-5 border-b border-white/10 bg-gradient-to-r from-red-500/10 to-orange-500/5 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-red-500/20 rounded-lg">
                         <WifiOff className="size-5 text-red-400" />
