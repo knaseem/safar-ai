@@ -4,7 +4,6 @@ import { Suspense, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Search, MapPin, Calendar, ArrowRight } from 'lucide-react'
-import { DateRangePicker } from '@/components/ui/date-range-picker'
 import { ActivitiesSection } from '@/components/activities/activities-section'
 import { Navbar } from '@/components/layout/navbar'
 
@@ -28,7 +27,6 @@ export default function ActivitiesPage() {
 function ActivitiesContent() {
     const [searchQuery, setSearchQuery] = useState('')
     const [activeDestination, setActiveDestination] = useState<string | null>(null)
-    const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null })
     const [isSearching, setIsSearching] = useState(false)
     const searchParams = useSearchParams()
     const router = useRouter()
@@ -123,17 +121,6 @@ function ActivitiesContent() {
                                     placeholder="Where are you going? (e.g. Paris, Tokyo)"
                                     className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-white/40 px-4 py-3 text-lg"
                                 />
-                                <div className="hidden md:block w-px h-8 bg-white/10 mx-2" />
-                                <div className="hidden md:block min-w-[200px]">
-                                    <DateRangePicker
-                                        checkIn={dateRange.from}
-                                        checkOut={dateRange.to}
-                                        onDateChange={(from, to) => setDateRange({ from, to })}
-                                        className="border-none !bg-transparent h-12 mt-1 hover:!bg-white/5 shadow-none ring-0 [&>div]:border-none [&>div]:bg-transparent"
-                                        fromLabel="Start"
-                                        toLabel="End"
-                                    />
-                                </div>
                                 <button
                                     type="submit"
                                     className="ml-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold rounded-full transition-all active:scale-95 flex items-center gap-2"
@@ -215,7 +202,6 @@ function ActivitiesContent() {
                             {/* The Polished Activities Component */}
                             <ActivitiesSection
                                 destination={activeDestination}
-                                dates={(dateRange.from && dateRange.to) ? { from: dateRange.from, to: dateRange.to } : undefined}
                             />
 
                         </motion.div>
