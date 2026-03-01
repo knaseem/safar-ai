@@ -73,12 +73,12 @@ const ALL_DESTINATIONS = [
     // Americas
     {
         id: 11, title: "Machu Picchu, Peru", description: "Lost Incan city high in the Andes.",
-        image: "https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=2076&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1588665792942-ed011aaab0b3?q=80&w=2076&auto=format&fit=crop",
         rating: "4.9", price: "From $6,500", tags: ["History", "Hiking", "Adventure"]
     },
     {
         id: 12, title: "Tulum, Mexico", description: "Ancient ruins meeting Caribbean beaches.",
-        image: "https://images.unsplash.com/photo-1504681869696-d9878ed521f6?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2070&auto=format&fit=crop",
         rating: "4.6", price: "From $4,500", tags: ["Beach", "Ruins", "Relax"]
     },
     {
@@ -88,12 +88,12 @@ const ALL_DESTINATIONS = [
     },
     {
         id: 14, title: "New York City, USA", description: "The city that never sleeps.",
-        image: "https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2070&auto=format&fit=crop",
         rating: "4.7", price: "From $7,500", tags: ["City", "Energy", "Shopping"]
     },
     {
         id: 35, title: "Patagonia, Chile", description: "Granite peaks and glaciers.",
-        image: "https://images.unsplash.com/photo-1490782300182-697b80ad4293?q=80&w=2102&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1550993806-38f321df75e3?q=80&w=2102&auto=format&fit=crop",
         rating: "4.9", price: "From $8,000", tags: ["Nature", "Hiking", "Adventure"]
     },
 
@@ -115,7 +115,7 @@ const ALL_DESTINATIONS = [
     },
     {
         id: 17, title: "Serengeti, Tanzania", description: "Witness the Great Migration.",
-        image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?q=80&w=2068&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1547471080-7fc2caa6f17f?q=80&w=2068&auto=format&fit=crop",
         rating: "5.0", price: "From $18,000", tags: ["Safari", "Wildlife", "Nature"]
     },
     {
