@@ -9,133 +9,133 @@ const ALL_DESTINATIONS = [
     // Asia
     {
         id: 1, title: "Kyoto, Japan", description: "Ancient temples meet modern autonomy.",
-        image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/kyoto.jpg",
         rating: "4.9", price: "From $8,500", tags: ["Culture", "History", "Nature"]
     },
     {
         id: 2, title: "Bali, Indonesia", description: "Spiritual healing in tropical paradise.",
-        image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?q=80&w=2038&auto=format&fit=crop",
+        image: "/images/destinations/bali.jpg",
         rating: "4.7", price: "From $5,500", tags: ["Tropical", "Wellness", "Relax"]
     },
     {
         id: 5, title: "Maldives", description: "Overwater bungalows and crystal clear lagoons.",
-        image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?q=80&w=2065&auto=format&fit=crop",
+        image: "/images/destinations/maldives.jpg",
         rating: "4.9", price: "From $15,000", tags: ["Luxury", "Beach", "Romance"]
     },
     {
         id: 6, title: "Petra, Jordan", description: "The Rose City, carved directly into rock.",
-        image: "https://images.unsplash.com/photo-1579705745811-a32bef7856a3?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/petra.jpg",
         rating: "4.8", price: "From $6,200", tags: ["History", "Desert", "Adventure"]
     },
     {
         id: 31, title: "Tokyo, Japan", description: "Neon lights, sushi, and tradition.",
-        image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=2094&auto=format&fit=crop",
+        image: "/images/destinations/tokyo.jpg",
         rating: "4.8", price: "From $7,800", tags: ["City", "Food", "Tech"]
     },
     {
         id: 32, title: "Phuket, Thailand", description: "Tropical beaches and vibrant nightlife.",
-        image: "https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?q=80&w=2001&auto=format&fit=crop",
+        image: "/images/destinations/phuket.jpg",
         rating: "4.6", price: "From $3,500", tags: ["Beach", "Party", "Relax"]
     },
 
     // Europe
     {
         id: 3, title: "Amalfi Coast, Italy", description: "Vertical landscapes and azure seas.",
-        image: "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?q=80&w=2066&auto=format&fit=crop",
+        image: "/images/destinations/amalfi.jpg",
         rating: "4.8", price: "From $12,000", tags: ["Coastal", "Luxury", "Food"]
     },
     {
         id: 4, title: "Reykjavik, Iceland", description: "Northern lights and volcanic wonders.",
-        image: "https://images.unsplash.com/photo-1476610182048-b716b8518aae?q=80&w=2159&auto=format&fit=crop",
+        image: "/images/destinations/reykjavik.jpg",
         rating: "4.9", price: "From $7,200", tags: ["Adventure", "Cold", "Nature"]
     },
     {
         id: 8, title: "Santorini, Greece", description: "White-washed buildings against the Aegean Sea.",
-        image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?q=80&w=2079&auto=format&fit=crop",
+        image: "/images/destinations/santorini.jpg",
         rating: "4.8", price: "From $9,500", tags: ["Romance", "Views", "Coastal"]
     },
     {
         id: 9, title: "Paris, France", description: "The city of light, love, and art.",
-        image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2073&auto=format&fit=crop",
+        image: "/images/destinations/paris.jpg",
         rating: "4.7", price: "From $8,900", tags: ["City", "Romance", "Art"]
     },
     {
         id: 10, title: "Swiss Alps, Switzerland", description: "Snow-capped peaks and pristine lakes.",
-        image: "https://images.unsplash.com/photo-1530122037265-a5f1f91d3b99?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/swiss_alps.jpg",
         rating: "4.9", price: "From $11,000", tags: ["Nature", "Mountains", "Luxury"]
     },
     {
         id: 26, title: "Barcelona, Spain", description: "Art, architecture, and vibrant street life.",
-        image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/barcelona.jpg",
         rating: "4.7", price: "From $6,800", tags: ["Art", "Architecture", "Food"]
     },
 
     // Americas
     {
         id: 11, title: "Machu Picchu, Peru", description: "Lost Incan city high in the Andes.",
-        image: "https://images.unsplash.com/photo-1588665792942-ed011aaab0b3?q=80&w=2076&auto=format&fit=crop",
+        image: "/images/destinations/machu_picchu.jpg",
         rating: "4.9", price: "From $6,500", tags: ["History", "Hiking", "Adventure"]
     },
     {
         id: 12, title: "Tulum, Mexico", description: "Ancient ruins meeting Caribbean beaches.",
-        image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/tulum.jpg",
         rating: "4.6", price: "From $4,500", tags: ["Beach", "Ruins", "Relax"]
     },
     {
         id: 13, title: "Banff, Canada", description: "Turquoise lakes and Rocky Mountain peaks.",
-        image: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/banff.jpg",
         rating: "4.8", price: "From $5,800", tags: ["Nature", "Mountains", "Hiking"]
     },
     {
         id: 14, title: "New York City, USA", description: "The city that never sleeps.",
-        image: "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/nyc.jpg",
         rating: "4.7", price: "From $7,500", tags: ["City", "Energy", "Shopping"]
     },
     {
         id: 35, title: "Patagonia, Chile", description: "Granite peaks and glaciers.",
-        image: "https://images.unsplash.com/photo-1550993806-38f321df75e3?q=80&w=2102&auto=format&fit=crop",
+        image: "/images/destinations/patagonia.jpg",
         rating: "4.9", price: "From $8,000", tags: ["Nature", "Hiking", "Adventure"]
     },
 
     // Africa & Middle East & Oceania
     {
         id: 36, title: "Dubai, UAE", description: "Futuristic architecture and luxury.",
-        image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2009&auto=format&fit=crop",
+        image: "/images/destinations/dubai.jpg",
         rating: "4.8", price: "From $6,500", tags: ["City", "Luxury", "Shopping"]
     },
     {
         id: 15, title: "Marrakech, Morocco", description: "A sensory feast of colors and spices.",
-        image: "https://images.unsplash.com/photo-1539020140153-e479b8c22e70?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/marrakech.jpg",
         rating: "4.6", price: "From $4,900", tags: ["Culture", "Markets", "Desert"]
     },
     {
         id: 16, title: "Cape Town, South Africa", description: "Where mountains meet the two oceans.",
-        image: "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?q=80&w=2071&auto=format&fit=crop",
+        image: "/images/destinations/cape_town.jpg",
         rating: "4.8", price: "From $6,800", tags: ["Nature", "City", "Wine"]
     },
     {
         id: 17, title: "Serengeti, Tanzania", description: "Witness the Great Migration.",
-        image: "https://images.unsplash.com/photo-1547471080-7fc2caa6f17f?q=80&w=2068&auto=format&fit=crop",
+        image: "/images/destinations/serengeti.jpg",
         rating: "5.0", price: "From $18,000", tags: ["Safari", "Wildlife", "Nature"]
     },
     {
         id: 29, title: "Cairo, Egypt", description: "Ancient pyramids and the mighty Nile.",
-        image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/cairo.jpg",
         rating: "4.7", price: "From $5,200", tags: ["History", "Culture", "Desert"]
     },
     {
         id: 18, title: "Queenstown, New Zealand", description: "The adventure capital of the world.",
-        image: "https://images.unsplash.com/photo-1507699622177-388898d9903d?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/queenstown.jpg",
         rating: "4.9", price: "From $8,200", tags: ["Adventure", "Nature", "Mountains"]
     },
     {
         id: 30, title: "Sydney, Australia", description: "Iconic harbor and surf beaches.",
-        image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/sydney.jpg",
         rating: "4.8", price: "From $7,900", tags: ["City", "Beach", "Harbor"]
     },
     {
         id: 19, title: "Bora Bora", description: "The pearl of the Pacific.",
-        image: "https://images.unsplash.com/photo-1589979481223-deb893043163?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/destinations/bora_bora.jpg",
         rating: "5.0", price: "From $16,000", tags: ["Luxury", "Beach", "Romance"]
     }
 ]
