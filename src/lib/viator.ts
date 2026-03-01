@@ -302,22 +302,26 @@ export async function searchProducts(destinationId: number | string, options?: a
     // Fallback Mock
     await new Promise(resolve => setTimeout(resolve, 800))
 
-    // 1. Try to find specific mocks
-    if (options?.mockDestinationName) {
-        const city = options.mockDestinationName
-        const specific = MOCK_VIATOR_PRODUCTS.filter(p =>
-            p.title.toLowerCase().includes(city.toLowerCase()) ||
-            p.description.toLowerCase().includes(city.toLowerCase())
-        )
-        if (specific.length > 0) return specific
+    // 1. Try to find specific mocks matching the destination and keyword
+    let results: ViatorProduct[] = []
 
-        // 2. Generate generic mocks for the city
-        return [
+    if (options?.mockDestinationName) {
+        const city = options.mockDestinationName.toLowerCase()
+        const keyword = options?.keyword?.toLowerCase() || ''
+
+        // Always start with all mock products that match the city
+        let specific = MOCK_VIATOR_PRODUCTS.filter(p =>
+            p.title.toLowerCase().includes(city) ||
+            p.description.toLowerCase().includes(city)
+        )
+
+        // Then generate generic ones for that city to pad
+        const generic = [
             {
                 productCode: `GEN-${city}-1`,
-                title: `Best of ${city} Private City Tour`,
-                description: `Discover the highlights of ${city} with a local expert guide. Visit top landmarks and hidden gems.`,
-                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
+                title: `Best of ${options.mockDestinationName} Private City Tour`,
+                description: `Discover the highlights of ${options.mockDestinationName} with a local expert guide. Visit top landmarks and hidden gems.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(options.mockDestinationName)}`,
                 pricing: { summary: { fromPrice: 89, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.8, totalReviews: Math.floor(Math.random() * 500) + 100 },
                 images: [{ variants: [{ url: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
@@ -326,9 +330,9 @@ export async function searchProducts(destinationId: number | string, options?: a
             },
             {
                 productCode: `GEN-${city}-2`,
-                title: `${city} Food & Culture Walking Tour`,
-                description: `Taste the authentic flavors of ${city} on this guided food tour. Sample local delicacies and learn about the culinary history.`,
-                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
+                title: `${options.mockDestinationName} Food & Culture Walking Tour`,
+                description: `Taste the authentic flavors of ${options.mockDestinationName} on this guided food tour. Sample local delicacies and learn about the culinary history.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(options.mockDestinationName)}`,
                 pricing: { summary: { fromPrice: 65, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.7, totalReviews: Math.floor(Math.random() * 500) + 50 },
                 images: [{ variants: [{ url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
@@ -337,9 +341,9 @@ export async function searchProducts(destinationId: number | string, options?: a
             },
             {
                 productCode: `GEN-${city}-3`,
-                title: `Full-Day ${city} Highlights & Hidden Gems`,
-                description: `See the best of ${city} in one day. From iconic sights to local secrets, this tour covers it all.`,
-                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
+                title: `Full-Day ${options.mockDestinationName} Highlights & Hidden Gems`,
+                description: `See the best of ${options.mockDestinationName} in one day. From iconic sights to local secrets, this tour covers it all.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(options.mockDestinationName)}`,
                 pricing: { summary: { fromPrice: 120, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.9, totalReviews: Math.floor(Math.random() * 1000) + 200 },
                 images: [{ variants: [{ url: "https://images.unsplash.com/photo-1530789253388-582c481c54b0?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
@@ -348,9 +352,9 @@ export async function searchProducts(destinationId: number | string, options?: a
             },
             {
                 productCode: `GEN-${city}-4`,
-                title: `${city} by Night: Evening Tour & Dinner`,
-                description: `Experience the magic of ${city} after dark. Includes a panoramic tour and a delicious dinner at a top-rated local restaurant.`,
-                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
+                title: `${options.mockDestinationName} by Night: Evening Tour & Dinner`,
+                description: `Experience the magic of ${options.mockDestinationName} after dark. Includes a panoramic tour and a delicious dinner at a top-rated local restaurant.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(options.mockDestinationName)}`,
                 pricing: { summary: { fromPrice: 95, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.6, totalReviews: Math.floor(Math.random() * 300) + 80 },
                 images: [{ variants: [{ url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
@@ -359,9 +363,9 @@ export async function searchProducts(destinationId: number | string, options?: a
             },
             {
                 productCode: `GEN-${city}-5`,
-                title: `Skip-the-Line: ${city} Museum & Art Tour`,
-                description: `Avoid the crowds with priority access to ${city}'s most famous museums and art galleries.`,
-                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(city)}`,
+                title: `Skip-the-Line: ${options.mockDestinationName} Museum & Art Tour`,
+                description: `Avoid the crowds with priority access to ${options.mockDestinationName}'s most famous museums and art galleries.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(options.mockDestinationName)}`,
                 pricing: { summary: { fromPrice: 55, currencyCode: 'USD' } },
                 reviews: { combinedAverageRating: 4.5, totalReviews: Math.floor(Math.random() * 400) + 120 },
                 images: [{ variants: [{ url: "https://images.unsplash.com/photo-1518998053901-5348d3969105?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }],
@@ -369,6 +373,45 @@ export async function searchProducts(destinationId: number | string, options?: a
                 bookingQuestions: []
             }
         ]
+
+        // Combine them
+        results = [...specific, ...generic]
+
+        // If user searched for a specific experience (keyword), try to dynamically generate a 100% matched card and push to the TOP
+        const categoryWords = ['tour', 'walk', 'food', 'sightseeing', 'culture', 'adventure', 'history', 'art', 'museum']
+        if (keyword && categoryWords.some((cat: string) => keyword.includes(cat)) === false) {
+            // It's a highly specific query like "helicopter ride in nyc"
+            const customTitleWords = keyword.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+
+            const customMatch: ViatorProduct = {
+                productCode: `CUSTOM-${keyword.replace(/\s+/g, '-')}`,
+                title: `Premium ${customTitleWords}`,
+                description: `The ultimate experience for those looking for a ${keyword}. Book this highly rated activity today.`,
+                productUrl: `https://www.viator.com/searchResults/all?text=${encodeURIComponent(keyword)}`,
+                pricing: { summary: { fromPrice: 249, currencyCode: 'USD' } },
+                reviews: { combinedAverageRating: 4.9, totalReviews: 842 },
+                images: [{ variants: [{ url: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&q=90&w=1200", width: 1200, height: 900 }] }], // Generic high quality image
+                duration: { fixedDurationInMinutes: 120 },
+                bookingQuestions: []
+            }
+
+            // Put the exact match first
+            results.unshift(customMatch)
+
+        }
+
+        // Sort by Relevancy (if title or description includes the keyword exactly, bubble to the top)
+        if (keyword) {
+            results.sort((a, b) => {
+                const aMatch = a.title.toLowerCase().includes(keyword) || a.description.toLowerCase().includes(keyword)
+                const bMatch = b.title.toLowerCase().includes(keyword) || b.description.toLowerCase().includes(keyword)
+                if (aMatch && !bMatch) return -1
+                if (!aMatch && bMatch) return 1
+                return 0
+            })
+        }
+
+        return results
     }
 
     return MOCK_VIATOR_PRODUCTS
