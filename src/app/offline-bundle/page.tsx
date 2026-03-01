@@ -108,6 +108,25 @@ export default function OfflineBundleView() {
                     </div>
                 </section>
 
+                {/* Personal Emergency Contacts (ICE) */}
+                {bundleData.personalContacts && bundleData.personalContacts.length > 0 && (
+                    <section className="bg-amber-950/20 border border-amber-900/50 rounded-2xl p-6 print:bg-amber-50 print:border-amber-500 print:break-inside-avoid">
+                        <h2 className="text-amber-400 font-bold text-lg mb-4 flex items-center gap-2 print:text-amber-800">
+                            <Phone className="size-5" /> Personal Emergency Contacts (ICE)
+                        </h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {bundleData.personalContacts.map((contact: any, idx: number) => (
+                                <div key={idx} className="space-y-1">
+                                    <p className="text-sm font-bold text-amber-300 print:text-amber-900 uppercase tracking-widest">{contact.relation || 'Contact'}</p>
+                                    <p className="text-lg font-bold text-white print:text-black">{contact.name || 'Unnamed'}</p>
+                                    {contact.phone && <p className="text-md font-mono text-neutral-300 print:text-neutral-700">{contact.phone}</p>}
+                                    {contact.email && <p className="text-sm text-neutral-400 print:text-neutral-500">{contact.email}</p>}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
                 {/* Secure Documents */}
                 <section>
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-white print:text-black">

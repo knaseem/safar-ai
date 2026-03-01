@@ -21,6 +21,13 @@ type GenerationStep = {
     status: "pending" | "generating" | "completed"
 }
 
+type PersonalContact = {
+    name: string
+    relation: string
+    phone: string
+    email: string
+}
+
 export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDays }: OfflineSurvivalKitProps) {
     const [isGenerating, setIsGenerating] = useState(false)
     const [isComplete, setIsComplete] = useState(false)
@@ -30,9 +37,26 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
     const [isScanningPassport, setIsScanningPassport] = useState(false)
     const [isCameraOpen, setIsCameraOpen] = useState(false)
     const [passportImage, setPassportImage] = useState<string | null>(null)
+    const [personalContacts, setPersonalContacts] = useState<PersonalContact[]>([])
+
     const fileInputRef = useRef<HTMLInputElement>(null)
     const videoRef = useRef<HTMLVideoElement>(null)
     const canvasRef = useRef<HTMLCanvasElement>(null)
+
+    const addContact = () => {
+        if (personalContacts.length >= 3) return
+        setPersonalContacts([...personalContacts, { name: '', relation: '', phone: '', email: '' }])
+    }
+
+    const updateContact = (index: number, field: keyof PersonalContact, value: string) => {
+        const newContacts = [...personalContacts]
+        newContacts[index][field] = value
+        setPersonalContacts(newContacts)
+    }
+
+    const removeContact = (index: number) => {
+        setPersonalContacts(personalContacts.filter((_, i) => i !== index))
+    }
 
     useEffect(() => {
         return () => {
@@ -200,6 +224,7 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
             securityNote: "This data is encrypted when stored within the Safar app securely.",
             emergencyPhrases: emergencyPhrases,
             emergencyContacts: getEmergencyInfo(destination),
+            personalContacts: personalContacts,
             hasPassport: hasPassport,
             passportImageData: passportImage,
             itineraryDays: itineraryDays || [],
@@ -373,6 +398,60 @@ export function OfflineSurvivalKit({ destination, tripName, onClose, itineraryDa
                                             setPassportImage(null)
                                         }} className="h-6 px-2 text-xs text-white/50 hover:text-white">Remove</Button>
                                     </div>
+                                )}
+                            </div>
+
+                            {/* Personal Emergency Contacts UI */}
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+                                <div className="flex items-center justify-between mb-1">
+                                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                        Personal Contacts (ICE)
+                                    </h4>
+                                    <span className="text-[10px] text-white/40 uppercase tracking-widest">Optional</span>
+                                </div>
+
+                                {personalContacts.map((contact, idx) => (
+                                    <div key={idx} className="relative bg-black/20 p-3 rounded-lg border border-white/5 space-y-2 text-left">
+                                        <button onClick={() => removeContact(idx)} className="absolute top-2 right-2 p-1 text-white/40 hover:text-red-400 bg-black/40 rounded-full hover:bg-black/60 transition-colors">
+                                            <X className="size-3" />
+                                        </button>
+                                        <div className="grid grid-cols-2 gap-2 mt-1">
+                                            <input
+                                                placeholder="Name (e.g. Jane Doe)"
+                                                className="bg-transparent border border-white/10 rounded-md px-3 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500/50"
+                                                value={contact.name}
+                                                onChange={e => updateContact(idx, 'name', e.target.value)}
+                                            />
+                                            <input
+                                                placeholder="Relation (e.g. Parent)"
+                                                className="bg-transparent border border-white/10 rounded-md px-3 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500/50"
+                                                value={contact.relation}
+                                                onChange={e => updateContact(idx, 'relation', e.target.value)}
+                                            />
+                                            <input
+                                                placeholder="Phone Number"
+                                                className="bg-transparent border border-white/10 rounded-md px-3 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500/50"
+                                                value={contact.phone}
+                                                onChange={e => updateContact(idx, 'phone', e.target.value)}
+                                            />
+                                            <input
+                                                placeholder="Email Address"
+                                                className="bg-transparent border border-white/10 rounded-md px-3 py-2 text-xs text-white placeholder:text-white/30 focus:outline-none focus:border-emerald-500/50 col-span-2"
+                                                value={contact.email}
+                                                onChange={e => updateContact(idx, 'email', e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {personalContacts.length < 3 && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={addContact}
+                                        className="w-full bg-transparent border-white/20 text-white hover:bg-white/10 border-dashed py-5 text-sm font-medium mt-1"
+                                    >
+                                        + Add Contact
+                                    </Button>
                                 )}
                             </div>
 
