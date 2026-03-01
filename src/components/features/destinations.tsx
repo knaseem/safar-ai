@@ -24,7 +24,7 @@ const ALL_DESTINATIONS = [
     },
     {
         id: 6, title: "Petra, Jordan", description: "The Rose City, carved directly into rock.",
-        image: "https://images.unsplash.com/photo-1547288647-73d8df5e8b4e?q=80&w=2070&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1579705745811-a32bef7856a3?q=80&w=2070&auto=format&fit=crop",
         rating: "4.8", price: "From $6,200", tags: ["History", "Desert", "Adventure"]
     },
     {
@@ -100,7 +100,7 @@ const ALL_DESTINATIONS = [
     // Africa & Middle East & Oceania
     {
         id: 36, title: "Dubai, UAE", description: "Futuristic architecture and luxury.",
-        image: "https://images.unsplash.com/photo-1512453979798-5ea904ac66de?q=80&w=2009&auto=format&fit=crop",
+        image: "https://images.unsplash.com/photo-1518684079-3c830dcef090?q=80&w=2009&auto=format&fit=crop",
         rating: "4.8", price: "From $6,500", tags: ["City", "Luxury", "Shopping"]
     },
     {
