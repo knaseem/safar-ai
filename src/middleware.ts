@@ -1,9 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Admin email whitelist from environment variable
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
-
 export async function middleware(request: NextRequest) {
     let supabaseResponse = NextResponse.next({ request })
 
@@ -31,6 +28,9 @@ export async function middleware(request: NextRequest) {
     // Refresh session (important for Supabase auth)
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Admin email whitelist — evaluated per-request so env changes take effect without redeploy
+    const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+
     // Protect /admin routes
     if (request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
@@ -42,7 +42,6 @@ export async function middleware(request: NextRequest) {
         }
 
         const userEmail = user.email?.toLowerCase() || ''
-        console.log("DEBUG ADMIN MIDDLEWARE:", { ADMIN_EMAILS, userEmail, user_raw: user.email })
 
         // If ADMIN_EMAILS is configured, enforce whitelist
         if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(userEmail)) {

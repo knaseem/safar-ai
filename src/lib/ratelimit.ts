@@ -53,6 +53,10 @@ export function getRateLimitIdentifier(request: Request): string {
     return '127.0.0.1'
 }
 
+// Module-level cache: one Ratelimit instance per plan+prefix combination
+// This prevents a new Ratelimit object from being allocated on every API request
+const tierLimiterCache = new Map<string, Ratelimit>()
+
 /**
  * Helper to apply per-user tiered rate limits
  */
@@ -63,14 +67,17 @@ export async function limitByUserTier(userId: string, prefix: string) {
     const { getUserPlan } = await import('./user-plan')
     const plan = await getUserPlan(userId)
     const limit = PLAN_LIMITS[plan].chatRequestsPerMin
+    const cacheKey = `${prefix}:${plan}`
 
-    // Create a per-tier rate limiter
-    const tierLimiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(limit, '60 s'),
-        analytics: true,
-        prefix: `ratelimit:${prefix}:${plan}`,
-    })
+    // Reuse cached limiter or create once
+    if (!tierLimiterCache.has(cacheKey)) {
+        tierLimiterCache.set(cacheKey, new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(limit, '60 s'),
+            analytics: true,
+            prefix: `ratelimit:${cacheKey}`,
+        }))
+    }
 
-    return tierLimiter.limit(`${prefix}:${userId}`)
+    return tierLimiterCache.get(cacheKey)!.limit(`${prefix}:${userId}`)
 }

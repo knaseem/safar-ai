@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendSubscriptionEmail } from "@/lib/email"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-    apiVersion: "2023-10-16" as any,
+    apiVersion: "2026-01-28.clover",
 })
 
 export async function POST(req: Request) {
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     try {
         switch (event.type) {
             case "checkout.session.completed": {
-                const session = event.data.object as any
+                const session = event.data.object as Stripe.Checkout.Session
                 const userId = session.metadata?.userId
                 const userEmail = session.customer_details?.email
                 const userName = session.customer_details?.name || "Traveler"
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
             }
 
             case "invoice.payment_failed": {
-                const invoice = event.data.object as any
+                const invoice = event.data.object as Stripe.Invoice
                 const userEmail = invoice.customer_email
 
                 if (userEmail) {
@@ -100,14 +100,17 @@ export async function POST(req: Request) {
             }
 
             case "customer.subscription.deleted": {
-                const subscription = event.data.object as any
+                const subscription = event.data.object as Stripe.Subscription
                 let userId = subscription.metadata?.userId
 
                 // Fallback: metadata may not be on the subscription object
                 // Look up user by customer email via Stripe
                 if (!userId && subscription.customer) {
                     try {
-                        const customer = await stripe.customers.retrieve(subscription.customer) as any
+                        const customerId = typeof subscription.customer === 'string'
+                            ? subscription.customer
+                            : (subscription.customer as Stripe.Customer).id
+                        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer
                         if (customer?.email) {
                             const { data: profile } = await supabase
                                 .from('profiles')

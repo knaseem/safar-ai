@@ -165,7 +165,6 @@ export async function POST(req: Request) {
       id: tempTrip.id,
       _v: "v3-stable"
     };
-    console.log("DEBUG: Final response payload:", JSON.stringify(finalResponse, null, 2));
     return NextResponse.json(finalResponse);
   } catch (error) {
     console.error("AI Error:", error);
