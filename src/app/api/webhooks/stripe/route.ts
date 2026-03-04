@@ -42,18 +42,33 @@ export async function POST(req: Request) {
             case "checkout.session.completed": {
                 const session = event.data.object as Stripe.Checkout.Session
                 const userId = session.metadata?.userId
+                const stripeCustomerId = typeof session.customer === 'string' ? session.customer : null
                 const userEmail = session.customer_details?.email
                 const userName = session.customer_details?.name || "Traveler"
 
                 if (!userId) {
-                    console.error("❌ No userId in session metadata")
+                    // ALERT: A paying customer has no userId — their upgrade was missed!
+                    const alertMsg = `❌ CRITICAL: Stripe checkout.session.completed missing userId. Session: ${session.id}, Customer: ${stripeCustomerId}, Email: ${userEmail}`
+                    console.error(alertMsg)
+                    // Send alert to admin so they can manually resolve
+                    await sendSubscriptionEmail({
+                        to: process.env.ADMIN_EMAILS || 'knaseem22@gmail.com',
+                        subject: '⚠️ SafarAI: Stripe Upgrade Missed — Manual Action Required',
+                        userName: 'Admin',
+                        planName: 'Pro',
+                        type: 'payment_failed',
+                        actionUrl: `${process.env.NEXT_PUBLIC_APP_URL}/admin`
+                    })
                     break
                 }
 
-                // 1. Upgrade User in DB
+                // 1. Upgrade User in DB and store stripe_customer_id for portal link
+                const profileUpdate: Record<string, unknown> = { plan_tier: 'pro' }
+                if (stripeCustomerId) profileUpdate.stripe_customer_id = stripeCustomerId
+
                 const { error: updateError } = await supabase
                     .from('travel_profiles')
-                    .update({ plan_tier: 'pro' })
+                    .update(profileUpdate)
                     .eq('user_id', userId)
 
                 if (updateError) {
@@ -62,11 +77,12 @@ export async function POST(req: Request) {
                         .from('travel_profiles')
                         .upsert({
                             user_id: userId,
-                            plan_tier: 'pro'
+                            plan_tier: 'pro',
+                            ...(stripeCustomerId ? { stripe_customer_id: stripeCustomerId } : {})
                         }, { onConflict: 'user_id' })
                 }
 
-                console.log(`✅ Upgraded user ${userId} to Pro`)
+                console.log(`✅ Upgraded user ${userId} to Pro (customer: ${stripeCustomerId})`)
 
                 // 2. Trigger Welcome Email
                 if (userEmail) {

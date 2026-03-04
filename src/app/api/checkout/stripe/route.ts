@@ -3,7 +3,7 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_mock', {
-    apiVersion: "2023-10-16" as any,
+    apiVersion: "2026-01-28.clover",
 })
 
 export async function POST(req: Request) {
@@ -18,8 +18,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        // 1. Determine the Price ID based on the selection
-        // In a real app, these would be in your .env or a config file
+        // Determine the Price ID based on the selection
         const getPriceId = () => {
             if (planId === 'pro') {
                 return billingCycle === 'yearly'
@@ -31,45 +30,16 @@ export async function POST(req: Request) {
 
         const priceId = getPriceId()
 
+        // Price ID is required — no dynamic fallback in production
         if (!priceId) {
-            // Fallback: If no Price ID is configured, we can use price_data for initial testing
-            // But for long-term subscriptions, Price IDs are required.
-            // For now, let's allow dynamic price creation for testing IF env is missing
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ["card"],
-                line_items: [
-                    {
-                        price_data: {
-                            currency: "usd",
-                            product_data: {
-                                name: `Safar AI Pro (${billingCycle})`,
-                                description: billingCycle === 'yearly'
-                                    ? "Founder's Special Annual Plan"
-                                    : "Premium Travel Concierge Monthly",
-                            },
-                            unit_amount: billingCycle === 'yearly' ? 6999 : 1499,
-                            recurring: {
-                                interval: billingCycle === 'yearly' ? "year" : "month",
-                            },
-                        },
-                        quantity: 1,
-                    },
-                ],
-                mode: "subscription",
-                success_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?canceled=true`,
-                customer_email: user.email,
-                metadata: {
-                    userId: user.id,
-                    planTier: planId,
-                    billingCycle: billingCycle
-                },
-            })
-
-            return NextResponse.json({ url: session.url })
+            console.error(`Stripe checkout: no Price ID configured for plan "${planId}" / "${billingCycle}"`)
+            return NextResponse.json(
+                { error: "Checkout is temporarily unavailable. Please try again later." },
+                { status: 503 }
+            )
         }
 
-        // Standard way: Use Price ID
+        // Create the checkout session using the configured Price ID
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
             line_items: [{ price: priceId, quantity: 1 }],
@@ -85,8 +55,13 @@ export async function POST(req: Request) {
         })
 
         return NextResponse.json({ url: session.url })
-    } catch (err: any) {
-        console.error("Stripe Checkout Error:", err)
-        return NextResponse.json({ error: err.message }, { status: 500 })
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        console.error("Stripe Checkout Error:", message)
+        // Return a safe generic message — never expose Stripe internals to the client
+        return NextResponse.json(
+            { error: "Unable to initiate checkout. Please try again." },
+            { status: 500 }
+        )
     }
 }

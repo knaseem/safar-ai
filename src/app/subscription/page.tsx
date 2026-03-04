@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { motion, AnimatePresence } from "framer-motion"
 import { Check, Sparkles, Zap, Globe, Plane, Rocket } from "lucide-react"
 import { PLAN_LIMITS } from "@/lib/plans"
+import { PLAN_PRICES } from "@/lib/pricing"
 import { useAuth } from "@/lib/auth-context"
 import { useSubscription } from "@/lib/subscription-context"
 import { AuthModal } from "@/components/features/auth-modal"
@@ -62,10 +63,7 @@ function SubscriptionPageContent() {
             const res = await fetch("/api/checkout/stripe", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    planId,
-                    billingCycle,
-                }),
+                body: JSON.stringify({ planId, billingCycle }),
             })
 
             const data = await res.json()
@@ -76,20 +74,33 @@ function SubscriptionPageContent() {
             }
         } catch (err: any) {
             console.error("Checkout error:", err)
-            toast.error("Checkout failed", { description: err.message || "Please try again" })
+            toast.error("Checkout failed", { description: "Please try again." })
+        } finally {
+            setIsLoading(null)
+        }
+    }
+
+    const handleManageBilling = async () => {
+        setIsLoading('billing')
+        try {
+            const res = await fetch("/api/billing-portal", { method: "POST" })
+            const data = await res.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                throw new Error(data.error || "Could not open billing portal")
+            }
+        } catch (err: any) {
+            console.error("Billing portal error:", err)
+            toast.error("Could not open billing portal", { description: "Please try again." })
         } finally {
             setIsLoading(null)
         }
     }
 
     const prices = {
-        free: { monthly: "$0", yearly: "$0" },
-        pro: { monthly: "$14.99", yearly: "$69.99" }
-    }
-
-    const PLAN_DESCRIPTIONS = {
-        free: "Essential intelligence for the casual explorer.",
-        pro: "The ultimate concierge for elite travelers."
+        free: { monthly: PLAN_PRICES.free.monthly.display, yearly: PLAN_PRICES.free.yearly.display },
+        pro: { monthly: PLAN_PRICES.pro.monthly.display, yearly: PLAN_PRICES.pro.yearly.display },
     }
 
     const PRO_FEATURES = [
@@ -262,6 +273,17 @@ function SubscriptionPageContent() {
                                             'Downgrade'
                                         )}
                                     </Button>
+
+                                    {/* Manage Billing — only shown for current Pro subscribers */}
+                                    {isPro && currentPlan === 'pro' && (
+                                        <button
+                                            onClick={handleManageBilling}
+                                            disabled={isLoading === 'billing'}
+                                            className="w-full text-center text-xs text-white/30 hover:text-white/60 transition-colors pt-1 underline underline-offset-4"
+                                        >
+                                            {isLoading === 'billing' ? 'Opening portal...' : 'Manage billing & cancel'}
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Background glow for Pro */}

@@ -47,11 +47,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ script })
 
     } catch (error: any) {
-        console.error("Script generation error details:", error)
-        console.error("API Key present:", !!process.env.GOOGLE_API_KEY)
-        return NextResponse.json({
-            error: "Failed to generate script",
-            details: error?.message || "Unknown error"
-        }, { status: 500 })
+        console.error("Script generation error:", error)
+        return NextResponse.json(
+            { error: "Failed to generate script. Please try again." },
+            { status: 500 }
+        )
     }
 }

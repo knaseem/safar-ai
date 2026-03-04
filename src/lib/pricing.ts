@@ -47,3 +47,22 @@ export function formatCurrencyValue(amount: number, currency: string = 'USD'): s
         currency: currency,
     }).format(amount);
 }
+
+/**
+ * Subscription plan pricing — single source of truth.
+ * Used by the UI (subscription page) and the checkout API.
+ * Amounts in cents for Stripe; display strings for the UI.
+ */
+export const PLAN_PRICES = {
+    free: {
+        monthly: { amount: 0, display: '$0' },
+        yearly: { amount: 0, display: '$0' },
+    },
+    pro: {
+        monthly: { amount: 1499, display: '$14.99' },
+        yearly: { amount: 6999, display: '$69.99' },
+    },
+} as const
+
+export type SubscriptionTier = keyof typeof PLAN_PRICES
+export type BillingCycle = 'monthly' | 'yearly'
