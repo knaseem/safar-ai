@@ -40,11 +40,11 @@ function CheckoutContent() {
     // On mount, create session and redirect
     useEffect(() => {
         async function initiateCheckout() {
-            // Allow generic checkout (no specific offer) for Hotels or open search
-            // if (!offerId) {
-            //     setError("No booking selected")
-            //     return
-            // }
+            // Guard: flight checkouts require a valid offer ID
+            if (offerType === 'flight' && !offerId) {
+                setError("No flight offer selected. Please search for a flight first.")
+                return
+            }
 
             try {
                 // 1. Get additional details for context (Optional, but good for tracking)

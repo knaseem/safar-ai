@@ -4,6 +4,8 @@ import { Navbar } from "@/components/layout/navbar"
 import { redirect } from "next/navigation"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
 import { UnifiedBooking } from "@/types/booking"
+import Link from "next/link"
+import { Users } from "lucide-react"
 
 export default async function TripPage(props: { params: Promise<{ id: string }> }) {
     const params = await props.params
@@ -142,6 +144,25 @@ export default async function TripPage(props: { params: Promise<{ id: string }> 
                     isHalal={trip.is_halal}
                     linkedBookings={linkedBookings}
                 />
+
+                {/* Collaborate Entry Point */}
+                <div className="mt-8 p-5 rounded-2xl border border-white/10 bg-white/[0.03] flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <Users className="size-5 text-emerald-400" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-semibold text-white">Plan Together</p>
+                            <p className="text-xs text-white/50">Invite friends to vote on destinations, hotels &amp; activities</p>
+                        </div>
+                    </div>
+                    <Link
+                        href={`/collaborate/${trip.id}`}
+                        className="shrink-0 px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-500 text-black hover:bg-emerald-400 transition-colors"
+                    >
+                        Invite Friends →
+                    </Link>
+                </div>
             </div>
         </main>
     )
