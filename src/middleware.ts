@@ -31,10 +31,9 @@ export async function middleware(request: NextRequest) {
     // Admin email whitelist — evaluated per-request so env changes take effect without redeploy
     const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
 
-    // Protect /admin routes
+    // Protect /admin page routes
     if (request.nextUrl.pathname.startsWith('/admin')) {
         if (!user) {
-            // Not logged in — redirect to auth
             const url = request.nextUrl.clone()
             url.pathname = '/auth'
             url.searchParams.set('redirect', '/admin')
@@ -43,12 +42,21 @@ export async function middleware(request: NextRequest) {
 
         const userEmail = user.email?.toLowerCase() || ''
 
-        // If ADMIN_EMAILS is configured, enforce whitelist
         if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(userEmail)) {
-            // Unauthorized — redirect to home
             const url = request.nextUrl.clone()
             url.pathname = '/'
             return NextResponse.redirect(url)
+        }
+    }
+
+    // Defense-in-depth: also protect /api/admin routes at middleware level
+    if (request.nextUrl.pathname.startsWith('/api/admin')) {
+        if (!user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        const userEmail = user.email?.toLowerCase() || ''
+        if (ADMIN_EMAILS.length > 0 && !ADMIN_EMAILS.includes(userEmail)) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
     }
 
@@ -57,9 +65,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        // Run on admin routes
+        // Protect admin pages and API routes
         '/admin/:path*',
-        // Also refresh auth on all routes (recommended by supabase)
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/api/admin/:path*',
+        // Refresh auth on all non-static routes (recommended by Supabase)
+        '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }

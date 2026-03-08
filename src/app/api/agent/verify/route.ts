@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
+    // Auth guard — prevent unauthenticated abuse of the 1.5s delay endpoint
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     // Simulate thinking/network delay (1-2 seconds)
     // This makes the "Agent" feel like it's actually doing work
     await new Promise(resolve => setTimeout(resolve, 1500))

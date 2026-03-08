@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 const ALADHAN_BASE_URL = "https://api.aladhan.com/v1"
 
@@ -6,8 +6,26 @@ const ALADHAN_BASE_URL = "https://api.aladhan.com/v1"
 const cache = new Map<string, { data: any; timestamp: number }>()
 const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
-export async function GET(request: Request) {
+// Simple IP-based rate limiting: 30 req/min
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 30
+const RATE_WINDOW = 60 * 1000 // 1 minute
+
+export async function GET(request: NextRequest) {
     try {
+        // IP rate limiting
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+        const now = Date.now()
+        const rateEntry = rateLimitMap.get(ip)
+        if (rateEntry && now < rateEntry.resetAt) {
+            if (rateEntry.count >= RATE_LIMIT) {
+                return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+            }
+            rateEntry.count++
+        } else {
+            rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW })
+        }
+
         const { searchParams } = new URL(request.url)
         const lat = searchParams.get("lat")
         const lng = searchParams.get("lng")

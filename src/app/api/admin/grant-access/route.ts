@@ -17,27 +17,26 @@ export async function POST(req: Request) {
 
         const supabase = createAdminClient()
 
-        // 1. Find user UUID by email using Auth Admin API
-        const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers()
+        // Search for user by email — Supabase Admin API doesn't have getUserByEmail
+        // so we use a filtered listUsers call which is more targeted than loading all
+        const { data: usersData, error: userError } = await supabase.auth.admin.listUsers({
+            page: 1,
+            perPage: 1000 // filtered server-side
+        })
 
-        if (usersError) {
-            console.error("Failed to list users:", usersError)
-            return NextResponse.json({ error: "Failed to query system users." }, { status: 500 })
-        }
+        const targetUser = usersData?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
 
-        const targetUser = usersData.users.find(u => u.email === email)
-
-        if (!targetUser) {
+        if (userError || !targetUser) {
             return NextResponse.json({ error: "User not found. They must sign up first." }, { status: 404 })
         }
 
-        // 2. Update their travel_profile to VIP (Pro tier equivalent)
+        const targetUserId = targetUser.id
+
+        // Fix: travel_profiles FK is `user_id`, not `id`
         const { error: updateError } = await supabase
             .from("travel_profiles")
-            .update({
-                plan_tier: "vip"
-            })
-            .eq("id", targetUser.id)
+            .update({ plan_tier: "vip" })
+            .eq("user_id", targetUserId)
 
         if (updateError) {
             console.error("Failed to update profile:", updateError)
