@@ -12,11 +12,33 @@ import { toast } from "sonner"
 import { AnimatePresence } from "framer-motion"
 import { useSubscription } from "@/lib/subscription-context"
 import { UpgradeOverlay } from "@/components/features/upgrade-overlay"
+import { useAuth } from "@/lib/auth-context"
+import { AuthModal } from "@/components/features/auth-modal"
 
 import { Trip, Budget, TripWithBudget } from "@/lib/types"
 
 export default function BudgetPage() {
     const { isPro, loading: subLoading } = useSubscription()
+    const { user, loading: authLoading } = useAuth()
+    const [authModalOpen, setAuthModalOpen] = useState(false)
+
+    // Not signed in — show sign-in prompt (not upgrade prompt)
+    if (!authLoading && !user) {
+        return (
+            <>
+                <Navbar />
+                <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-6">
+                    <Wallet className="size-12 text-white/20" />
+                    <h2 className="text-2xl font-bold">Sign in to access Budget Optimizer</h2>
+                    <p className="text-white/40">Create an account or sign in to manage your travel budgets.</p>
+                    <Button onClick={() => setAuthModalOpen(true)} className="bg-emerald-500 text-black font-bold hover:bg-emerald-400">
+                        Sign In / Sign Up
+                    </Button>
+                    <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+                </main>
+            </>
+        )
+    }
 
     if (!subLoading && !isPro) {
         return <UpgradeOverlay feature="AI Budget Optimizer" description="Manage spending across all your expeditions with AI-powered financial intelligence and real-time expense tracking." />

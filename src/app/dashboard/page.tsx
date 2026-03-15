@@ -240,13 +240,22 @@ export default function DashboardPage() {
                             onClick={(e) => e.stopPropagation()}
                             className="relative w-full max-w-5xl mx-4"
                         >
-                            {/* Close Button - positioned inside modal */}
-                            <button
-                                onClick={() => setViewingTrip(null)}
-                                className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors z-30 border border-white/20"
-                            >
-                                <X className="size-5" />
-                            </button>
+                            {/* Action Bar */}
+                            <div className="absolute top-4 right-4 flex items-center gap-2 z-30">
+                                <Link
+                                    href={`/trips/${viewingTrip.id}`}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold bg-emerald-500 text-black hover:bg-emerald-400 transition-colors"
+                                >
+                                    <Eye className="size-4" />
+                                    View Full Trip
+                                </Link>
+                                <button
+                                    onClick={() => setViewingTrip(null)}
+                                    className="p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors border border-white/20"
+                                >
+                                    <X className="size-5" />
+                                </button>
+                            </div>
 
                             {/* Trip Itinerary Display */}
                             <TripItinerary
